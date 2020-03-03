@@ -15,8 +15,10 @@
 //#define MAX_TRIG    1639                    // Max number of triggers
 //#define MAX_DATA    3141632
 #define PKT_SIZE      16                      // maximum number of bytes in a packet
-#define MOTOR_PW      3985                    // number of TMR2 ticks for 50us
+//#define MOTOR_PW      3985                    // number of TMR2 ticks for 50us
 //#define MOTOR_PW      7970                    // number of TMR2 ticks for 100us
+#define FOCUS_MOTOR_PW     1200                    // number of TMR2 ticks for 100us
+#define ZOOM_MOTOR_PW      3200                    // number of TMR2 ticks for 100us
 
 
 #define Blue_LED      LATFbits.LATF3          // define Blue LED

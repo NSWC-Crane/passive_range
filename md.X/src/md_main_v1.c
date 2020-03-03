@@ -39,8 +39,8 @@ const unsigned char serial_num[1] = {2};
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-const int max_focus_step = 200000;
-const int max_zoom_step = 20000;
+const int max_focus_step = 25000;
+const int max_zoom_step = 10000;
 
 /***************************Interrupt Definitions******************************/
 /*******************************RTCC Interrupt*********************************/
@@ -430,7 +430,7 @@ void main(void)
                         FOC_DIR_PIN = dir;
                         steps = (rx_data[2]&0x7F)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
                                 								
-						if(dir == 0)
+						if(dir == 1)
 						{
 							if(steps + focus_step_count > max_focus_step)
 							{
@@ -467,11 +467,11 @@ void main(void)
                         Green_LED = 1;
 						
                         // run the motor control
-						dir = (rx_data[6]&0x80)>>7;
+						dir = (rx_data[2]&0x80)>>7;
                         ZM_DIR_PIN = dir;
-                        steps = (rx_data[6]&0x7F)<<24 | (rx_data[7]<<16) | (rx_data[8]<<8) | (rx_data[9]);
+                        steps = (rx_data[2]&0x7F)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
                                 
-						if(dir == 0)
+						if(dir == 1)
 						{
 							if(steps + zoom_step_count > max_zoom_step)
 							{
@@ -493,10 +493,10 @@ void main(void)
 						
                         step_zoom_motor(steps);
                         
-						packet_data[4] = (zoom_step_count >> 24) & 0x00FF;
-						packet_data[5] = (zoom_step_count >> 16) & 0x00FF;
-						packet_data[6] = (zoom_step_count >> 8) & 0x00FF;
-						packet_data[7] = (zoom_step_count) & 0x00FF;
+						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
+						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
+						packet_data[2] = (zoom_step_count >> 8) & 0x00FF;
+						packet_data[3] = (zoom_step_count) & 0x00FF;
 
                         send_packet(ZOOM_CTRL, length, packet_data);
                         Green_LED = 0;
@@ -512,7 +512,7 @@ void main(void)
                         FOC_DIR_PIN = dir;
                         steps = (rx_data[2]&0x7F)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
                                 								
-						if(dir == 0)
+						if(dir == 1)
 						{
 							if(steps + focus_step_count > max_focus_step)
 							{
@@ -539,7 +539,7 @@ void main(void)
                         ZM_DIR_PIN = dir;
                         steps = (rx_data[6]&0x7F)<<24 | (rx_data[7]<<16) | (rx_data[8]<<8) | (rx_data[9]);
                                 
-						if(dir == 0)
+						if(dir == 1)
 						{
 							if(steps + zoom_step_count > max_zoom_step)
 							{
@@ -843,12 +843,12 @@ void step_focus_motor(unsigned int N)
         //FOC_STEP_PIN = 1;
         PORTBbits.RB4 = 1;
         TMR2 = 0;
-        while(TMR2 < MOTOR_PW);
+        while(TMR2 < FOCUS_MOTOR_PW);
         
         //FOC_STEP_PIN = 0;
         PORTBbits.RB4 = 0;
         TMR2 = 0;
-        while(TMR2 < MOTOR_PW);       
+        while(TMR2 < FOCUS_MOTOR_PW);       
     }
    
 }   // end of step_focus_motor
@@ -859,13 +859,15 @@ void step_zoom_motor(unsigned int N)
     
     for(idx=0; idx<N; ++idx)
     {
-        ZM_STEP_PIN = 1;
+        //ZM_STEP_PIN = 1;
+        PORTBbits.RB10 = 1;
         TMR2 = 0;
-        while(TMR2 < MOTOR_PW);
+        while(TMR2 < ZOOM_MOTOR_PW);
         
-        ZM_STEP_PIN = 0;
+        //ZM_STEP_PIN = 0;
+        PORTBbits.RB10 = 0;
         TMR2 = 0;
-        while(TMR2 < MOTOR_PW);       
+        while(TMR2 < ZOOM_MOTOR_PW);       
     }
    
 }   // end of step_zoom_motor

@@ -53,9 +53,9 @@ void init_Timers(void)
     //T2CONbits.TCS = 0;
     T2CONbits.SIDL = 0;         // Do not Discontinue operation in Idle mode
     T2CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T2CONbits.TCKPS = 0;        // 1:2 prescale value, FPBclk = 80MHz -> T2 period ~= 0.01250us
+    T2CONbits.TCKPS = 3;        // 1:8 prescale value, FPBclk = 80MHz -> T2 period ~= 0.01250us
     T2CONbits.T32 = 0;          // TMR2 and TMR3 form separate 16-bit timer
-    PR2 = 15942;                // Period Register (0.01250us)*PR2 = ~200 us => 5kHz
+    PR2 = 0xFFFF;               // Period Register (0.01250us)*PR2 = ~200 us => 5kHz
                                 // A3 -> 15942
                                 // A5 -> 15940    
     tick_time = 200;            // sets the value of a tick in us - based on PR2 and T2 prescale
