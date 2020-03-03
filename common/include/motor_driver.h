@@ -27,6 +27,8 @@
 #define SER_NUM_READ        0x52                /* Read serial number return command */
 #define CONNECT             0x53                /* Check for data connection to motor controller */
 
+const uint8_t motor_packet_size = 6;
+
 
 //-----------------------------------------------------------------------------
 typedef struct motor_driver_info

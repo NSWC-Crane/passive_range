@@ -5,6 +5,9 @@
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 //#include <windows.h> 
+#include <conio.h>
+#elif defined(__linux__)
+
 #endif
 
 // C++ Includes
@@ -18,6 +21,8 @@
 #include <string>
 #include <vector>
 #include <chrono>
+
+
 
 // Custom Includes
 #include "num2string.h"
@@ -53,6 +58,7 @@ int main(int argc, char** argv)
     std::string console_input;
 	std::string value_str;
 	int32_t value = 0;
+    bool direct = false;
 
     motor_driver md;
 
@@ -65,6 +71,7 @@ int main(int argc, char** argv)
     uint64_t read_timeout = 15000;
     uint64_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
+    int32_t steps;
 
     uint32_t focus_step, zoom_step;
 
@@ -154,7 +161,7 @@ int main(int argc, char** argv)
                 }
                 else
                 {
-                    std::wcout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
+                    std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }
             }
 			else if(console_input[0] == 'f')
@@ -170,11 +177,14 @@ int main(int argc, char** argv)
 
                     md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                     md.send_packet(driver_handle, md.tx);
-                    status = md.receive_packet(driver_handle, 3, md.rx);
+                    status = md.receive_packet(driver_handle, 6, md.rx);
+
+                    steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                    std::cout << "steps: " << steps << std::endl;
                 }
                 else
                 {
-                    std::wcout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
+                    std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }
             }
 			else if(console_input[0] == 'z')
@@ -190,13 +200,71 @@ int main(int argc, char** argv)
 
                     md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                     md.send_packet(driver_handle, md.tx);
-                    status = md.receive_packet(driver_handle, 3, md.rx);
+                    status = md.receive_packet(driver_handle, 6, md.rx);
+
+                    steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                    std::cout << "steps: " << steps << std::endl;
                 }
                 else
                 {
-                    std::wcout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
+                    std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }				
 			}
+            else if (console_input[0] == 'd')
+            {
+                direct = true;
+                //wchar_t key;
+                int key = 0;
+                do
+                {
+                    //std::wcin >> key;
+                    key = _getch();
+                    if (key == 0xE0)
+                    {
+                        key = _getch();
+                        switch (key)
+                        {
+                        case 72:    // up arrow key
+                            zoom_step = 16 | MOTOR_CW;
+
+                            md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
+                            md.send_packet(driver_handle, md.tx);
+                            status = md.receive_packet(driver_handle, 6, md.rx);
+                            break;
+                        case 75:    // left arrow key
+                            focus_step = 16 | MOTOR_CW;
+
+                            md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
+                            md.send_packet(driver_handle, md.tx);
+                            status = md.receive_packet(driver_handle, 6, md.rx);
+                            //printf("left");
+                            //std::cout << "left" << std::endl;
+                            break;
+                        case 77:    // right arrow key
+                            focus_step = 16 | MOTOR_CCW;
+
+                            md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
+                            md.send_packet(driver_handle, md.tx);
+                            status = md.receive_packet(driver_handle, 6, md.rx);
+                            //std::cout << "right" << std::endl;
+                            break;
+                        case 80:    // down arrow key
+                            zoom_step = 16 | MOTOR_CCW;
+
+                            md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
+                            md.send_packet(driver_handle, md.tx);
+                            status = md.receive_packet(driver_handle, 6, md.rx);
+                            //std::cout << "down" << std::endl;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        direct = false;
+                    }
+                } while (direct == true);
+
+            }
 									
 		}	// end of while loop
 

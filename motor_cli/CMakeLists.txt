@@ -26,6 +26,10 @@ set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
 
 message("Platform: " ${PLATFORM})
 
+# find the root of the main project
+string(FIND ${PROJECT_SOURCE_DIR} "/" INDEX REVERSE)
+string(SUBSTRING ${PROJECT_SOURCE_DIR} 0 ${INDEX} PR_ROOT)
+
 if(${PLATFORM} STREQUAL "Laptop")
     set(COMMON_ROOT "D:/Common")
 elseif(${PLATFORM} STREQUAL "MainGear")
@@ -47,7 +51,11 @@ file(GLOB SOURCES "src/*.c*"
     "${COMMON_ROOT}/src/*.cpp"
     )
 
-set(project_includes "include" "${COMMON_ROOT}/include")
+set(project_includes 
+    "include" 
+    "${PR_ROOT}/common/include"
+    "${COMMON_ROOT}/include"
+    )
 
 include(${COMMON_ROOT}/cmake_utils/find_ftdi.cmake)
 if(FTDI_FOUND)
