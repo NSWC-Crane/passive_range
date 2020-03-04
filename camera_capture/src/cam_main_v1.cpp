@@ -58,8 +58,8 @@ int main(int argc, char** argv)
     // camera variables
     uint32_t cam_index;
     uint32_t num_cams;
-    uint64_t width, height, x_offset, y_offset;
-    uint64_t x_padding, y_padding;
+    uint32_t width, height, x_offset, y_offset;
+    uint32_t x_padding, y_padding;
     uint32_t sharpness;
     double camera_temp;
     std::vector<double> exp_time;
