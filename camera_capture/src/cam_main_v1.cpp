@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 {
 
     uint32_t idx, jdx;
-    uint8_t status;
+    //uint8_t status;
     std::string console_input;
     std::ofstream data_log_stream;
 
