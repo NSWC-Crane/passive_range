@@ -1,8 +1,8 @@
 /* 
- * File:   DL_main.c
+ * File:   md_main_v1.c
  * Author: David Emerson
  *
- * Created on February 23, 2013, 6:36 PM
+ * Created on February 01, 2020
  */
 
 // Configuration Bits
@@ -17,18 +17,16 @@
 #include <string.h>
 #include "../include/md.h"
 #include "../include/config.h"
-//#include "../include/N25Q.h"
 #include <cp0defs.h>
 
 /****************************Local Definitions*********************************/
 
 /*************************Declare Global Variables*****************************/
-//volatile unsigned short tick_sync, tick_time, count = 0, delay = 1000;
 volatile unsigned short tick_time;
 volatile unsigned char time[3] = {0,0,0};
 volatile unsigned char date[3] = {0,0,0};
 
-unsigned int global_count=0;
+//unsigned int global_count=0;
 unsigned char direction = 0;
 
 unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
@@ -39,44 +37,11 @@ const unsigned char serial_num[1] = {2};
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-const int max_focus_step = 25000;
-const int max_zoom_step = 10000;
+const int max_focus_steps = 25000;
+const int max_zoom_steps = 10000;
+const int min_steps = 0;
 
 /***************************Interrupt Definitions******************************/
-/*******************************RTCC Interrupt*********************************/
-//void __ISR(35, IPL1) RTCCHandler(void)
-//{
-//    //count3 = _CP0_GET_COUNT();
-//    //LATEINV = 0x0008;
-//    Green_LED = ~Green_LED;             // toggle green LED
-//
-//    //get_RTCC_Time();
-//    while(RTCCONbits.RTCSYNC);          // wait for rollover time to complete
-//    tick_sync = count;                  // synchronize FIFO with RTCC
-//    time[0] = (RTCTIMEbits.HR10*10) + RTCTIMEbits.HR01;
-//    time[1] = (RTCTIMEbits.MIN10*10) + RTCTIMEbits.MIN01;
-//    time[2] = (RTCTIMEbits.SEC10*10) + RTCTIMEbits.SEC01;
-//    
-//    //get_RTCC_Date();
-//    date[0] = (RTCDATEbits.DAY10*10) + RTCDATEbits.DAY01;
-//    date[1] = (RTCDATEbits.MONTH10*10) + RTCDATEbits.MONTH01;
-//    date[2] = (RTCDATEbits.YEAR10*10) + RTCDATEbits.YEAR01;
-//    
-//    // check for memory full then write ADC values to normal log memory space
-//    if(curr_Norm_Add < MEM_NORM_STOP)
-//    {
-//        write_ADC_Mem(curr_Norm_Add, AD1[count], AD2[count], AD3[count], AD4[count]);
-//        curr_Norm_Add +=16;
-//    }
-//    else
-//    {
-//        Blue_LED = 1;
-//        Green_LED = 1;
-//    }
-//
-//    mRTCCClearIntFlag();
-//    //count3 = _CP0_GET_COUNT()-count3;
-//}   // end of RTCC interrupt
 
 /*****************************Timer 2 Interrupt********************************/
 void __ISR(_TIMER_2_VECTOR, IPL6) Timer2Handler(void)
@@ -104,10 +69,7 @@ void __ISR(_TIMER_2_VECTOR, IPL6) Timer2Handler(void)
         case 1:
             break;
     }
-//    if(count>=MAX_SAMP)
-//    {
-//        count=0;
-//    }
+
     mT2ClearIntFlag();
     //count2 = _CP0_GET_COUNT();
 }   // end of Timer 2 interrupt
@@ -132,108 +94,8 @@ void __ISR(12, IPL7AUTO) Timer3Handler(void)
 
     mT3ClearIntFlag();
     
-}   // End of Timer 3 interrupt
+}   // end of Timer 3 interrupt
 
-//void __ISR(_CHANGE_NOTICE_VECTOR, IPL2) CNHandler(void)
-//{
-//    unsigned char status;
-//    unsigned short trigger_count;
-//    int i;
-//
-//    //asm("di");
-//    mRTCCIntEnable(0);
-//    mCNIntEnable(0);
-//
-//    // Find trigger pin (6/7) then bit shift right
-//    //cn_pin = (CN2<<1) & CN1;
-//
-//    // check for memory full then write triggered logs to memory
-//    if(curr_Trig_Add < MEM_TRIG_STOP)
-//    {
-//
-//        Blue_LED = 1;
-//        Green_LED = 0;
-//
-//        if(mT3GetIntEnable()==0 || mT2GetIntEnable()==0)
-//        {
-//            mCNClearIntFlag();
-//            Blue_LED = 0;
-//            mCNIntEnable(1);
-//        }
-//
-//        else
-//        {
-//            delay_count = 0;
-//            trigger_count = count;
-//            while(delay_count < delay);                 // wait for delay count
-//
-//            mT3IntEnable(0);
-//            mT2IntEnable(0);
-//
-//            PORTG;
-//            //get_RTCC_Date();
-//            //get_RTCC_Time();
-//
-//            // write normal logs with current date/time to indicate trigger event occured
-//            write_ADC_Mem(curr_Norm_Add, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF);
-//            curr_Norm_Add +=16;
-//
-//            // write the triggered logs header information to memory
-//            init_write_ADC_Trig(curr_Trig_Add, count, trigger_count);
-//            curr_Trig_Add += 16;                        // increment address
-//
-////            time[2]++;
-////            if(time[2] > 59)
-////            {
-////                time[2] = 0;
-////            }
-//
-//            for(i=count; i<MAX_SAMP; i++)
-//            {
-//                Blue_LED = ~Blue_LED;
-//                Green_LED = ~Green_LED;
-//                status = write_ADC_Trig(curr_Trig_Add, AD1[i], AD2[i], AD3[i], AD4[i]);
-//                curr_Trig_Add += 8;                     // increment address
-//                if(status != 0x81)
-//                {
-//                    Status_Error(status);
-//                    sendChar('\n');
-//                    Blue_LED = 0;
-//                }
-//            }
-//
-//            for(i=0; i<=count-1; i++)
-//            {
-//                Blue_LED = ~Blue_LED;
-//                Green_LED = ~Green_LED;
-//                status = write_ADC_Trig(curr_Trig_Add, AD1[i], AD2[i], AD3[i], AD4[i]);
-//                curr_Trig_Add += 8;                     // increment address
-//                if(status != 0x81)
-//                {
-//                    Status_Error(status);
-//                    sendChar('\n');
-//                    Blue_LED = 0;
-//                }
-//            }
-//
-//            Blue_LED = 0;
-//            Green_LED = 0;
-//            PORTG;
-//
-//            mCNClearIntFlag();
-//            mT3IntEnable(1);
-//            mT2IntEnable(1);
-//            mRTCCIntEnable(1);
-//            mCNIntEnable(1);
-//            //asm("ei");
-//        }
-//    }
-//    else
-//    {
-//        Blue_LED = 1;
-//        Green_LED = 1;
-//    }
-//}   // end of CN interrupt
 
 void __ISR(32,IPL4) UART_Rx(void)
 {
@@ -257,33 +119,22 @@ void main(void)
     // Variable Declarations
     int idx = 0;
     int length = 0;
-    int int_temp = 0;
+    //int int_temp = 0;
+	int desired_steps = 0;
+	int steps = 0;
+	
     unsigned int uint_temp = 0;
-	unsigned int steps = 0;
     unsigned char dir;
 	
-//    char CAL[4][CAL_SIZE];
-//    unsigned short battery, j, adc_read[4] = {0,0,0,0};
-//    unsigned short adc_temp=0;
     unsigned char running=0, command=0;
     unsigned char temp;//, read, erase_size[2] = {0,0};
     unsigned char packet_data[PKT_SIZE] = {0,0,0,0,0,0,0,0,0,0};
-//    char zero_cal[4][CAL_SIZE];
-//    unsigned char nv_config_data[2] = {0x0F, 0xFE};
-//    unsigned char stat_reg_data[1] = {0x00};
-//    unsigned char vol_config_data[1] = {0x03};
-
-    //SYSTEMConfigPerformance(80000000L);
 
     if(RCON & 0x18)             // The WDT caused a wake from Sleep
     {
         asm volatile("eret");   // return from interrupt
     }
 
-//    MEM_CS = 1;                 // bring memory CS pin high
-//    MEM_CLK = 0;
-//    MEM_HOLD = 0;
-//    MEM_SDI = 1;
     DDPCONbits.JTAGEN=0;        // disable JTAG
 
     init_PreCache();            // setup wait states
@@ -293,15 +144,12 @@ void main(void)
     init_Timers();              // Setup and Initialize Timer Modules
     init_Comparator();          // Setup Comparator Module
     
-    //init_CN();                  // Setup and Initialize CN Module
     init_UART();                // Setup and Initialize UART
     init_SPI3();                // Setup and Initialize SPI3 Module
     init_ADC();                 // Setup and initialize ADC Module
-//    get_RTCC_Date();            // Get the current date
 
     // TRIS Configurations
     TRISB = 0x00FAEB;             // RB2, RB4, RB8 & RB10 set to outputs
-    //TRISD = 0x00FF0F;             // RD0-RD3 => inputs, RD4-RD7 => outputs
     TRISE = 0x00FFE3;             // RE2, RE3 & RE4 => outputs
     TRISF = 0x00FFF7;             // RF3 => output
     TRISG = 0x00FFBF;             // RG6 => output
@@ -310,16 +158,13 @@ void main(void)
     MOT_EN_PIN = 1;
 
     // configure interrupt sources
-//    mRTCCSetIntPriority(1);     // Configure RTCC Interrupt priority to 1
-//    mCNSetIntPriority(2);       // Configure CN Interrupt priority to 2
     mU2SetIntPriority(4);       // configure UART2 Interrupt priority 4
-    mT2SetIntPriority(6);       // Configure Timer2 Interrupt priority to 7
+    mT2SetIntPriority(6);       // Configure Timer2 Interrupt priority to 6
     mT3SetIntPriority(7);       // Configure Timer3 Interrupt priority to 7
-//    mRTCCClearIntFlag();
+	
+    mU2RXClearIntFlag();
     mT3ClearIntFlag();
     mT2ClearIntFlag();
-//    mCNClearIntFlag();
-    mU2RXClearIntFlag();
     
     INTEnableSystemMultiVectoredInt();
 
@@ -333,17 +178,11 @@ void main(void)
     Blue_LED = 1;
     Blue_LED = 0;
 
-//    MEM_HOLD = 1;               // enable memory chip
-//
-//    MEM_CLK = 1;
-    for(idx=0; idx>5; ++idx)              // wait 250ms to begin
+    for(idx=0; idx>5; ++idx)              	// wait 250ms to begin
     {
         TMR1 = 0;
-        while(TMR1 < 62500);        // wait 50ms before starting
+        while(TMR1 < 62500);        		// wait 50ms before starting
     }
-//    MEM_CLK = 0;
-
-//    Enter_4B_Mode();            // enter 4-Byte Address mode
         
 /**********************************MAIN LOOP**********************************/
     while(1)
@@ -359,16 +198,11 @@ void main(void)
                     while(TMR1 < 62500);        // wait 50ms before starting
                 }
 
-                //PORTG;
-                //mCNClearIntFlag();
                 mU2RXIntEnable(0);          // disable U2 Interrupt
                 mT3IntEnable(1);            // enable T3 Interrupt
                 mT2IntEnable(1);            // enable T2 Interrupt
-                //mRTCCIntEnable(1);          // enable RTCC Interrupt
-                //mCNIntEnable(1);            // enable CN Interrupt
                 
                 Blue_LED = 0;               // turn off blue LED
-                
                 running = 1;
                 command = 0;
             }        
@@ -384,8 +218,7 @@ void main(void)
                 temp = U2RXREG;
                 mU2RXClearIntFlag();
                 mU2RXIntEnable(1);          // enable UART Rx interrupt
-                //mRTCCIntEnable(0);          // disable RTCC Interrupt
-                //mCNIntEnable(0);            // disable CN Interrupt
+
                 mT3IntEnable(0);            // enable T3 Interrupt
                 mT2IntEnable(0);            // enable T2 Interrupt
                 
@@ -409,7 +242,7 @@ void main(void)
                 switch(rx_data[0])
                 {
                     
-/*************************Motor Control Operations*****************************/
+/*************************Motor Control Operations****************************/
 
                     // Enable Motors
                     case MOTOR_ENABLE:
@@ -426,31 +259,23 @@ void main(void)
                         Green_LED = 1;
 						
                         // run the motor control
-						dir = (rx_data[2]&0x80)>>7;
-                        FOC_DIR_PIN = dir;
-                        steps = (rx_data[2]&0x7F)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
-                                								
-						if(dir == 1)
-						{
-							if(steps + focus_step_count > max_focus_step)
-							{
-								steps = max_focus_step - focus_step_count;	
-							}
-							
-							focus_step_count += steps;
-							
-						}
-						else
-						{
-							if(focus_step_count - steps < 0)
-							{
-								steps = focus_step_count;
-							}
-							
-							focus_step_count -= steps;
-						}
+                        steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						FOC_DIR_PIN = (rx_data[2] >> 7) & 0x01;
 						
-						step_focus_motor(steps);
+						// ensure that the steps do not go beyond the limits on the rings being turned
+						desired_steps = focus_step_count + steps;
+						
+						if(desired_steps < min_steps)
+						{
+							steps = min_steps - focus_step_count;
+						}
+						else if(desired_steps > max_focus_steps)
+						{
+							steps = max_focus_steps - focus_step_count;
+						}
+
+						focus_step_count += steps;
+						step_focus_motor(abs(steps));
                         
 						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
 						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
@@ -467,31 +292,23 @@ void main(void)
                         Green_LED = 1;
 						
                         // run the motor control
-						dir = (rx_data[2]&0x80)>>7;
-                        ZM_DIR_PIN = dir;
-                        steps = (rx_data[2]&0x7F)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						ZM_DIR_PIN = (rx_data[2] >> 7) & 0x01;
                                 
-						if(dir == 1)
+						// ensure that the steps do not go beyond the limits on the rings being turned
+						desired_steps = zoom_step_count + steps;
+
+						if(desired_steps < min_steps)
 						{
-							if(steps + zoom_step_count > max_zoom_step)
-							{
-								steps = max_zoom_step - zoom_step_count;	
-							}
-							
-							zoom_step_count += steps;
-							
+							steps = min_steps - zoom_step_count;
 						}
-						else
+						else if(desired_steps > max_zoom_steps)
 						{
-							if(zoom_step_count - steps < 0)
-							{
-								steps = zoom_step_count;
-							}
-							
-							zoom_step_count -= steps;
-						}						
-						
-                        step_zoom_motor(steps);
+							steps = max_zoom_steps - zoom_step_count;
+						}
+
+						zoom_step_count += steps;						
+                        step_zoom_motor(abs(steps));
                         
 						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
 						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
@@ -507,59 +324,43 @@ void main(void)
                         length = 8;
                         Green_LED = 1;
 						
-                        // run the focus motor control
-						dir = (rx_data[2]&0x80)>>7;
-                        FOC_DIR_PIN = dir;
-                        steps = (rx_data[2]&0x7F)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
-                                								
-						if(dir == 1)
-						{
-							if(steps + focus_step_count > max_focus_step)
-							{
-								steps = max_focus_step - focus_step_count;	
-							}
-							
-							focus_step_count += steps;
-							
-						}
-						else
-						{
-							if(focus_step_count - steps < 0)
-							{
-								steps = focus_step_count;
-							}
-							
-							focus_step_count -= steps;
-						}
+                        // run the motor control
+                        steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						FOC_DIR_PIN = (rx_data[2] >> 7) & 0x01;
 						
-						step_focus_motor(steps);
+						// ensure that the steps do not go beyond the limits on the rings being turned
+						desired_steps = focus_step_count + steps;
+						
+						if(desired_steps < min_steps)
+						{
+							steps = min_steps - focus_step_count;
+						}
+						else if(desired_steps > max_focus_steps)
+						{
+							steps = max_focus_steps - focus_step_count;
+						}
+
+						focus_step_count += steps;
+						step_focus_motor(abs(steps));
 						
                         // run the zoom motor control
-						dir = (rx_data[6]&0x80)>>7;
-                        ZM_DIR_PIN = dir;
-                        steps = (rx_data[6]&0x7F)<<24 | (rx_data[7]<<16) | (rx_data[8]<<8) | (rx_data[9]);
+                        steps = (rx_data[6]&0xFF)<<24 | (rx_data[7]<<16) | (rx_data[8]<<8) | (rx_data[9]);
+                        ZM_DIR_PIN = (rx_data[6] >> 7) & 0x01;
                                 
-						if(dir == 1)
+						// ensure that the steps do not go beyond the limits on the rings being turned
+						desired_steps = zoom_step_count + steps;
+
+						if(desired_steps < min_steps)
 						{
-							if(steps + zoom_step_count > max_zoom_step)
-							{
-								steps = max_zoom_step - zoom_step_count;	
-							}
-							
-							zoom_step_count += steps;
-							
+							steps = min_steps - zoom_step_count;
 						}
-						else
+						else if(desired_steps > max_zoom_steps)
 						{
-							if(zoom_step_count - steps < 0)
-							{
-								steps = zoom_step_count;
-							}
-							
-							zoom_step_count -= steps;
-						}						
-						
-                        step_zoom_motor(steps);
+							steps = max_zoom_steps - zoom_step_count;
+						}
+
+						zoom_step_count += steps;						
+                        step_zoom_motor(abs(steps));
                         
 						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
 						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
@@ -580,11 +381,8 @@ void main(void)
 						Green_LED = 1;
 						
 						FOC_DIR_PIN = 1;
-						steps = focus_step_count;
-
-						step_focus_motor(steps);
-
-						focus_step_count -= steps;
+						step_focus_motor(focus_step_count);
+						focus_step_count = 0;
 						
 						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
 						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
@@ -600,14 +398,11 @@ void main(void)
 						Green_LED = 1;
 						
 						FOC_DIR_PIN = 1;
-						steps = zoom_step_count;
-
-						step_focus_motor(steps);
-
-						zoom_step_count -= steps;
+						step_focus_motor(zoom_step_count);
+						zoom_step_count = 0;
 						
 						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
-						packet_data[1] = (zoom_step_count) & 0x00FF;
+						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
 						packet_data[2] = (zoom_step_count >> 8) & 0x00FF;
 						packet_data[3] = (zoom_step_count) & 0x00FF;
 						
@@ -615,13 +410,13 @@ void main(void)
                         Green_LED = 0;
                         break;						
                         
-/************************Camera Trigger Operations*****************************/
+/***********************Camera Trigger Operations*****************************/
                         
                     case TRIG_CTRL:
                         
                         break;
                         
-/**************************Engineering Operations******************************/
+/*************************Engineering Operations******************************/
                         
                     // read the control firmware
                     case FIRM_READ:
@@ -645,13 +440,11 @@ void main(void)
                         send_packet(CONNECT, length, packet_data);
                         break;  
 
-
                 } // end of switch(code[1])
 
                 data_ready = 0;
                 mU2RXIntEnable(1);          // enable UART Rx Interrupt
                 
-
             } // end if
              
         }// end of CMD_SW while
@@ -665,9 +458,6 @@ void main(void)
             
             if((running == 1) || (command == 1))
             {
-                //mCNClearIntFlag();          // clear CN Interrupt flag
-                //mCNIntEnable(0);            // disable CN Interrupt
-                //mRTCCIntEnable(0);          // disable RTCC Interrupt
                 mU2RXIntEnable(0);          // disable U2 Interrupt
                 mT3IntEnable(0);            // disable T3 Interrupt
                 mT2IntEnable(0);            // disable T2 Interrupt
@@ -689,8 +479,8 @@ void main(void)
 } // End of Main
 
 
-
-/***********************************Functions**********************************/
+//-----------------------------------------------------------------------------
+/**********************************Functions**********************************/
 /* Function: void send_char(unsigned char c)
  *
  * Arguments: 
@@ -701,11 +491,12 @@ void main(void)
  * Description: Function to send data out of UART2 to the user */
 void send_char(unsigned char c)
 {
-    while(U2STAbits.UTXBF);             // wait for at least one buffer slot to be open
+    while(U2STAbits.UTXBF);				// wait for at least one buffer slot to be open
     U2TXREG = c;
 }   // end of send_char
 
 
+//-----------------------------------------------------------------------------
 /* Function: unsigned char get_U2_char(void)
  *
  * Arguments: None
@@ -731,6 +522,7 @@ unsigned char get_U2_char(void)
 }   // end of get_U2_char
 
 
+//-----------------------------------------------------------------------------
 /* Function: void BCD_Convert(short ADC_Value)
  *
  * Arguments:
@@ -761,6 +553,7 @@ void BCD_Convert(short Value)
 }   // end of BCD_Convert
 
 
+//-----------------------------------------------------------------------------
 /* Function: void bin2hex(unsigned char convert)
  *
  * Arguments:
@@ -798,7 +591,7 @@ void bin2hex(unsigned char convert)
 
 } // end of bin2hex
 
-
+//-----------------------------------------------------------------------------
 /* Function: void send_packet(unsigned char code)
  *
  * Arguments:
@@ -824,7 +617,7 @@ void send_packet(unsigned char command, unsigned short length, unsigned char dat
 }   // end of send_packet
 
 
-
+//-----------------------------------------------------------------------------
 /* Function: void send_packet(unsigned char code)
  *
  * Arguments:
@@ -837,16 +630,16 @@ void send_packet(unsigned char command, unsigned short length, unsigned char dat
 void step_focus_motor(unsigned int N)
 {
     unsigned int idx = 0;
-    
+	    
     for(idx=0; idx<N; ++idx)
     {
-        //FOC_STEP_PIN = 1;
-        PORTBbits.RB4 = 1;
+        FOC_STEP_PIN = 1;
+        //PORTBbits.RB4 = 1;
         TMR2 = 0;
         while(TMR2 < FOCUS_MOTOR_PW);
         
-        //FOC_STEP_PIN = 0;
-        PORTBbits.RB4 = 0;
+        FOC_STEP_PIN = 0;
+        //PORTBbits.RB4 = 0;
         TMR2 = 0;
         while(TMR2 < FOCUS_MOTOR_PW);       
     }
@@ -859,13 +652,13 @@ void step_zoom_motor(unsigned int N)
     
     for(idx=0; idx<N; ++idx)
     {
-        //ZM_STEP_PIN = 1;
-        PORTBbits.RB10 = 1;
+        ZM_STEP_PIN = 1;
+        //PORTBbits.RB10 = 1;
         TMR2 = 0;
         while(TMR2 < ZOOM_MOTOR_PW);
         
-        //ZM_STEP_PIN = 0;
-        PORTBbits.RB10 = 0;
+        ZM_STEP_PIN = 0;
+        //PORTBbits.RB10 = 0;
         TMR2 = 0;
         while(TMR2 < ZOOM_MOTOR_PW);       
     }
