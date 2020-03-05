@@ -37,8 +37,8 @@ const unsigned char serial_num[1] = {2};
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-const int max_focus_steps = 25000;
-const int max_zoom_steps = 10000;
+const int max_focus_steps = 24600;
+const int max_zoom_steps = 3000;
 const int min_steps = 0;
 
 /***************************Interrupt Definitions******************************/

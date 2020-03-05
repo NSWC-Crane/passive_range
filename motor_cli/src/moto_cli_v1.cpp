@@ -68,12 +68,12 @@ int main(int argc, char** argv)
     FT_HANDLE driver_handle = NULL;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
-    uint64_t read_timeout = 15000;
-    uint64_t write_timeout = 1000;
+    uint32_t read_timeout = 15000;
+    uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     int32_t steps;
 
-    uint32_t focus_step, zoom_step;
+    int32_t focus_step, zoom_step;
 
     try
     {
@@ -168,12 +168,12 @@ int main(int argc, char** argv)
 			{
                 if (console_input.length() >= 3)
                 {
-                    value = std::stoi(console_input.substr(2, console_input.length()-1));
+                    focus_step = std::stoi(console_input.substr(2, console_input.length()-1));
                     // try to step the focus motor
-                    if (value < 0)
-                        focus_step = abs(value) | MOTOR_CCW;
-                    else
-                        focus_step = value | MOTOR_CW;
+                    //if (value < 0)
+                    //    focus_step = abs(value) | MOTOR_CCW;
+                    //else
+                    //    focus_step = value | MOTOR_CW;
 
                     md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                     md.send_packet(driver_handle, md.tx);
@@ -191,12 +191,12 @@ int main(int argc, char** argv)
 			{
                 if (console_input.length() >= 3)
                 {
-                    value = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
 
-                    if (value < 0)
-                        zoom_step = abs(value) | MOTOR_CCW;
-                    else
-                        zoom_step = value | MOTOR_CW;
+                    //if (value < 0)
+                    //    zoom_step = abs(value) | MOTOR_CCW;
+                    //else
+                    //    zoom_step = value | MOTOR_CW;
 
                     md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                     md.send_packet(driver_handle, md.tx);
