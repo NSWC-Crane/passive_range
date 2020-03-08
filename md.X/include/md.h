@@ -10,8 +10,8 @@
 
 /*****************************Define Constants*********************************/
 #define PKT_SIZE      16                      /* maximum number of bytes in a packet */
-#define FOCUS_MOTOR_PW     1200               /* number of TMR2 ticks for 10MHz clock  */
-#define ZOOM_MOTOR_PW      3200               /* number of TMR2 ticks for 10MHz clock */
+//#define FOCUS_MOTOR_PW     1200               /* number of TMR2 ticks for 10MHz clock  */
+//#define ZOOM_MOTOR_PW      3200               /* number of TMR2 ticks for 10MHz clock */
 
 #define Blue_LED      LATFbits.LATF3          /* define Blue LED */
 #define Green_LED     LATEbits.LATE4          /* define green LED */
@@ -33,12 +33,16 @@
 #define ZERO_FOCUS		0x35				  /* zero the focus motor */
 #define ZERO_ZOOM		0x36				  /* zero the zoom motor */
 
-#define TRIG_CTRL       0x41                  /* Camera trigger control */
+#define SET_FOC_MOT_SPD 0x40				  /* set focus motor speed */
+#define GET_FOC_MOT_SPD 0x41				  /* get focus motor speed */
+#define SET_ZM_MOT_SPD  0x42				  /* set zoom motor speed */
+#define GET_ZM_MOT_SPD  0x43				  /* get zoom motor speed */
 
 #define FIRM_READ       0x51                  /* Read firmware version return command */
 #define SER_NUM_READ    0x52                  /* Read serial number return command */
 #define CONNECT         0x53                  /* Check for data connection to motor controller */
 
+#define TRIG_CTRL       0x61                  /* Camera trigger control */
 
 /****************************Function Definitions******************************/
 void send_char(unsigned char c);

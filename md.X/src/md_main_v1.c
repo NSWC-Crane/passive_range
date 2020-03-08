@@ -37,8 +37,13 @@ const unsigned char serial_num[1] = {2};
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
+unsigned int focus_motor_pw = 1200;               // number of TMR2 ticks for 10MHz clock
+unsigned int zoom_motor_pw = 3200;                // number of TMR2 ticks for 10MHz clock
+const unsigned int max_pw = 20000;
+const unsigned int min_pw = 400;
+
 const int max_focus_steps = 24600;
-const int max_zoom_steps = 3000;
+const int max_zoom_steps = 6000;					// 3000
 const int min_steps = 0;
 
 /***************************Interrupt Definitions******************************/
@@ -123,6 +128,7 @@ void main(void)
 	int desired_steps = 0;
 	int steps = 0;
 	
+	unsigned int tmp_pw = 0;
     unsigned int uint_temp = 0;
     unsigned char dir;
 	
@@ -410,6 +416,60 @@ void main(void)
                         Green_LED = 0;
                         break;						
                         
+/*************************Motor Speed Operations******************************/
+						
+					case SET_FOC_MOT_SPD:
+						length = 4;
+						
+						tmp_pw = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						
+						focus_motor_pw = min(max_pw, max(min_pw, tmp_pw));
+						
+						packet_data[0] = (focus_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (focus_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (focus_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (focus_motor_pw) & 0x00FF;
+						
+                        send_packet(SET_FOC_MOT_SPD, length, packet_data);						
+						break;
+						
+					case GET_FOC_MOT_SPD:
+						length = 4;
+
+						packet_data[0] = (focus_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (focus_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (focus_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (focus_motor_pw) & 0x00FF;
+						
+                        send_packet(GET_FOC_MOT_SPD, length, packet_data);						
+						break;
+						
+					case SET_ZM_MOT_SPD:
+						length = 4;
+						
+						tmp_pw = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						
+						zoom_motor_pw = min(max_pw, max(min_pw, tmp_pw));
+						
+						packet_data[0] = (zoom_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (zoom_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (zoom_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (zoom_motor_pw) & 0x00FF;
+						
+                        send_packet(SET_ZM_MOT_SPD, length, packet_data);						
+						break;
+						
+					case GET_ZM_MOT_SPD:
+						length = 4;
+
+						packet_data[0] = (zoom_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (zoom_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (zoom_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (zoom_motor_pw) & 0x00FF;
+						
+                        send_packet(GET_ZM_MOT_SPD, length, packet_data);						
+						break;
+						
 /***********************Camera Trigger Operations*****************************/
                         
                     case TRIG_CTRL:
@@ -636,12 +696,12 @@ void step_focus_motor(unsigned int N)
         FOC_STEP_PIN = 1;
         //PORTBbits.RB4 = 1;
         TMR2 = 0;
-        while(TMR2 < FOCUS_MOTOR_PW);
+        while(TMR2 < focus_motor_pw);
         
         FOC_STEP_PIN = 0;
         //PORTBbits.RB4 = 0;
         TMR2 = 0;
-        while(TMR2 < FOCUS_MOTOR_PW);       
+        while(TMR2 < focus_motor_pw);       
     }
    
 }   // end of step_focus_motor
@@ -655,12 +715,12 @@ void step_zoom_motor(unsigned int N)
         ZM_STEP_PIN = 1;
         //PORTBbits.RB10 = 1;
         TMR2 = 0;
-        while(TMR2 < ZOOM_MOTOR_PW);
+        while(TMR2 < zoom_motor_pw);
         
         ZM_STEP_PIN = 0;
         //PORTBbits.RB10 = 0;
         TMR2 = 0;
-        while(TMR2 < ZOOM_MOTOR_PW);       
+        while(TMR2 < zoom_motor_pw);       
     }
    
 }   // end of step_zoom_motor
