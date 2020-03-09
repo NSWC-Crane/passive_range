@@ -37,13 +37,13 @@ const unsigned char serial_num[1] = {2};
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-unsigned int focus_motor_pw = 1200;               // number of TMR2 ticks for 10MHz clock
-unsigned int zoom_motor_pw = 3200;                // number of TMR2 ticks for 10MHz clock
+unsigned int focus_motor_pw = 1500;               // number of TMR2 ticks for 10MHz clock
+unsigned int zoom_motor_pw = 3000;                // number of TMR2 ticks for 10MHz clock
 const unsigned int max_pw = 20000;
-const unsigned int min_pw = 400;
+const unsigned int min_pw = 1000;
 
-const int max_focus_steps = 24600;
-const int max_zoom_steps = 6000;					// 3000
+const int max_focus_steps = 24570;
+const int max_zoom_steps = 4680;					// 3000
 const int min_steps = 0;
 
 /***************************Interrupt Definitions******************************/

@@ -15,17 +15,27 @@
 #define CMD_FOCUS_CTRL      0x31                /* Focus motor control */
 #define CMD_ZOOM_CTRL       0x32                /* Zoom motor control */
 #define CMD_ALL_CTRL        0x33                /* Both motor control */
+#define ZERO_FOCUS		    0x35				/* zero the focus motor */
+#define ZERO_ZOOM		    0x36				/* zero the zoom motor */
+
+#define SET_FOC_MOT_SPD     0x40				/* set focus motor speed */
+#define GET_FOC_MOT_SPD     0x41				/* get focus motor speed */
+#define SET_ZM_MOT_SPD      0x42				/* set zoom motor speed */
+#define GET_ZM_MOT_SPD      0x43				/* get zoom motor speed */
+
+#define FIRM_READ           0x51                /* Read firmware version return command */
+#define SER_NUM_READ        0x52                /* Read serial number return command */
+#define CONNECT             0x53                /* Check for data connection to motor controller */
+
+//#define TRIG_CTRL           0x61                /* Camera trigger control */
 
 #define ENABLE_MOTOR        0x00                /* Enable the motors */
 #define DISABLE_MOTOR       0x01                /* Disable the motors */
 #define MOTOR_CW            0x80000000          /* turn the motor clockwise */
 #define MOTOR_CCW           0x00000000          /* turn the motor coutner-clockwise */
 
-#define TRIG_CTRL           0x41                /* Camera trigger control */
 
-#define FIRM_READ           0x51                /* Read firmware version return command */
-#define SER_NUM_READ        0x52                /* Read serial number return command */
-#define CONNECT             0x53                /* Check for data connection to motor controller */
+
 
 const uint8_t motor_packet_size = 6;
 
