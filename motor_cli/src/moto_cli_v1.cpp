@@ -210,6 +210,7 @@ int main(int argc, char** argv)
                     std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }				
 			}
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
             else if (console_input[0] == 'd')
             {
                 direct = true;
@@ -265,7 +266,8 @@ int main(int argc, char** argv)
                 } while (direct == true);
 
             }
-									
+#endif
+		
 		}	// end of while loop
 
 

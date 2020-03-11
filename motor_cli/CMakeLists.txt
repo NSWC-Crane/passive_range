@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-#  Root CMake file for Camera Capture Code
+#  Root CMake file for the Motor Command Line Interface (CLI) Code
 # ----------------------------------------------------------------------------
 #
 # To perform an out of source build do the following on the command line:
@@ -30,18 +30,27 @@ message("Platform: " ${PLATFORM})
 string(FIND ${PROJECT_SOURCE_DIR} "/" INDEX REVERSE)
 string(SUBSTRING ${PROJECT_SOURCE_DIR} 0 ${INDEX} PR_ROOT)
 
-if(${PLATFORM} STREQUAL "Laptop")
-    set(COMMON_ROOT "D:/Common")
-elseif(${PLATFORM} STREQUAL "MainGear")
-    set(_ECLIPSE_VERSION "3.8")
-    set(COMMON_ROOT "~/Common")
-elseif(${PLATFORM} STREQUAL "HPC")
-    set(COMMON_ROOT "$HOME/Common")
-elseif(${PLATFORM} STREQUAL "LaptopN")
-    set(COMMON_ROOT "C:/Projects/Common")
+if(WIN32)
+	if(${PLATFORM} STREQUAL "Laptop")
+		set(COMMON_ROOT "D:/Common")
+	elseif(${PLATFORM} STREQUAL "LaptopN")
+		set(COMMON_ROOT "C:/Projects/Common")
+    elseif(${PLATFORM} STREQUAL "BEAST")
+        set(COMMON_ROOT "D:/Common")
+    else()
+        set(COMMON_ROOT "D:/Common")
+    endif()      
 else()
-    set(COMMON_ROOT "D:/Common")
+    if(${PLATFORM} STREQUAL "MainGear")
+        set(_ECLIPSE_VERSION "3.8")
+        set(COMMON_ROOT "~/Projects/Common")
+    elseif(${PLATFORM} STREQUAL "HPC")
+        set(COMMON_ROOT "~/Projects/Common")
+    else()
+        set(COMMON_ROOT "~/Projects/Common")
+    endif()    
 endif()
+
 
 include(${COMMON_ROOT}/cmake_utils/use_cpp_11.cmake)
 include(${COMMON_ROOT}/cmake_utils/use_sse_avx.cmake)
@@ -56,10 +65,10 @@ set(project_includes
     "${PR_ROOT}/common/include"
     "${COMMON_ROOT}/include"
     )
-
+    
+message(" ")
 include(${COMMON_ROOT}/cmake_utils/find_ftdi.cmake)
 if(FTDI_FOUND)
-    message(STATUS "Found FTDI Library: " ${FTDI_LIBS})
     set(project_includes ${project_includes} ${FTDI_INCLUDE_DIRS})
     set(project_libs ${project_libs} ${FTDI_LIBS})
 endif()
