@@ -45,6 +45,7 @@ void help_menu(void)
 	std::cout << "  e <0/1> - enable (1)/disable (0) motors" << std::endl;
 	std::cout << "  f <step> - step the focus motor, use '-' for CCW otherwise CW" << std::endl;
 	std::cout << "  z <step> - step the zoom motor, use '-' for CCW otherwise CW" << std::endl;
+    std::cout << "  x - zero the motor counter" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << std::endl;
 }
@@ -68,7 +69,7 @@ int main(int argc, char** argv)
     FT_HANDLE driver_handle = NULL;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
-    uint32_t read_timeout = 15000;
+    uint32_t read_timeout = 25000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     int32_t steps;
@@ -145,6 +146,12 @@ int main(int argc, char** argv)
 			{
 				help_menu();
 			}
+            else if (console_input[0] == 'x')
+            {
+                md.tx = data_packet(ZERO_ALL, 0);
+                md.send_packet(driver_handle, md.tx);
+                status = md.receive_packet(driver_handle, 3, md.rx);
+            }
             else if (console_input[0] == 'e')
             {
                 if (console_input.length() >= 3)

@@ -37,13 +37,13 @@ const unsigned char serial_num[1] = {2};
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-unsigned int focus_motor_pw = 1500;               // number of TMR2 ticks for 10MHz clock
-unsigned int zoom_motor_pw = 3000;                // number of TMR2 ticks for 10MHz clock
-const unsigned int max_pw = 20000;
+unsigned int focus_motor_pw = 2000;               // number of TMR2 ticks for 10MHz clock
+unsigned int zoom_motor_pw = 3500;                // number of TMR2 ticks for 10MHz clock
+const unsigned int max_pw = 30000;
 const unsigned int min_pw = 1000;
 
-const int max_focus_steps = 24570;
-const int max_zoom_steps = 4680;					// 3000
+const int max_focus_steps = 40575;
+const int max_zoom_steps = 4628;					// 3000
 const int min_steps = 0;
 
 /***************************Interrupt Definitions******************************/
@@ -193,7 +193,7 @@ void main(void)
 /**********************************MAIN LOOP**********************************/
     while(1)
     {
-        // This state is when the switch is to the right and the logger enters data logging mode
+        // This state is when the switch is to the right
         while (RUN_SW_PIN == 1 && CMD_SW_PIN == 0)
         {
             if(running == 0)
@@ -211,11 +211,14 @@ void main(void)
                 Blue_LED = 0;               // turn off blue LED
                 running = 1;
                 command = 0;
-            }        
+                
+                // make sure that the motor is disabled
+                MOT_EN_PIN = 1;
+            }
                 
         } // end of RUN_SW while
 
-        // This state is when the switch is set to the left and the logger enters command mode.
+        // This state is when the switch is set to the left - enters command mode.
         while(CMD_SW_PIN == 1 && RUN_SW_PIN == 0)
         {
             
@@ -414,7 +417,16 @@ void main(void)
 						
                         send_packet(ZERO_ZOOM, length, packet_data);
                         Green_LED = 0;
-                        break;						
+                        break;
+                        
+                    case ZERO_ALL:
+                        length = 1;
+						focus_step_count = 0;
+						zoom_step_count = 0;
+                        
+                        packet_data[0] = 1;
+                        send_packet(ZERO_ZOOM, length, packet_data);
+                        break;
                         
 /*************************Motor Speed Operations******************************/
 						
@@ -516,7 +528,7 @@ void main(void)
             WDTCONSET = 0x01;               // service the WDT
             WDTCONbits.ON = 0x01;           // enable WDT
             
-            if((running == 1) || (command == 1))
+            if(((running == 1) || (command == 1)))
             {
                 mU2RXIntEnable(0);          // disable U2 Interrupt
                 mT3IntEnable(0);            // disable T3 Interrupt
@@ -526,6 +538,9 @@ void main(void)
                 Blue_LED = 0;               // turn off blue LED
                 command = 0;
                 running = 0;
+                
+                // make sure that the motor is disabled
+                MOT_EN_PIN = 1;
             }       
 
             asm volatile("wait");

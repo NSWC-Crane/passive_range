@@ -32,6 +32,7 @@
 
 #define ZERO_FOCUS		0x35				  /* zero the focus motor */
 #define ZERO_ZOOM		0x36				  /* zero the zoom motor */
+#define ZERO_ALL        0x37                  /* zero all motors */
 
 #define SET_FOC_MOT_SPD 0x40				  /* set focus motor speed */
 #define GET_FOC_MOT_SPD 0x41				  /* get focus motor speed */
