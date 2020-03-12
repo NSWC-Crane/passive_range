@@ -1,9 +1,9 @@
-#Passive Range Project
+# Passive Range Project
 
 This project contains the project files for the Passive Range Project.
 
 
-#Dependencies
+# Dependencies
 
 The code in this repository has the following dependecies
 
