@@ -55,13 +55,13 @@ The -- -j4 tells the make to use 4 cores to build the code.  This number can be 
 
 To run the code enter the following:
 
-Windows:
+### Windows:
 
 ```
 motor_cli
 ```
 
-Linux
+### Linux
 
 ```
 ./motor_cli
