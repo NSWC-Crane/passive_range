@@ -53,21 +53,21 @@ To run the code you have two options.  The first is to supply individual paramet
 
 ```
 parameter | default value | description |
-| --- |---| ---|
-help h ?   |  | Display Usage message }"
-cfg_file   |  | Alternate input method to supply all parameters, all parameters must be included in the file }"
-focus_step | 0:216:21384 | voltage step range}"
-x_off      | 8 | X offset for camera }"
-y_off      | 4 | Y offset for camera }"
-width      | 1264 | Width of the captured image }"
-height     | 1020 | Height of the captured image }"
-sharpness  | 3072 | Sharpness setting for the camera }"
-fps        | 10.0 | Frames per second setting for the camera }"
-exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera }"
-gain       | 5.0 | Inital gain setting before letting the camera find one }"
-avg        | 11 | Number of images to capture for an average }"
-source     | 1  | source for the trigger (0 -> Line0, 1 -> Software) }"
-output     | ../results/       | Output directory to save lidar images }"
+| --- | --- | --- |
+help h ?   |  | Display Usage message
+cfg_file   |  | Alternate input method to supply all parameters, all parameters must be included in the file
+focus_step | 0:216:21384 | voltage step range
+x_off      | 8 | X offset for camera
+y_off      | 4 | Y offset for camera
+width      | 1264 | Width of the captured image
+height     | 1020 | Height of the captured image
+sharpness  | 3072 | Sharpness setting for the camera
+fps        | 10.0 | Frames per second setting for the camera
+exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera
+gain       | 5.0 | Inital gain setting before letting the camera find one
+avg        | 11 | Number of images to capture for an average
+source     | 1  | source for the trigger (0 -> Line0, 1 -> Software)
+output     | ../results/       | Output directory to save lidar images
 ```
 To supply the parameters at runtime they can be called in the following manner:
 
