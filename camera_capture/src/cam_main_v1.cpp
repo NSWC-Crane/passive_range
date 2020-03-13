@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 // FTDI Driver Includes
-#include "ftdi_functions.h"
+#include "ftd2xx_functions.h"
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
@@ -112,6 +112,8 @@ int main(int argc, char** argv)
         ;
 
     // use opencv's command line parser
+	// to use the individual parameters you can enter the following:
+	// -parameter=N
     cv::CommandLineParser parser(argc, argv, params);
 
     if (parser.has("help"))

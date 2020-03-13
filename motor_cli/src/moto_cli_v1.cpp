@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 // FTDI Driver Includes
-#include "ftdi_functions.h"
+#include "ftd2xx_functions.h"
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 //#include <windows.h> 

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "ftdi_functions.h"
+#include "ftd2xx_functions.h"
 
 //#define MAX_DATA_LENGTH		16
 //#define MAX_PACKET_LENGTH	(MAX_DATA_LENGTH+2)
