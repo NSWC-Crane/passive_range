@@ -19,12 +19,12 @@ The code in this repository has the following dependecies
 
 Execute the following commands in a Windows command window:
 
-'''
+```
 mkdir build
 cd build
 cmake -G "Visual Studio 15 2017 Win64" -T host=x64 ..
 cmake --build . --config Release
-'''
+```
 
 Or you can use the cmake-gui and set the "source code" location to the location of the CmakeLists.txt file and the set the "build" location to the build folder. 
 
@@ -32,16 +32,16 @@ Or you can use the cmake-gui and set the "source code" location to the location 
 
 Execute the following commands in a terminal window:
 
-'''
+```
 mkdir build
 cd build
 cmake ..
 cmake --build . --config Release -- -j4
-'''
+```
 
 Or you can use the cmake-gui and set the "source code" location to the location of the CmakeLists.txt file and the set the "build" location to the build folder. Then open a terminal window and navigate to the build folder and execute the follokwing command:
 
-'''
+```
 cmake --build . --config Release -- -j4
-'''
+```
 
