@@ -51,7 +51,7 @@ The -- -j4 tells the make to use 4 cores to build the code.  This number can be 
 
 To run the code you have two options.  The first is to supply individual parameters described in the table below.  For parameters that were not supplied at runtime the default values will be used.
 
-```
+
 parameter | default value | description |
 | --- | --- | --- |
 help h ?   |  | Display Usage message
@@ -68,7 +68,8 @@ gain       | 5.0 | Inital gain setting before letting the camera find one
 avg        | 11 | Number of images to capture for an average
 source     | 1  | source for the trigger (0 -> Line0, 1 -> Software)
 output     | ../results/       | Output directory to save lidar images
-```
+
+
 To supply the parameters at runtime they can be called in the following manner:
 
 ```
