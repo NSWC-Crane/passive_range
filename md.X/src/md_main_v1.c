@@ -31,13 +31,13 @@ unsigned char direction = 0;
 
 unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {0,50};
-const unsigned char serial_num[1] = {2};
+const unsigned char firmware[2] = {0,80};
+const unsigned char serial_num[1] = {1};
 
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-unsigned int focus_motor_pw = 2000;               // number of TMR2 ticks for 10MHz clock
+unsigned int focus_motor_pw = 2500;               // number of TMR2 ticks for 10MHz clock
 unsigned int zoom_motor_pw = 3500;                // number of TMR2 ticks for 10MHz clock
 const unsigned int max_pw = 30000;
 const unsigned int min_pw = 1000;
@@ -251,7 +251,7 @@ void main(void)
                 switch(rx_data[0])
                 {
                     
-/*************************Motor Control Operations****************************/
+/************************ Motor Control Operations ****************************/
 
                     // Enable Motors
                     case MOTOR_ENABLE:
@@ -262,7 +262,24 @@ void main(void)
                         send_packet(MOTOR_ENABLE, length, packet_data);
                         break;
                         
-                    // focus motor control
+/************************ Focus Control Operations ****************************/
+					case ZERO_FOCUS:
+						length = 4;
+						Green_LED = 1;
+						
+						FOC_DIR_PIN = 1;
+						step_focus_motor(focus_step_count);
+						focus_step_count = 0;
+						
+						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
+						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
+						packet_data[2] = (focus_step_count >> 8) & 0x00FF;
+						packet_data[3] = (focus_step_count) & 0x00FF;
+						
+                        send_packet(ZERO_FOCUS, length, packet_data);
+                        Green_LED = 0;
+                        break;
+                        
                     case FOCUS_CTRL:
                         length = 4;
                         Green_LED = 1;
@@ -294,8 +311,105 @@ void main(void)
                         send_packet(FOCUS_CTRL, length, packet_data);
                         Green_LED = 0;
                         break;
+
+                    case ABS_FOCUS_CTRL:
+                        length = 4;
+                        Green_LED = 1;
+
+                        // run the motor control
+                        steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
                         
-                    // zoom motor control
+                        if(steps >= focus_step_count)
+                        {
+                            FOC_DIR_PIN = 0;
+                            desired_steps = steps - focus_step_count;
+                            steps = desired_steps;
+                        }
+                        else
+                        {
+                            FOC_DIR_PIN = 1;
+                            desired_steps = focus_step_count - steps;
+                            steps = -desired_steps;
+                            
+                        }
+						
+						if(desired_steps < min_steps)
+						{
+							steps = min_steps - focus_step_count;
+						}
+						else if(desired_steps > max_focus_steps)
+						{
+							steps = max_focus_steps - focus_step_count;
+						}
+
+						focus_step_count += steps;
+						step_focus_motor(abs(steps));
+                        
+						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
+						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
+						packet_data[2] = (focus_step_count >> 8) & 0x00FF;
+						packet_data[3] = (focus_step_count) & 0x00FF;                        
+                        
+                        send_packet(ABS_FOCUS_CTRL, length, packet_data);                       
+                        Green_LED = 0;
+                        break;
+                    
+                    case GET_FOC_MOT_STEP:
+                        length = 4;
+
+						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
+						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
+						packet_data[2] = (focus_step_count >> 8) & 0x00FF;
+						packet_data[3] = (focus_step_count) & 0x00FF;
+
+                        send_packet(GET_FOC_MOT_STEP, length, packet_data);
+                        break;
+                    
+                    case SET_FOC_MOT_SPD:
+						length = 4;
+						
+						tmp_pw = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						
+						focus_motor_pw = min(max_pw, max(min_pw, tmp_pw));
+						
+						packet_data[0] = (focus_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (focus_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (focus_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (focus_motor_pw) & 0x00FF;
+						
+                        send_packet(SET_FOC_MOT_SPD, length, packet_data);						
+						break;
+						
+					case GET_FOC_MOT_SPD:
+						length = 4;
+
+						packet_data[0] = (focus_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (focus_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (focus_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (focus_motor_pw) & 0x00FF;
+						
+                        send_packet(GET_FOC_MOT_SPD, length, packet_data);						
+						break;
+                        
+/************************* Zoom Control Operations ****************************/
+
+					case ZERO_ZOOM:
+						length = 4;
+						Green_LED = 1;
+						
+						FOC_DIR_PIN = 1;
+						step_focus_motor(zoom_step_count);
+						zoom_step_count = 0;
+						
+						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
+						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
+						packet_data[2] = (zoom_step_count >> 8) & 0x00FF;
+						packet_data[3] = (zoom_step_count) & 0x00FF;
+						
+                        send_packet(ZERO_ZOOM, length, packet_data);
+                        Green_LED = 0;
+                        break;
+                        
                     case ZOOM_CTRL:           
                         length = 4;
                         Green_LED = 1;
@@ -327,7 +441,96 @@ void main(void)
                         send_packet(ZOOM_CTRL, length, packet_data);
                         Green_LED = 0;
                         break;
+                        
+                    case ABS_ZOOM_CTRL:
+                        length = 4;
+                        Green_LED = 1;
 
+                        // run the motor control
+						steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+                        
+                        if(steps >= zoom_step_count)
+                        {
+                            ZM_DIR_PIN = 0;
+                            desired_steps = steps - zoom_step_count;
+                            steps = desired_steps;                                                       
+                        }
+                        else
+                        {
+                            ZM_DIR_PIN = 1;
+                            desired_steps = zoom_step_count - steps;
+                            steps = -desired_steps;
+                            
+                        }
+
+						if(desired_steps < min_steps)
+						{
+							steps = min_steps - zoom_step_count;
+						}
+						else if(desired_steps > max_zoom_steps)
+						{
+							steps = max_zoom_steps - zoom_step_count;
+						}
+
+						zoom_step_count += steps;						
+                        step_zoom_motor(abs(steps));
+                        
+						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
+						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
+						packet_data[2] = (zoom_step_count >> 8) & 0x00FF;
+						packet_data[3] = (zoom_step_count) & 0x00FF;                        
+                        
+                        send_packet(ABS_ZOOM_CTRL, length, packet_data);                       
+                        Green_LED = 0;
+                        break;
+                    
+                    case GET_ZM_MOT_STEP:
+                        length = 4;
+
+						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
+						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
+						packet_data[2] = (zoom_step_count >> 8) & 0x00FF;
+						packet_data[3] = (zoom_step_count) & 0x00FF;
+
+                        send_packet(GET_ZM_MOT_STEP, length, packet_data);
+                        break;                       
+                        
+					case SET_ZM_MOT_SPD:
+						length = 4;
+						
+						tmp_pw = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
+						
+						zoom_motor_pw = min(max_pw, max(min_pw, tmp_pw));
+						
+						packet_data[0] = (zoom_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (zoom_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (zoom_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (zoom_motor_pw) & 0x00FF;
+						
+                        send_packet(SET_ZM_MOT_SPD, length, packet_data);						
+						break;
+						
+					case GET_ZM_MOT_SPD:
+						length = 4;
+
+						packet_data[0] = (zoom_motor_pw >> 24) & 0x00FF;
+						packet_data[1] = (zoom_motor_pw >> 16) & 0x00FF;
+						packet_data[2] = (zoom_motor_pw >> 8) & 0x00FF;
+						packet_data[3] = (zoom_motor_pw) & 0x00FF;
+						
+                        send_packet(GET_ZM_MOT_SPD, length, packet_data);						
+						break;                        
+                        
+/*
+                    case ZERO_ALL:
+                        length = 1;
+						focus_step_count = 0;
+						zoom_step_count = 0;
+                        
+                        packet_data[0] = 1;
+                        send_packet(ZERO_ZOOM, length, packet_data);
+                        break;
+  
                     // both motor controls
                     case ALL_CTRL:
                         length = 8;
@@ -384,103 +587,9 @@ void main(void)
                         send_packet(ALL_CTRL, length, packet_data);
                         Green_LED = 0;
                         break;
-						
-					case ZERO_FOCUS:
-						length = 4;
-						Green_LED = 1;
-						
-						FOC_DIR_PIN = 1;
-						step_focus_motor(focus_step_count);
-						focus_step_count = 0;
-						
-						packet_data[0] = (focus_step_count >> 24) & 0x00FF;
-						packet_data[1] = (focus_step_count >> 16) & 0x00FF;
-						packet_data[2] = (focus_step_count >> 8) & 0x00FF;
-						packet_data[3] = (focus_step_count) & 0x00FF;
-						
-                        send_packet(ZERO_FOCUS, length, packet_data);
-                        Green_LED = 0;
-                        break;
-						
-					case ZERO_ZOOM:
-						length = 4;
-						Green_LED = 1;
-						
-						FOC_DIR_PIN = 1;
-						step_focus_motor(zoom_step_count);
-						zoom_step_count = 0;
-						
-						packet_data[0] = (zoom_step_count >> 24) & 0x00FF;
-						packet_data[1] = (zoom_step_count >> 16) & 0x00FF;
-						packet_data[2] = (zoom_step_count >> 8) & 0x00FF;
-						packet_data[3] = (zoom_step_count) & 0x00FF;
-						
-                        send_packet(ZERO_ZOOM, length, packet_data);
-                        Green_LED = 0;
-                        break;
-                        
-                    case ZERO_ALL:
-                        length = 1;
-						focus_step_count = 0;
-						zoom_step_count = 0;
-                        
-                        packet_data[0] = 1;
-                        send_packet(ZERO_ZOOM, length, packet_data);
-                        break;
-                        
-/*************************Motor Speed Operations******************************/
-						
-					case SET_FOC_MOT_SPD:
-						length = 4;
-						
-						tmp_pw = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
-						
-						focus_motor_pw = min(max_pw, max(min_pw, tmp_pw));
-						
-						packet_data[0] = (focus_motor_pw >> 24) & 0x00FF;
-						packet_data[1] = (focus_motor_pw >> 16) & 0x00FF;
-						packet_data[2] = (focus_motor_pw >> 8) & 0x00FF;
-						packet_data[3] = (focus_motor_pw) & 0x00FF;
-						
-                        send_packet(SET_FOC_MOT_SPD, length, packet_data);						
-						break;
-						
-					case GET_FOC_MOT_SPD:
-						length = 4;
+									                       
 
-						packet_data[0] = (focus_motor_pw >> 24) & 0x00FF;
-						packet_data[1] = (focus_motor_pw >> 16) & 0x00FF;
-						packet_data[2] = (focus_motor_pw >> 8) & 0x00FF;
-						packet_data[3] = (focus_motor_pw) & 0x00FF;
-						
-                        send_packet(GET_FOC_MOT_SPD, length, packet_data);						
-						break;
-						
-					case SET_ZM_MOT_SPD:
-						length = 4;
-						
-						tmp_pw = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
-						
-						zoom_motor_pw = min(max_pw, max(min_pw, tmp_pw));
-						
-						packet_data[0] = (zoom_motor_pw >> 24) & 0x00FF;
-						packet_data[1] = (zoom_motor_pw >> 16) & 0x00FF;
-						packet_data[2] = (zoom_motor_pw >> 8) & 0x00FF;
-						packet_data[3] = (zoom_motor_pw) & 0x00FF;
-						
-                        send_packet(SET_ZM_MOT_SPD, length, packet_data);						
-						break;
-						
-					case GET_ZM_MOT_SPD:
-						length = 4;
-
-						packet_data[0] = (zoom_motor_pw >> 24) & 0x00FF;
-						packet_data[1] = (zoom_motor_pw >> 16) & 0x00FF;
-						packet_data[2] = (zoom_motor_pw >> 8) & 0x00FF;
-						packet_data[3] = (zoom_motor_pw) & 0x00FF;
-						
-                        send_packet(GET_ZM_MOT_SPD, length, packet_data);						
-						break;
+*/
 						
 /***********************Camera Trigger Operations*****************************/
                         

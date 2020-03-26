@@ -1,4 +1,4 @@
-//=============================================================================
+// ----------------------------------------------------------------------------------------
 #define _CRT_SECURE_NO_WARNINGS
 
 // FTDI Driver Includes
@@ -31,18 +31,18 @@
 // Project Includes
 #include "motor_driver.h"
 
-
+// ----------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
 
     uint32_t idx, jdx;
-    //uint8_t status;
+    uint32_t exp_idx, focus_idx, img_idx;
+
     std::string console_input;
     std::ofstream data_log_stream;
 
-    motor_driver md;
-
     // Motor Driver Variables
+    motor_driver md;
     uint32_t ftdi_device_count = 0;
     ftdiDeviceDetails driver_details;
     FT_HANDLE driver_handle = NULL;
@@ -52,6 +52,7 @@ int main(int argc, char** argv)
     uint64_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     std::vector<uint32_t> focus_range, zoom_range;
+    bool status = false;
 
     //uint32_t focus_step, zoom_step;
 
@@ -78,7 +79,6 @@ int main(int argc, char** argv)
     Spinnaker::ImagePtr image;
     Spinnaker::SystemPtr system = Spinnaker::System::GetInstance();
     Spinnaker::CameraList cam_list;
-    std::string exposure_str;
 
     // OpenCV Variables
     char key;
@@ -91,8 +91,13 @@ int main(int argc, char** argv)
 
     std::string sdate, stime;
     std::string log_filename = "camera_capture_log_";
+    std::string image_header = "image_";
     std::string image_capture_name = "image_";
     std::string output_save_location = "";
+    std::string focus_str;
+    std::string zoom_str;
+    std::string exposure_str;
+    std::string image_str;
 
     const std::string params =
         "{help h ?   |  | Display Usage message }"
@@ -226,7 +231,10 @@ int main(int argc, char** argv)
         std::cout << system->GetLibraryVersion() << std::endl;
 
         cam_list = system->GetCameras();
-/*
+
+// ----------------------------------------------------------------------------------------
+// Scan the system and get the motor controller connected to the computer
+// ----------------------------------------------------------------------------------------
         ftdi_device_count = get_device_list(ftdi_devices);
         if (ftdi_device_count == 0)
         {
@@ -279,7 +287,11 @@ int main(int argc, char** argv)
         std::cout << md << std::endl;
         data_log_stream << md << std::endl;
         data_log_stream << "#------------------------------------------------------------------" << std::endl;
-*/
+
+// ----------------------------------------------------------------------------------------
+// Scan the system and get the camera connected to the computer
+// ----------------------------------------------------------------------------------------
+
         num_cams = get_camera_selection(cam_list, cam_index, cam_sn);
 
         // Finish if there are no cameras
@@ -332,7 +344,6 @@ int main(int argc, char** argv)
         std::cout << "Camera Configuration:" << std::endl;
         data_log_stream << "------------------------------------------------------------------" << std::endl;
         data_log_stream << "Camera Configuration:" << std::endl;
-
 
         get_image_size(cam, height, width, y_offset, x_offset);
 
@@ -413,11 +424,23 @@ int main(int argc, char** argv)
                 //ld.send_lens_packet(focus_packets[0], lens_driver_handle);
 
                 sleep_ms(10);
+                
+                // get the current focus step value from the motor controller
 
-                for (idx = 0; idx < exp_time.size(); ++idx)
+                // set the focus step to zero
+
+                
+
+                for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
                 {
+                    // set the focus motor value to each value in focus_range
+
+                    focus_str = num2str(focus_range[focus_idx], "f%05d_");
+                    //image_capture_name = image_header + ;
+
+                    // create the directory to save the images at various focus steps
                     std::string combined_save_location = "";
-                    std::string sub_dir = "exp_" + num2str(exp_time[idx], "%02.0f");
+                    std::string sub_dir = "focus_" + num2str(focus_range[focus_idx], "%05d");
                     int32_t stat = make_dir(output_save_location, sub_dir);
                     if (stat != 1 && stat != (int32_t)ERROR_ALREADY_EXISTS)
                     {
@@ -430,24 +453,41 @@ int main(int argc, char** argv)
                         combined_save_location = output_save_location + sub_dir + "/";
                     }
 
-                    set_exposure_time(cam, exp_time[idx]);
-                    get_exposure_time(cam, tmp_exp_time);
+                    for (exp_idx = 0; exp_idx < exp_time.size(); ++exp_idx)
+                    {
+                        set_exposure_time(cam, exp_time[exp_idx]);
+                        get_exposure_time(cam, tmp_exp_time);
 
-                    exposure_str = num2str(tmp_exp_time, "%2.2f");
-                    std::cout << "exp_str: " << exposure_str << std::endl;
+                        exposure_str = num2str(tmp_exp_time, "e%03d_");
+                        std::cout << "exp_str: " << num2str(tmp_exp_time, "%2.2f") << std::endl;
 
-                    acquire_image(cam, image);
-                    //acquire_single_image(cam, image);
-                    cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-                    cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
-                    cv::imshow(image_window, cv_image);
-                    key = cv::waitKey(1);
-                    //sleep_ms(100);
+                        for (img_idx = 0; img_idx < avg_count; ++img_idx)
+                        {
+                            image_capture_name = image_header + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+                            
+                            // grab an image
+                            acquire_image(cam, image);
+                            //acquire_single_image(cam, image);
+                            cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-                }
+                            cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+                            cv::imshow(image_window, cv_image);
+                            key = cv::waitKey(1);
 
-                set_exposure_time(cam, exp_time[0]);
+                            // save the image
+                            std::cout << "saving: " << image_capture_name << std::endl;
+
+                            std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
+                            //sleep_ms(100);
+
+                        }   // end of img_idx loop
+
+                    }   // end of exp_idx loop
+
+                    set_exposure_time(cam, exp_time[0]);
+
+                }   // end of focus_idx loop
 
             }   // end of key == 's'
 

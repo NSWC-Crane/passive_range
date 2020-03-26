@@ -11,31 +11,60 @@
 //#define MAX_DATA_LENGTH		16
 //#define MAX_PACKET_LENGTH	(MAX_DATA_LENGTH+2)
 
-#define CMD_MOTOR_ENABLE    0x30                /* Enable/Disable motors */
-#define CMD_FOCUS_CTRL      0x31                /* Focus motor control */
-#define CMD_ZOOM_CTRL       0x32                /* Zoom motor control */
-#define CMD_ALL_CTRL        0x33                /* Both motor control */
-#define ZERO_FOCUS		    0x35                /* zero the focus motor */
-#define ZERO_ZOOM		    0x36                /* zero the zoom motor */
-#define ZERO_ALL            0x37                /* zero all motors */
+//#define CMD_MOTOR_ENABLE    0x30                /* Enable/Disable motors */
+//#define CMD_FOCUS_CTRL      0x31                /* Focus motor control */
+//#define CMD_ZOOM_CTRL       0x32                /* Zoom motor control */
+//#define CMD_ALL_CTRL        0x33                /* Both motor control */
+//#define ZERO_FOCUS		    0x34                /* zero the focus motor */
+//#define ZERO_ZOOM		    0x35                /* zero the zoom motor */
+//#define ZERO_ALL            0x36                /* zero all motors */
+//
+//
+//#define SET_FOC_MOT_SPD     0x40                /* set focus motor speed */
+//#define GET_FOC_MOT_SPD     0x41                /* get focus motor speed */
+//#define SET_ZM_MOT_SPD      0x42                /* set zoom motor speed */
+//#define GET_ZM_MOT_SPD      0x43                /* get zoom motor speed */
+//
+//#define FIRM_READ           0x51                /* Read firmware version return command */
+//#define SER_NUM_READ        0x52                /* Read serial number return command */
+//#define CONNECT             0x53                /* Check for data connection to motor controller */
 
-#define SET_FOC_MOT_SPD     0x40                /* set focus motor speed */
-#define GET_FOC_MOT_SPD     0x41                /* get focus motor speed */
-#define SET_ZM_MOT_SPD      0x42                /* set zoom motor speed */
-#define GET_ZM_MOT_SPD      0x43                /* get zoom motor speed */
+#define CMD_MOTOR_ENABLE 0x10                 /* Enable/Disable motors */
 
-#define FIRM_READ           0x51                /* Read firmware version return command */
-#define SER_NUM_READ        0x52                /* Read serial number return command */
-#define CONNECT             0x53                /* Check for data connection to motor controller */
+// focus motor control
+#define ZERO_FOCUS		 0x20				  /* zero the focus motor */
+#define CMD_FOCUS_CTRL   0x21                 /* Focus motor control */
+#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
+#define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
+#define SET_FOC_MOT_SPD  0x24				  /* set focus motor speed */
+#define GET_FOC_MOT_SPD  0x25				  /* get focus motor speed */
 
-//#define TRIG_CTRL           0x61                /* Camera trigger control */
+// zoom motor control
+#define ZERO_ZOOM		 0x30				  /* zero the zoom motor */
+#define CMD_ZOOM_CTRL    0x31                 /* Zoom motor control */
+#define ABS_ZOOM_CTRL    0x32                 /* Absolute zoom motor control */
+#define GET_ZM_MOT_STEP  0x33                 /* get the zoom motor step count */
+#define SET_ZM_MOT_SPD   0x34				  /* set zoom motor speed */
+#define GET_ZM_MOT_SPD   0x35				  /* get zoom motor speed */
 
-#define ENABLE_MOTOR        0x00                /* Enable the motors */
-#define DISABLE_MOTOR       0x01                /* Disable the motors */
-#define MOTOR_CW            0x80000000          /* turn the motor clockwise */
-#define MOTOR_CCW           0x00000000          /* turn the motor coutner-clockwise */
+//#define ZERO_ALL        0x40                  /* zero all motors */
+//#define ALL_CTRL        0x41                  /* Both motor control */
+
+#define FIRM_READ        0x51                 /* Read firmware version return command */
+#define SER_NUM_READ     0x52                 /* Read serial number return command */
+#define CONNECT          0x53                 /* Check for data connection to motor controller */
+
+#define TRIG_CTRL        0x61                 /* Camera trigger control */
+
+#define ENABLE_MOTOR     0x00                 /* Enable the motors */
+#define DISABLE_MOTOR    0x01                 /* Disable the motors */
+#define MOTOR_CW         0x80000000           /* turn the motor clockwise */
+#define MOTOR_CCW        0x00000000           /* turn the motor coutner-clockwise */
 
 const uint8_t motor_packet_size = 6;
+
+extern const int max_focus_steps = 40575;
+extern const int max_zoom_steps = 4628;
 
 //-----------------------------------------------------------------------------
 typedef struct motor_driver_info

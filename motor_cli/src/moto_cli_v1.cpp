@@ -7,7 +7,7 @@
 //#include <windows.h> 
 #include <conio.h>
 #elif defined(__linux__)
-
+#include <termios.h>
 #endif
 
 // C++ Includes
@@ -21,8 +21,6 @@
 #include <string>
 #include <vector>
 #include <chrono>
-
-
 
 // Custom Includes
 #include "num2string.h"
@@ -45,7 +43,11 @@ void help_menu(void)
 	std::cout << "  e <0/1> - enable (1)/disable (0) motors" << std::endl;
 	std::cout << "  f <step> - step the focus motor, use '-' for CCW otherwise CW" << std::endl;
 	std::cout << "  z <step> - step the zoom motor, use '-' for CCW otherwise CW" << std::endl;
-    std::cout << "  x - zero the motor counter" << std::endl;
+    std::cout << "  d - step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
+    std::cout << "  af <step> - set the absolute focus motor step value [0 - " << max_focus_steps << "]" << std::endl;
+    std::cout << "  az <step> - set the absolute zoom motor step value [0 - " << max_zoom_steps << "]" << std::endl;
+
+    //std::cout << "  x - zero the motor counter" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << std::endl;
 }
@@ -73,8 +75,12 @@ int main(int argc, char** argv)
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     int32_t steps;
+    int32_t focus_step = 0;
+    int32_t zoom_step = 0;
 
-    int32_t focus_step, zoom_step;
+#if defined(__linux__)
+    struct termios t;
+#endif
 
     try
     {
@@ -127,10 +133,21 @@ int main(int argc, char** argv)
         md.set_driver_info(md.rx);
         std::cout << md << std::endl;
 
+        // get the current step count reported by the controller
+        md.tx = data_packet(GET_FOC_MOT_STEP);
+        md.send_packet(driver_handle, md.tx);
+        status = md.receive_packet(driver_handle, 6, md.rx);
+        focus_step = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+
+        md.tx = data_packet(GET_ZM_MOT_STEP);
+        md.send_packet(driver_handle, md.tx);
+        status = md.receive_packet(driver_handle, 6, md.rx);
+        zoom_step = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+
+        std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
 
 		// print out a short menu of commands for the CLI
 		help_menu();
-
         // start the while loop
 		while(stop >= 0)
 		{
@@ -146,12 +163,12 @@ int main(int argc, char** argv)
 			{
 				help_menu();
 			}
-            else if (console_input[0] == 'x')
-            {
-                md.tx = data_packet(ZERO_ALL, 0);
-                md.send_packet(driver_handle, md.tx);
-                status = md.receive_packet(driver_handle, 3, md.rx);
-            }
+            //else if (console_input[0] == 'x')
+            //{
+            //    md.tx = data_packet(ZERO_ALL, 0);
+            //    md.send_packet(driver_handle, md.tx);
+            //    status = md.receive_packet(driver_handle, 3, md.rx);
+            //}
             else if (console_input[0] == 'e')
             {
                 if (console_input.length() >= 3)
@@ -194,6 +211,7 @@ int main(int argc, char** argv)
                     std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }
             }
+
 			else if(console_input[0] == 'z')
 			{
                 if (console_input.length() >= 3)
@@ -217,30 +235,84 @@ int main(int argc, char** argv)
                     std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }				
 			}
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+
+            else if (console_input[0] == 'a')
+            {
+                if (console_input.length() > 3)
+                {
+
+                    switch (console_input[1])
+                    {
+                    case 'f':
+                        focus_step = std::stoi(console_input.substr(3, console_input.length() - 1));
+                        md.tx = data_packet(ABS_FOCUS_CTRL, focus_step);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+
+                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << "steps: " << steps << std::endl;
+                        break;
+
+                    case 'z':
+                        zoom_step = std::stoi(console_input.substr(3, console_input.length() - 1));
+                        md.tx = data_packet(ABS_ZOOM_CTRL, zoom_step);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+
+                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << "steps: " << steps << std::endl;
+                        break;
+
+                    }
+                }
+            }
+
+
+
             else if (console_input[0] == 'd')
             {
+                std::cout << "Step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
+
                 direct = true;
                 //wchar_t key;
                 int key = 0;
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
                 do
                 {
+
                     //std::wcin >> key;
-                    key = _getch();
-                    if (key == 0xE0)
-                    {
+                    //key = _getch();
+                    //if (key == 0xE0)
+                    //{
                         key = _getch();
+
+#elif defined(__linux__)
+
+                tcgetattr(STDIN_FILENO, &t); //get the current terminal I/O structure
+                t.c_lflag &= ~ICANON; //Manipulate the flag bits to do what you want it to do
+                tcsetattr(STDIN_FILENO, TSCANOW, &t); //Apply the new settings
+
+                do
+                {
+                    key = std::getchar();
+
+#endif
+
                         switch (key)
                         {
-                        case 72:    // up arrow key
-                            zoom_step = 16 | MOTOR_CW;
+                        case (int)('w'):
+                        //case 72:    // up arrow key
+                            zoom_step = -16;
 
                             md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                             md.send_packet(driver_handle, md.tx);
                             status = md.receive_packet(driver_handle, 6, md.rx);
                             break;
-                        case 75:    // left arrow key
-                            focus_step = 16 | MOTOR_CW;
+
+                        case (int)('a') :
+                        //case 75:    // left arrow key
+                            focus_step = -16;
 
                             md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                             md.send_packet(driver_handle, md.tx);
@@ -248,32 +320,45 @@ int main(int argc, char** argv)
                             //printf("left");
                             //std::cout << "left" << std::endl;
                             break;
-                        case 77:    // right arrow key
-                            focus_step = 16 | MOTOR_CCW;
+
+                        case (int)('d') :
+                        //case 77:    // right arrow key
+                            focus_step = 16;
 
                             md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                             md.send_packet(driver_handle, md.tx);
                             status = md.receive_packet(driver_handle, 6, md.rx);
                             //std::cout << "right" << std::endl;
                             break;
-                        case 80:    // down arrow key
-                            zoom_step = 16 | MOTOR_CCW;
+
+                        case (int)('s') :
+                        //case 80:    // down arrow key
+                            zoom_step = 16;
 
                             md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                             md.send_packet(driver_handle, md.tx);
                             status = md.receive_packet(driver_handle, 6, md.rx);
                             //std::cout << "down" << std::endl;
                             break;
+
+                        default:
+                            direct = false;
+
+                            break;
                         }
-                    }
-                    else
-                    {
-                        direct = false;
-                    }
+                    //}
+                    //else
+                    //{
+                    //    direct = false;
+                    //}
+
                 } while (direct == true);
 
-            }
+#if defined(__linux__)
+                t.c_lflag |= ICANON; //Manipulate the flag bits to do what you want it to do
+                tcsetattr(STDIN_FILENO, TSCANOW, &t); //Apply the new settings
 #endif
+            }
 		
 		}	// end of while loop
 
