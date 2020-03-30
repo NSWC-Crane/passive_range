@@ -67,11 +67,12 @@ int main(int argc, char** argv)
     uint32_t avg_count;
     std::vector<std::string> cam_sn;
     Spinnaker::CameraPtr cam;
-    Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_RGB8;
+    Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
     double camera_gain;
     Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
     Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
     double frame_rate, frame_count;
+    Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
     Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
@@ -102,7 +103,8 @@ int main(int argc, char** argv)
     const std::string params =
         "{help h ?   |  | Display Usage message }"
         "{cfg_file   |  | Alternate input method to supply all parameters, all parameters must be included in the file }"
-        "{focus_step | 0:216:21384 | voltage step range}"
+        "{focus_step | 0:320:40575 | focus motor step range }"
+        "{zoom_step  | 0:160:4628 | zoom motor range }"
         "{x_off      | 8 | X offset for camera }"
         "{y_off      | 4 | Y offset for camera }"
         "{width      | 1264 | Width of the captured image }"
@@ -111,7 +113,7 @@ int main(int argc, char** argv)
         "{fps        | 10.0 | Frames per second setting for the camera }"
         "{exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera }"
         "{gain       | 5.0 | Inital gain setting before letting the camera find one }"
-        "{avg        | 11 | Number of images to capture for an average }"
+        "{avg        | 5 | Number of images to capture for an average }"
         "{source     | 1  | source for the trigger (0 -> Line0, 1 -> Software) }"
         "{output     | ../results/       | Output directory to save lidar images }"
         ;
@@ -321,7 +323,7 @@ int main(int argc, char** argv)
         // initialize the camera
         //cam->Init();
         init_camera(cam);
-        cam->TriggerActivation.SetValue(Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge);
+        //cam->TriggerActivation.SetValue(Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge);
 
         get_temperature(cam, camera_temp);
         std::cout << "  Camera Temp:       " << camera_temp << std::endl << std::endl;
@@ -336,13 +338,13 @@ int main(int argc, char** argv)
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
         set_exposure_mode(cam, exp_mode);
-        set_exposure_time(cam, exp_time[0]);
+        //set_exposure_time(cam, exp_time[0]);
         set_acquisition_mode(cam, acq_mode); //acq_mode
 
         // print out the camera configuration
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Camera Configuration:" << std::endl;
-        data_log_stream << "------------------------------------------------------------------" << std::endl;
+        data_log_stream << "#------------------------------------------------------------------" << std::endl;
         data_log_stream << "Camera Configuration:" << std::endl;
 
         get_image_size(cam, height, width, y_offset, x_offset);
@@ -356,24 +358,26 @@ int main(int argc, char** argv)
         get_exposure_mode(cam, exp_mode);
         get_exposure_time(cam, tmp_exp_time);
         get_acquisition_mode(cam, acq_mode);
-       
-        std::cout << "Image Size (h x w):  " << height << " x " << width << ", [" << x_offset << ", " << y_offset << "]" << std::endl;
-        std::cout << "Pixel Format:        " << pixel_format << std::endl;
-        std::cout << "Gain mode/value:     " << gain_mode << "/" << camera_gain << std::endl;
-        std::cout << "Exposure mode/value: " << exp_mode << "/" << tmp_exp_time << std::endl;
-        std::cout << "Acq mode/value:      " << acq_mode << "/" << frame_rate << std::endl;
+        
+        std::cout << "Image Size (h x w):  " << height << " x " << width << std::endl;
+        std::cout << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
+        std::cout << "Pixel Format:        " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "Gain mode/value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+        std::cout << "Exposure mode/value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
+        std::cout << "Acq mode/frame rate: " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
         std::cout << "Avg Capture Number:  " << avg_count << std::endl;
-        //std::cout << "ADC Bit Depth:       " << cam->AdcBitDepth.GetValue() << std::endl;
         std::cout << std::endl;
 
-        data_log_stream << "Image Size (h x w):  " << height << " x " << width << ", [" << x_offset << ", " << y_offset << "]" << std::endl;
-        data_log_stream << "Pixel Format:        " << pixel_format << std::endl;
-        data_log_stream << "Gain mode/value:     " << gain_mode << "/" << camera_gain << std::endl;
-        data_log_stream << "Exposure mode/value: " << exp_mode << "/" << tmp_exp_time << std::endl;
-        data_log_stream << "Acq mode/value:      " << acq_mode << "/" << frame_rate << std::endl;
+        data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
+        data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
+        data_log_stream << "Pixel Format:        " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
+        //data_log_stream << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Gain mode/value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+        data_log_stream << "Exposure mode/value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
+        data_log_stream << "Acq mode/value:      " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
         data_log_stream << "Avg Capture Number:  " << avg_count << std::endl;
-        //data_log_stream << "ADC Bit Depth:       " << cam->AdcBitDepth.GetValue() << std::endl;
-        data_log_stream << std::endl;
+        data_log_stream << "#------------------------------------------------------------------" << std::endl << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Root save location: " << output_save_location << std::endl << std::endl;
@@ -393,8 +397,9 @@ int main(int argc, char** argv)
 
         // set trigger mode and enable
         set_trigger_source(cam, trigger_source);
-        //config_trigger(cam, true);
-        config_trigger(cam, false);
+        //config_trigger(cam, ON);
+        config_trigger(cam, OFF);
+        sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
 
         // grab an initial image to get the padding 
         //fire_software_trigger(cam);
@@ -497,7 +502,8 @@ int main(int argc, char** argv)
             cam->EndAcquisition();
 
         // deactivate the camera trigger
-        cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
+        config_trigger(cam, OFF);
+        //cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
 
     }
     catch (Spinnaker::Exception &e)

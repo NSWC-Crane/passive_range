@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     int32_t zoom_step = 0;
 
 #if defined(__linux__)
-    struct termios t;
+    struct termios old_term, new_term;
 #endif
 
     try
@@ -288,10 +288,11 @@ int main(int argc, char** argv)
                         key = _getch();
 
 #elif defined(__linux__)
-
-                tcgetattr(STDIN_FILENO, &t); //get the current terminal I/O structure
-                t.c_lflag &= ~ICANON; //Manipulate the flag bits to do what you want it to do
-                tcsetattr(STDIN_FILENO, TSCANOW, &t); //Apply the new settings
+                // http://shtrom.ssji.net/skb/getc.html
+                tcgetattr(STDIN_FILENO, &old_term); //get the current terminal I/O structure
+                new_term = old_term;
+                new_term.c_lflag &= (~ICANON & ~ECHO); //Manipulate the flag bits to do what you want it to do
+                tcsetattr(STDIN_FILENO, TSCANOW, &new_term); //Apply the new settings
 
                 do
                 {
@@ -355,8 +356,7 @@ int main(int argc, char** argv)
                 } while (direct == true);
 
 #if defined(__linux__)
-                t.c_lflag |= ICANON; //Manipulate the flag bits to do what you want it to do
-                tcsetattr(STDIN_FILENO, TSCANOW, &t); //Apply the new settings
+                tcsetattr(STDIN_FILENO, TSCANOW, &old_term); //Apply the old settings
 #endif
             }
 		
