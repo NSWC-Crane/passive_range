@@ -26,12 +26,12 @@
 #include "num2string.h"
 #include "get_current_time.h"
 #include "file_parser.h"
-#include "make_dir.h"
+#include "file_ops.h"
 
 // Project Includes
 #include "motor_driver.h"
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
 
@@ -48,13 +48,14 @@ int main(int argc, char** argv)
     FT_HANDLE driver_handle = NULL;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
-    uint64_t read_timeout = 15000;
-    uint64_t write_timeout = 1000;
+    uint32_t read_timeout = 60000;
+    uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     std::vector<uint32_t> focus_range, zoom_range;
     bool status = false;
-
-    //uint32_t focus_step, zoom_step;
+    int32_t steps;
+    int32_t focus_step = 0;
+    int32_t zoom_step = 0;
 
     // camera variables
     uint32_t cam_index;
@@ -103,17 +104,17 @@ int main(int argc, char** argv)
     const std::string params =
         "{help h ?   |  | Display Usage message }"
         "{cfg_file   |  | Alternate input method to supply all parameters, all parameters must be included in the file }"
-        "{focus_step | 0:320:40575 | focus motor step range }"
-        "{zoom_step  | 0:160:4628 | zoom motor range }"
-        "{x_off      | 8 | X offset for camera }"
-        "{y_off      | 4 | Y offset for camera }"
-        "{width      | 1264 | Width of the captured image }"
-        "{height     | 1020 | Height of the captured image }"
-        "{sharpness  | 3072 | Sharpness setting for the camera }"
-        "{fps        | 10.0 | Frames per second setting for the camera }"
+        "{focus_step | 2000:3200:40575 | focus motor step range }"
+        "{zoom_step  | 0:925:4628 | zoom motor range }"
+        "{x_off      | 0 | X offset for camera }"
+        "{y_off      | 0 | Y offset for camera }"
+        "{width      | 2048 | Width of the captured image }"
+        "{height     | 1536 | Height of the captured image }"
+        //"{sharpness  | 3072 | Sharpness setting for the camera }"
+        //"{fps        | 10.0 | Frames per second setting for the camera }"
         "{exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera }"
         "{gain       | 5.0 | Inital gain setting before letting the camera find one }"
-        "{avg        | 5 | Number of images to capture for an average }"
+        "{avg        | 1 | Number of images to capture for an average }"
         "{source     | 1  | source for the trigger (0 -> Line0, 1 -> Software) }"
         "{output     | ../results/       | Output directory to save lidar images }"
         ;
@@ -141,15 +142,16 @@ int main(int argc, char** argv)
         parse_csv_file(cfg_filename, cfg_params);
 
         // config file should be in the following format
-        // Line 1: colon separated values of the motor driver step range(start : inc : stop)
+        // Line 1: colon separated values of the motor driver step range (start:inc:stop)
         // Line 2: comma separated values for the x offset, y offset, width, height of the camera
-        // Line 3: comma separated values for the camera properties : sharpness, fps, shutter range, gain
+        // Line 3: comma separated values for the camera properties: exposure time range (us) (start:inc:stop), gain
         // Line 4: single value for the number of images to capture to average
         // Line 5: trigger source (0 -> Line0, 1 -> Software)
         // Line 6: base directory where the results will be saved
         if (cfg_params.size() == 6)
         {
             // line 1: setup the focus motor steps in a vector
+            focus_str = cfg_params[0][0];
             parse_input_range(cfg_params[0][0], focus_range);
 
             // line 2: image properties
@@ -159,10 +161,11 @@ int main(int argc, char** argv)
             height = std::stoi(cfg_params[1][3]);
 
             // line 3: camera properties settings
-            sharpness = std::stoi(cfg_params[2][0]);
-            frame_rate = std::stod(cfg_params[2][1]);
-            parse_input_range(cfg_params[2][2], exp_time);
-            camera_gain = std::stod(cfg_params[2][3]);
+            //sharpness = std::stoi(cfg_params[2][0]);
+            //frame_rate = std::stod(cfg_params[2][1]);
+            exposure_str = cfg_params[2][0];
+            parse_input_range(cfg_params[2][0], exp_time);
+            camera_gain = std::stod(cfg_params[2][1]);
 
             // line 4: average frame capture
             avg_count = std::stoi(cfg_params[3][0]);
@@ -187,7 +190,10 @@ int main(int argc, char** argv)
     else
     {
         // line 1: setup the focus motor steps in a vector
+        focus_str = parser.get<string>("focus_step");
         parse_input_range(parser.get<string>("focus_step"), focus_range);
+
+        zoom_str = parser.get<string>("zoom_step");
         
         // line 2: image properties
         x_offset = parser.get<uint32_t>("x_off");		// 40
@@ -196,8 +202,9 @@ int main(int argc, char** argv)
         height = parser.get<uint32_t>("height");		// 720;
 
         // line 3: camera properties settings
-        sharpness = parser.get<uint32_t>("sharpness");
-        frame_rate = parser.get<double>("fps");
+        //sharpness = parser.get<uint32_t>("sharpness");
+        //frame_rate = parser.get<double>("fps");
+        exposure_str = parser.get<string>("exp_time");
         parse_input_range(parser.get<string>("exp_time"), exp_time);
         camera_gain = parser.get<double>("gain");
 
@@ -217,6 +224,10 @@ int main(int argc, char** argv)
 
     output_save_location = path_check(output_save_location);
 
+    int32_t dir_status = mkdir(output_save_location);
+    if (dir_status != 0)
+        std::cout << "Error creating folder: " << dir_status << std::endl;
+
     get_current_time(sdate, stime);
     log_filename = log_filename + sdate + "_" + stime + ".txt";
 
@@ -227,6 +238,31 @@ int main(int argc, char** argv)
     data_log_stream << "#------------------------------------------------------------------" << std::endl;
     data_log_stream << "Version: 1.0    Date: " << sdate << "    Time: " << stime << std::endl << std::endl;
     data_log_stream << "#------------------------------------------------------------------" << std::endl;
+
+    // print out the info about what was passed in to the code
+    std::cout << "------------------------------------------------------------------" << std::endl;
+    std::cout << "Input Parameters:" << std::endl;
+    std::cout << "Image Size (h x w):  " << height << " x " << width << std::endl;
+    std::cout << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
+    std::cout << "Focus Step Range:    " << focus_str << std::endl;
+    std::cout << "Zoom Step Range:     " << zoom_str << std::endl;
+    std::cout << "Exposure Time Range: " << exposure_str << std::endl;
+    std::cout << "Camera Gain:         " << camera_gain << std::endl;
+    std::cout << "Number of Captures:  " << avg_count << std::endl;
+    std::cout << "Trigger Source:      " << trigger_source << std::endl;
+    std::cout <<  std::endl;
+
+    data_log_stream << "Input Parameters:" << std::endl;
+    data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
+    data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
+    data_log_stream << "Focus Step Range:    " << focus_str << std::endl;
+    data_log_stream << "Zoom Step Range:     " << zoom_str << std::endl;
+    data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
+    data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
+    data_log_stream << "Number of Captures:  " << avg_count << std::endl;
+    data_log_stream << "Trigger Source:      " << trigger_source << std::endl;
+    data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
+
 
     try {
         // Print out current library version
@@ -289,6 +325,11 @@ int main(int argc, char** argv)
         std::cout << md << std::endl;
         data_log_stream << md << std::endl;
         data_log_stream << "#------------------------------------------------------------------" << std::endl;
+
+        // disable the motors
+        md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
+        md.send_packet(driver_handle, md.tx);
+        status = md.receive_packet(driver_handle, 3, md.rx);
 
 // ----------------------------------------------------------------------------------------
 // Scan the system and get the camera connected to the computer
@@ -363,21 +404,23 @@ int main(int argc, char** argv)
         std::cout << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
         std::cout << "Pixel Format:        " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
         std::cout << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
-        std::cout << "Gain mode/value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
-        std::cout << "Exposure mode/value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
-        std::cout << "Acq mode/frame rate: " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
-        std::cout << "Avg Capture Number:  " << avg_count << std::endl;
+        std::cout << "Gain Mode/Value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+        std::cout << "Exposure Mode/Value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
+//        std::cout << "Acq mode/frame rate: " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
+        std::cout << "Acquistion Mode:     " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "Number of Captures:  " << avg_count << std::endl;
         std::cout << std::endl;
 
         data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
         data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
         data_log_stream << "Pixel Format:        " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
-        //data_log_stream << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
-        data_log_stream << "Gain mode/value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
-        data_log_stream << "Exposure mode/value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
-        data_log_stream << "Acq mode/value:      " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
-        data_log_stream << "Avg Capture Number:  " << avg_count << std::endl;
-        data_log_stream << "#------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Gain Mode/Value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+        data_log_stream << "Exposure Mode/Value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
+//        data_log_stream << "Acq mode/value:      " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
+        data_log_stream << "Acquistion Mode:     " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Number of Captures:  " << avg_count << std::endl;
+        data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Root save location: " << output_save_location << std::endl << std::endl;
@@ -405,8 +448,8 @@ int main(int argc, char** argv)
         //fire_software_trigger(cam);
         acquire_image(cam, image);
         //acquire_single_image(cam, image);
-        x_padding = image->GetXPadding();
-        y_padding = image->GetYPadding();
+        x_padding = (uint32_t)image->GetXPadding();
+        y_padding = (uint32_t)image->GetYPadding();
 
         do
         {
@@ -425,20 +468,32 @@ int main(int argc, char** argv)
             // check to save the image
             if (key == 's')
             {
+                // enable the motors
+                md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
+                md.send_packet(driver_handle, md.tx);
+                status = md.receive_packet(driver_handle, 3, md.rx);
+
                 get_current_time(sdate, stime);
                 //ld.send_lens_packet(focus_packets[0], lens_driver_handle);
 
                 sleep_ms(10);
                 
-                // get the current focus step value from the motor controller
-
                 // set the focus step to zero
+                focus_step = 0;
+                md.tx = data_packet(ABS_FOCUS_CTRL, focus_step);
+                md.send_packet(driver_handle, md.tx);
+                status = md.receive_packet(driver_handle, 6, md.rx);
 
+                steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                std::cout << "steps: " << steps << std::endl;
                 
 
                 for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
                 {
                     // set the focus motor value to each value in focus_range
+                    md.tx = data_packet(ABS_FOCUS_CTRL, focus_range[focus_idx]);
+                    md.send_packet(driver_handle, md.tx);
+                    status = md.receive_packet(driver_handle, 6, md.rx);
 
                     focus_str = num2str(focus_range[focus_idx], "f%05d_");
                     //image_capture_name = image_header + ;
@@ -447,7 +502,7 @@ int main(int argc, char** argv)
                     std::string combined_save_location = "";
                     std::string sub_dir = "focus_" + num2str(focus_range[focus_idx], "%05d");
                     int32_t stat = make_dir(output_save_location, sub_dir);
-                    if (stat != 1 && stat != (int32_t)ERROR_ALREADY_EXISTS)
+                    if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
                     {
                         std::cout << "Error creating directory: " << stat << std::endl;
                         data_log_stream << "Error creating directory: " << stat << std::endl;
@@ -484,7 +539,7 @@ int main(int argc, char** argv)
                             std::cout << "saving: " << image_capture_name << std::endl;
 
                             std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                            //sleep_ms(100);
+                            sleep_ms(100);
 
                         }   // end of img_idx loop
 
@@ -493,6 +548,11 @@ int main(int argc, char** argv)
                     set_exposure_time(cam, exp_time[0]);
 
                 }   // end of focus_idx loop
+
+                // disable the motors
+                md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
+                md.send_packet(driver_handle, md.tx);
+                status = md.receive_packet(driver_handle, 3, md.rx);
 
             }   // end of key == 's'
 
