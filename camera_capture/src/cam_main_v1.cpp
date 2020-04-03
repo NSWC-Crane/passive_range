@@ -74,9 +74,9 @@ int main(int argc, char** argv)
     Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
     double frame_rate, frame_count;
     Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
-    Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
+    //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
-    //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
+    Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
     Spinnaker::TriggerSourceEnums trigger_source;
     Spinnaker::ImagePtr image;
     Spinnaker::SystemPtr system = Spinnaker::System::GetInstance();
@@ -409,6 +409,9 @@ int main(int argc, char** argv)
 //        std::cout << "Acq mode/frame rate: " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
         std::cout << "Acquistion Mode:     " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
         std::cout << "Number of Captures:  " << avg_count << std::endl;
+        std::cout << "Trigger Source:      " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "Min/Max Gain:        " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
+        std::cout << "Min/Max Exp:         " << cam->ExposureTime.GetMin() << " / " << cam->ExposureTime.GetMax() << std::endl;
         std::cout << std::endl;
 
         data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
@@ -420,10 +423,12 @@ int main(int argc, char** argv)
 //        data_log_stream << "Acq mode/value:      " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
         data_log_stream << "Acquistion Mode:     " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
         data_log_stream << "Number of Captures:  " << avg_count << std::endl;
-        data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << "Trigger Source:      " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Root save location: " << output_save_location << std::endl << std::endl;
+        data_log_stream << "Root save location: " << output_save_location << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
@@ -440,22 +445,24 @@ int main(int argc, char** argv)
 
         // set trigger mode and enable
         set_trigger_source(cam, trigger_source);
-        //config_trigger(cam, ON);
-        config_trigger(cam, OFF);
+        //config_trigger(cam, OFF);
+        config_trigger(cam, ON);
         sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
 
         // grab an initial image to get the padding 
-        //fire_software_trigger(cam);
-        acquire_image(cam, image);
+        //acquire_image(cam, image);
         //acquire_single_image(cam, image);
+        aquire_software_trigger_image(cam, image);
+
         x_padding = (uint32_t)image->GetXPadding();
         y_padding = (uint32_t)image->GetYPadding();
 
         do
         {
-            //fire_software_trigger(cam);
-            acquire_image(cam, image);
+
+            //acquire_image(cam, image);
             //acquire_single_image(cam, image);
+            aquire_software_trigger_image(cam, image);
 
             //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding. 
             cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
@@ -484,9 +491,8 @@ int main(int argc, char** argv)
                 md.send_packet(driver_handle, md.tx);
                 status = md.receive_packet(driver_handle, 6, md.rx);
 
-                steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                std::cout << "steps: " << steps << std::endl;
-                
+                //steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                //std::cout << "steps: " << steps << std::endl;               
 
                 for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
                 {
@@ -496,9 +502,9 @@ int main(int argc, char** argv)
                     status = md.receive_packet(driver_handle, 6, md.rx);
 
                     focus_str = num2str(focus_range[focus_idx], "f%05d_");
-                    //image_capture_name = image_header + ;
 
                     // create the directory to save the images at various focus steps
+                    /*
                     std::string combined_save_location = "";
                     std::string sub_dir = "focus_" + num2str(focus_range[focus_idx], "%05d");
                     int32_t stat = make_dir(output_save_location, sub_dir);
@@ -512,23 +518,24 @@ int main(int argc, char** argv)
                     {
                         combined_save_location = output_save_location + sub_dir + "/";
                     }
-
+                    */
                     for (exp_idx = 0; exp_idx < exp_time.size(); ++exp_idx)
                     {
                         set_exposure_time(cam, exp_time[exp_idx]);
-                        get_exposure_time(cam, tmp_exp_time);
-
-                        exposure_str = num2str(tmp_exp_time, "e%03d_");
-                        std::cout << "exp_str: " << num2str(tmp_exp_time, "%2.2f") << std::endl;
-
 
                         for (img_idx = 0; img_idx < avg_count; ++img_idx)
                         {
-                            image_capture_name = image_header + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
                             
-                            // grab an image
-                            acquire_image(cam, image);
+                            // grab an image: either from the continuous, single or triggered
+                            //acquire_image(cam, image);
                             //acquire_single_image(cam, image);
+                            aquire_software_trigger_image(cam, image);
+
+                            get_exposure_time(cam, tmp_exp_time);
+                            exposure_str = num2str(tmp_exp_time, "e%05.0f_");
+
+                            image_capture_name = image_header + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+
                             cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
                             cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
@@ -536,10 +543,12 @@ int main(int argc, char** argv)
                             key = cv::waitKey(1);
 
                             // save the image
-                            std::cout << "saving: " << image_capture_name << std::endl;
+                            std::cout << "saving: " << output_save_location << image_capture_name << std::endl;
+                            data_log_stream << image_capture_name << std::endl;
 
-                            std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                            sleep_ms(100);
+                            //cv::imwrite((output_save_location + image_capture_name), cv_image, compression_params);
+                            //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
+                            //sleep_ms(100);
 
                         }   // end of img_idx loop
 
@@ -554,6 +563,9 @@ int main(int argc, char** argv)
                 md.send_packet(driver_handle, md.tx);
                 status = md.receive_packet(driver_handle, 3, md.rx);
 
+                std::cout << "------------------------------------------------------------------" << std::endl;
+                data_log_stream << "#------------------------------------------------------------------" << std::endl;
+
             }   // end of key == 's'
 
         } while (key != 'q');
@@ -563,7 +575,6 @@ int main(int argc, char** argv)
 
         // deactivate the camera trigger
         config_trigger(cam, OFF);
-        //cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
 
     }
     catch (Spinnaker::Exception &e)
