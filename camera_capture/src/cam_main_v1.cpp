@@ -427,8 +427,8 @@ int main(int argc, char** argv)
         data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
-        std::cout << "Root save location: " << output_save_location << std::endl << std::endl;
-        data_log_stream << "Root save location: " << output_save_location << std::endl;
+        std::cout << "Save location: " << output_save_location << std::endl << std::endl;
+        //data_log_stream << "Save location: " << output_save_location << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
@@ -475,13 +475,22 @@ int main(int argc, char** argv)
             // check to save the image
             if (key == 's')
             {
+
+                get_current_time(sdate, stime);
+                std::string img_save_folder = output_save_location + sdate + "_" + stime + "/";
+
+                int32_t stat = mkdir(img_save_folder);
+                if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
+                {
+                    std::cout << "Error creating directory: " << stat << std::endl;
+                }
+
+                data_log_stream << "Save location: " << img_save_folder << std::endl;
+                std::cout << "------------------------------------------------------------------" << std::endl;
                 // enable the motors
                 md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
                 md.send_packet(driver_handle, md.tx);
                 status = md.receive_packet(driver_handle, 3, md.rx);
-
-                get_current_time(sdate, stime);
-                //ld.send_lens_packet(focus_packets[0], lens_driver_handle);
 
                 sleep_ms(10);
                 
@@ -502,6 +511,7 @@ int main(int argc, char** argv)
                     status = md.receive_packet(driver_handle, 6, md.rx);
 
                     focus_str = num2str(focus_range[focus_idx], "f%05d_");
+                    sleep_ms(5);
 
                     // create the directory to save the images at various focus steps
                     /*
@@ -543,10 +553,10 @@ int main(int argc, char** argv)
                             key = cv::waitKey(1);
 
                             // save the image
-                            std::cout << "saving: " << output_save_location << image_capture_name << std::endl;
+                            std::cout << "saving: " << img_save_folder << image_capture_name << std::endl;
                             data_log_stream << image_capture_name << std::endl;
 
-                            //cv::imwrite((output_save_location + image_capture_name), cv_image, compression_params);
+                            cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
                             //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
                             //sleep_ms(100);
 
@@ -557,6 +567,12 @@ int main(int argc, char** argv)
                     set_exposure_time(cam, exp_time[0]);
 
                 }   // end of focus_idx loop
+
+                // set the focus step to zero
+                focus_step = 0;
+                md.tx = data_packet(ABS_FOCUS_CTRL, focus_step);
+                md.send_packet(driver_handle, md.tx);
+                status = md.receive_packet(driver_handle, 6, md.rx);
 
                 // disable the motors
                 md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
