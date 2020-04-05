@@ -13,13 +13,36 @@ The code in this repository has the following dependecies:
 4. [Spinnaker SDK](https://www.flir.com/products/spinnaker-sdk/)
 5. [davemers0160 common code repository](https://github.com/davemers0160/Common)
 
-Follow the instruction for each of the dependencies according to your operating system.  For the FTDI drivers on a Linux based system an additional script needs to be run to add a udev rule that allows users without elevated privaledges to access the USB device.  In a terminla window run the following script in the main repository:
+Follow the instruction for each of the dependencies according to your operating system.  For the FTDI drivers on a Linux based system an additional script needs to be run to add a udev rule that allows users without elevated privaledges to access the USB device.  In a terminal window run the following script in the main repository:
 
 ```
 sudo sh ftdi_config.sh
 ```
 
+You will also need to copy the following files from the ftdi unziped folder:
+
+```
+sudo cp ftdid2xx.h /usr/include/.
+sudo cp WinTypes.h /usr/include/.
+```
+
 ## Build
+
+The project uses CMake as the pmrimary mechanism to build the executables.  There are some modifications that may have to be made to the CMakeLists.txt file in order to get the project to build successfully.
+
+The first thing that must be done is to create an environment variable called "PLATFORM".  The CMakeLists.txt file uses this variable to determine where to look for the other required repositories and/or libraries.  These will be machine specific.
+
+To create an environment variable in Windows (drop the -m if you do not have elevated privileges):
+```
+setx -m PLATFORM MY_PC
+```
+
+In Linux (usually placed in .profile or .bashrc):
+```
+export PLATFORM=MY_PC
+```
+
+In the CMakeLists.txt file make sure to add a check for the platform you've added and point to the right locations for the repositories/libraries.
 
 ### Windows
 
