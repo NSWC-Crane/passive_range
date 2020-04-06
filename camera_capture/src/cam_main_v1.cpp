@@ -56,6 +56,7 @@ int main(int argc, char** argv)
     int32_t steps;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
+    bool md_connected = false;
 
     // camera variables
     uint32_t cam_index;
@@ -81,6 +82,7 @@ int main(int argc, char** argv)
     Spinnaker::ImagePtr image;
     Spinnaker::SystemPtr system = Spinnaker::System::GetInstance();
     Spinnaker::CameraList cam_list;
+    bool cam_connected = false;
 
     // OpenCV Variables
     char key;
@@ -265,18 +267,16 @@ int main(int argc, char** argv)
 
 
     try {
-        // Print out current library version
-        std::cout << system->GetLibraryVersion() << std::endl;
 
-        cam_list = system->GetCameras();
 
 // ----------------------------------------------------------------------------------------
 // Scan the system and get the motor controller connected to the computer
 // ----------------------------------------------------------------------------------------
+        std::cout << "------------------------------------------------------------------" << std::endl;
         ftdi_device_count = get_device_list(ftdi_devices);
         if (ftdi_device_count == 0)
         {
-            std::cout << "No ftdi devices found... Exiting!" << std::endl;
+            std::cout << "No ftdi devices found... Press Enter to Exit!" << std::endl;
             data_log_stream << "No ftdi devices found... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
@@ -301,7 +301,7 @@ int main(int argc, char** argv)
 
         if (driver_handle == NULL)
         {
-            std::cout << "No Motor Controller found... Exiting!" << std::endl;
+            std::cout << "No Motor Controller found... Press Enter to Exit!" << std::endl;
             data_log_stream << "No Motor Controller found... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
@@ -315,7 +315,7 @@ int main(int argc, char** argv)
 
         if (status == false)
         {
-            std::cout << "No Motor Controller found... Exiting!" << std::endl;
+            std::cout << "No Motor Controller found... Press Enter to Exit!" << std::endl;
             data_log_stream << "No Motor Controller found... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
@@ -330,11 +330,19 @@ int main(int argc, char** argv)
         md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
         md.send_packet(driver_handle, md.tx);
         status = md.receive_packet(driver_handle, 3, md.rx);
+        
+        md_connected = true;
 
 // ----------------------------------------------------------------------------------------
 // Scan the system and get the camera connected to the computer
 // ----------------------------------------------------------------------------------------
 
+        std::cout << "------------------------------------------------------------------" << std::endl;
+        // Print out current library version
+        std::cout << system->GetLibraryVersion() << std::endl;
+
+        cam_list = system->GetCameras();
+        
         num_cams = get_camera_selection(cam_list, cam_index, cam_sn);
 
         // Finish if there are no cameras
@@ -346,7 +354,7 @@ int main(int argc, char** argv)
             // Release system
             system->ReleaseInstance();
 
-            std::cout << "No Camera found... Exiting!" << std::endl;
+            std::cout << "No Camera found... Press Enter to Exit!" << std::endl;
             data_log_stream << "No Camera found... Exiting!" << std::endl;
             std::cin.ignore();
 
@@ -364,6 +372,7 @@ int main(int argc, char** argv)
         // initialize the camera
         //cam->Init();
         init_camera(cam);
+        cam_connected = true;
         //cam->TriggerActivation.SetValue(Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge);
 
         get_temperature(cam, camera_temp);
@@ -400,30 +409,32 @@ int main(int argc, char** argv)
         get_exposure_time(cam, tmp_exp_time);
         get_acquisition_mode(cam, acq_mode);
         
-        std::cout << "Image Size (h x w):  " << height << " x " << width << std::endl;
-        std::cout << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
-        std::cout << "Pixel Format:        " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
-        std::cout << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
-        std::cout << "Gain Mode/Value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
-        std::cout << "Exposure Mode/Value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
+        std::cout << "Image Size (h x w):       " << height << " x " << width << std::endl;
+        std::cout << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
+        std::cout << "Pixel Format:             " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "ADC Bit Depth:            " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "Gain Mode/Value:          " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+        std::cout << "Exposure Mode/Value (ms): " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time/1000.0 << std::endl;
 //        std::cout << "Acq mode/frame rate: " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
-        std::cout << "Acquistion Mode:     " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
-        std::cout << "Number of Captures:  " << avg_count << std::endl;
-        std::cout << "Trigger Source:      " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
-        std::cout << "Min/Max Gain:        " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
-        std::cout << "Min/Max Exp:         " << cam->ExposureTime.GetMin() << " / " << cam->ExposureTime.GetMax() << std::endl;
+        std::cout << "Acquistion Mode:          " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "Number of Captures:       " << avg_count << std::endl;
+        std::cout << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
+        std::cout << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
+        std::cout << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;
         std::cout << std::endl;
 
-        data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
-        data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
-        data_log_stream << "Pixel Format:        " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
-        data_log_stream << "ADC Bit Depth:       " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
-        data_log_stream << "Gain Mode/Value:     " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
-        data_log_stream << "Exposure Mode/Value: " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time << std::endl;
+        data_log_stream << "Image Size (h x w):       " << height << " x " << width << std::endl;
+        data_log_stream << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
+        data_log_stream << "Pixel Format:             " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "ADC Bit Depth:            " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Gain Mode/Value:          " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+        data_log_stream << "Exposure Mode/Value (ms): " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time/1000.0 << std::endl;
 //        data_log_stream << "Acq mode/value:      " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
-        data_log_stream << "Acquistion Mode:     " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
-        data_log_stream << "Number of Captures:  " << avg_count << std::endl;
-        data_log_stream << "Trigger Source:      " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Acquistion Mode:          " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Number of Captures:       " << avg_count << std::endl;
+        data_log_stream << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
+        data_log_stream << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
+        data_log_stream << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;       
         data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
@@ -604,6 +615,14 @@ int main(int argc, char** argv)
         data_log_stream << "Error: " << e.what() << std::endl;
     }
 
+    std::cout << std::endl;
+    
+    // close the motor driver port first
+    std::cout << "Closing Motor Driver port..." << std::endl;
+    close_com_port(driver_handle);
+    md_connected = false;
+        
+    std::cout << "Closing Camera..." << std::endl;
     // de-initialize the camera
     cam->DeInit();
 
@@ -615,12 +634,12 @@ int main(int argc, char** argv)
 
     // Release system
     system->ReleaseInstance();
-
+    cam_connected = false;
+      
     cv::destroyAllWindows();
 
     data_log_stream.close();
-    close_com_port(driver_handle);
-
+    
     std::cout << std::endl << "Program Complete! Press Enter to close..." << std::endl;
     std::cin.ignore();
 
