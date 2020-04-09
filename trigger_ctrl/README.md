@@ -1,6 +1,6 @@
-# Motor Command Line Interface (CLI) Project
+# Trigger Control Command Line Interface (CLI) Project
 
-This project contains the project files for a simple command line interface to the motor controller to test the motors.
+This project contains the project files for a simple command line interface to the trigger controller to test the trigger board.
 
 
 ## Dependencies
@@ -16,13 +16,11 @@ Follow the instruction for each of the dependencies according to your operating 
 ```
 sudo sh ftdi_config.sh
 ```
-
 You will also need to copy the following files from the ftdi unziped folder:
 
 ```
 sudo cp ftdid2xx.h /usr/include/.
 sudo cp WinTypes.h /usr/include/.
-```
 
 ## Build
 
@@ -81,24 +79,14 @@ To run the code enter the following:
 ### Windows:
 
 ```
-motor_cli
+trigger
 ```
 
 ### Linux
 
 ```
-./motor_cli
+./trigger
 ```
 
-Once running and the motor controller has been selected a set of control commands will be provided.
 
-```
-Motor Driver CLI Commands:
-  ? - print this menu
-  q - quit
-  e <0/1> - enable (1)/disable (0) motors
-  f <step> - step the focus motor, use '-' for CCW otherwise CW
-  z <step> - step the zoom motor, use '-' for CCW otherwise CW
-  x - zero the motor counter
-```
 

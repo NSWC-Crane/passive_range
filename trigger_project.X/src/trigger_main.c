@@ -72,18 +72,38 @@ void __interrupt () ISR(void)
         // check the first byte to make sure that it is a valid command byte
         if(tmp_rx == '$')
         {
+            // read in the command byte
+            rx_data[0] = RCREG;
+            if(RCSTAbits.OERR == 1)
+            {
+                RCSTAbits.CREN = 0;
+                asm("nop");
+                //rx_data[0] = RCREG;
+                RCSTAbits.CREN = 1;            
+            }
+
+            // read in the byte count
+            rx_data[1] = RCREG;
+            if(RCSTAbits.OERR == 1)
+            {
+                RCSTAbits.CREN = 0;
+                asm("nop");
+                //rx_data[1] = RCREG;
+                RCSTAbits.CREN = 1;            
+            }
+            
             // expect to receive a total of 8 characters in the packet
-            for(idx = 0; idx < PKT_SIZE; ++idx)
+            for(idx = 0; idx < rx_data[1]; ++idx)
             {
                 // wait for the next character to be received
                 while(PIR1bits.RCIF == 0);
                 
-                rx_data[idx] = RCREG;
+                rx_data[idx+2] = RCREG;
                 if(RCSTAbits.OERR == 1)
                 {
                     RCSTAbits.CREN = 0;
                     asm("nop");
-                    //rx_data[idx] = RCREG;
+                    //rx_data[idx+2] = RCREG;
                     RCSTAbits.CREN = 1;            
                 }                
             }
