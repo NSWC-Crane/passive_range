@@ -193,7 +193,7 @@ public:
 
         return status;
 
-    }   // end of receive_lens_packet
+    }   // end of receive_packet
 
 
 };   // end of class
