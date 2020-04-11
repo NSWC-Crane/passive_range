@@ -27,6 +27,7 @@
 #include "get_current_time.h"
 #include "file_parser.h"
 #include "file_ops.h"
+#include "sleep_ms.h"
 //#include "make_dir.h"
 //#include "ftdi_motor_driver.h"
 
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
 	int8_t stop = 0;
-    uint8_t status;
+    bool status;
     std::string console_input;
 	std::string value_str;
 	int32_t value = 0;
@@ -53,7 +54,7 @@ int main(int argc, char** argv)
     FT_HANDLE driver_handle = NULL;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
-    uint32_t read_timeout = 25000;
+    uint32_t read_timeout = 5000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     //int32_t steps;
@@ -80,11 +81,11 @@ int main(int argc, char** argv)
             std::cout << ftdi_devices[idx];
         }
 
-        std::cout << "Select Motor Controller: ";
+        std::cout << "Select Trigger Controller: ";
         std::getline(std::cin, console_input);
         driver_device_num = stoi(console_input);
 
-        std::cout << std::endl << "Connecting to Motor Controller..." << std::endl;
+        std::cout << std::endl << "Connecting to Trigger Controller..." << std::endl;
         ftdi_devices[driver_device_num].baud_rate = 250000;
         while ((driver_handle == NULL) && (connect_count < 10))
         {
@@ -94,7 +95,7 @@ int main(int argc, char** argv)
 
         if (driver_handle == NULL)
         {
-            std::cout << "No Motor Controller found... Exiting!" << std::endl;
+            std::cout << "No Trigger Controller found... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
         }
@@ -102,12 +103,12 @@ int main(int argc, char** argv)
         tc.tx = data_packet(CONNECT);
 
         // send connection request packet and get response back
-        tc.send_packet(driver_handle, tc.tx);
-        status = tc.receive_packet(driver_handle, 6, tc.rx);
+        status = tc.send_packet(driver_handle, tc.tx);
+        status |= tc.receive_packet(driver_handle, 6, tc.rx);
 
         if (status == false)
         {
-            std::cout << "Error communicating with Motor Controller... Exiting!" << std::endl;
+            std::cout << "Error communicating with Trigger Controller... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
         }

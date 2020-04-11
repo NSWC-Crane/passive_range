@@ -103,7 +103,7 @@ void config_uart(void)
     BAUDCONbits.WUE = 0;
     BAUDCONbits.ABDEN = 0;
     
-    SP1BRG = 31;                        // Fosc = 32MHz, baudrate = Fosc/(4n+1)
+    SP1BRG = 31;                        // Fosc = 32MHz, baudrate = Fosc/(4(n+1))
                                         // 39 => 200,000
                                         // 31 => 250,000
     

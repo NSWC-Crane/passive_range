@@ -98,7 +98,7 @@ inline std::ostream& operator<< (
     )
 {
     using std::endl;
-    out << "Motor Controller Information: " << std::endl;
+    out << "Trigger Controller Information: " << std::endl;
     out << "  Serial Number:    " << (uint32_t)item.info.serial_number << std::endl;
     out << "  Firmware Version: " << (uint32_t)item.info.firmware[0] << "." << std::setfill('0') << std::setw(2) << (uint32_t)item.info.firmware[1] << std::endl;
     return out;

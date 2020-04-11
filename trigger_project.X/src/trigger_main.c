@@ -57,6 +57,8 @@ void __interrupt () ISR(void)
     // check for the UART Rx interrupt to trigger
     if(PIR1bits.RCIF == 1)
     {       
+        TRIG3 = 0;
+
         // disable interrupt
         PIE1bits.RCIE = 0;
         
@@ -73,6 +75,7 @@ void __interrupt () ISR(void)
         if(tmp_rx == '$')
         {
             // read in the command byte
+            while(PIR1bits.RCIF == 0);
             rx_data[0] = RCREG;
             if(RCSTAbits.OERR == 1)
             {
@@ -83,6 +86,7 @@ void __interrupt () ISR(void)
             }
 
             // read in the byte count
+            while(PIR1bits.RCIF == 0);
             rx_data[1] = RCREG;
             if(RCSTAbits.OERR == 1)
             {
@@ -108,7 +112,15 @@ void __interrupt () ISR(void)
                 }                
             }
             data_ready = 1;
-        }       
+            
+        }
+        else
+        {
+            // re-enable the UART Rx interrupt
+            PIE1bits.RCIE = 1;          // enable UART Rx Interrupt                      
+        }
+        
+        TRIG3 = 1;
     }   // end of PIR1bits.RCIF
 
     // re-enable the interrupt
@@ -134,9 +146,11 @@ void main(void)
 
     TRIG1 = 0;
     TRIG2 = 0;
-    TRIG3 = 0;
+    TRIG3 = 1;
 
-
+    for(idx=0; idx<200; ++idx)
+        send_char('a');
+    
 /**********************************MAIN LOOP**********************************/
     while(1)
     {
@@ -305,9 +319,9 @@ void initiate_trigger(void)
         TRIG2 = t2_out ^ t2[0];
 
                 
-        t3_out = ((TMR1 >= t3_off) && (TMR1 <= t3_len));
-        TRIG3 = t3_out ^ t3[0];
-        
+//        t3_out = ((TMR1 >= t3_off) && (TMR1 <= t3_len));
+//        TRIG3 = t3_out ^ t3[0];
+//        
 /*        
         switch(((TMR1>=t1_off) && (TMR1<=t1_len)))
         {
