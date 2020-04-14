@@ -25,8 +25,8 @@
 // Custom Includes
 #include "num2string.h"
 #include "get_current_time.h"
-#include "file_parser.h"
 #include "file_ops.h"
+#include "file_parser.h"
 //#include "ftdi_motor_driver.h"
 
 // Project Includes

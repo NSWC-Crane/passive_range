@@ -58,7 +58,7 @@ void init_Timers(void)
     PR2 = 0xFFFF;               // Period Register (0.01250us)*PR2 = ~200 us => 5kHz
                                 // A3 -> 15942
                                 // A5 -> 15940    
-    tick_time = 200;            // sets the value of a tick in us - based on PR2 and T2 prescale
+    //tick_time = 200;            // sets the value of a tick in us - based on PR2 and T2 prescale
     T2CONbits.ON = 1;           // Turn Timer2 on
     TMR2 = 0;                   // set Timer2 counter = 0
     

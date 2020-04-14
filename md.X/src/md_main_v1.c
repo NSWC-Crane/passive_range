@@ -1,7 +1,7 @@
 /* 
  * File:   md_main_v1.c
  * Author: David Emerson
- *
+ * PIC32MX695F512H
  * Created on February 01, 2020
  */
 
@@ -22,9 +22,9 @@
 /****************************Local Definitions*********************************/
 
 /*************************Declare Global Variables*****************************/
-volatile unsigned short tick_time;
-volatile unsigned char time[3] = {0,0,0};
-volatile unsigned char date[3] = {0,0,0};
+//volatile unsigned short tick_time;
+//volatile unsigned char time[3] = {0,0,0};
+//volatile unsigned char date[3] = {0,0,0};
 
 //unsigned int global_count=0;
 unsigned char direction = 0;
@@ -32,7 +32,7 @@ unsigned char direction = 0;
 unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
 unsigned char data_ready = 0;
 const unsigned char firmware[2] = {0,80};
-const unsigned char serial_num[1] = {1};
+const unsigned char serial_num[1] = {2};
 
 int focus_step_count = 0;
 int zoom_step_count = 0;
