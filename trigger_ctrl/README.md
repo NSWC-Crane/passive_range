@@ -21,6 +21,7 @@ You will also need to copy the following files from the ftdi unziped folder:
 ```
 sudo cp ftdid2xx.h /usr/include/.
 sudo cp WinTypes.h /usr/include/.
+```
 
 ## Build
 

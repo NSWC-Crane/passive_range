@@ -23,7 +23,10 @@ PROJECT(cam_ctrl_project)
 set(exe_name "cam_ctrl")
 
 set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
-
+if("${PLATFORM}" STREQUAL "")
+    set(PLATFORM "NOT_SET")
+    message("The PLATFORM Environment variable is not set on this system.  Setting it to:")
+endif()
 message("Platform: " ${PLATFORM})
 
 # find the root of the main project
