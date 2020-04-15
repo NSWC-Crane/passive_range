@@ -102,7 +102,8 @@ output     | ../results/       | Output directory to save lidar images
 To supply the parameters at runtime they can be called in the following manner:
 
 ```
-executable -x_off=0 -fps=5.1
+Windows: cam_ctrl -x_off=0 -fps=5.1
+Linux: ./cam_ctrl -x_off=0 -fps=5.1
 ```
 
 The second method (preferred) is to supply all of the parameters in a single file.  Using this method all of the input parametes must be supplied and they must be in the order outlined in the example file *cam_config.txt*
@@ -110,7 +111,8 @@ The second method (preferred) is to supply all of the parameters in a single fil
 To use the file enter the following:
 
 ```
-executable -cfg_file=../cam_config.txt
+Windows: cam_ctrl -cfg_file=../cam_config.txt
+Linux: ./cam_ctrl -cfg_file=../cam_config.txt
 ```
 
 It is important to note that if the output folder does not exist the program will run, but there may not be any indication that the data is not being saved.
