@@ -212,18 +212,18 @@ void main(void)
                     send_packet(CONFIG_T2, length, packet_data);
                     break;                  
 
-                case CONFIG_T3:
-                    length = 1;
-                    
-                    t3[0] = rx_data[1];
-                    t3[1] = rx_data[2];
-                    t3[2] = rx_data[3];
-                    t3[3] = rx_data[4];
-                    t3[4] = rx_data[5];
-                    
-                    packet_data[0] = 1;
-                    send_packet(CONFIG_T3, length, packet_data);
-                    break; 
+//                case CONFIG_T3:
+//                    length = 1;
+//                    
+//                    t3[0] = rx_data[1];
+//                    t3[1] = rx_data[2];
+//                    t3[2] = rx_data[3];
+//                    t3[3] = rx_data[4];
+//                    t3[4] = rx_data[5];
+//                    
+//                    packet_data[0] = 1;
+//                    send_packet(CONFIG_T3, length, packet_data);
+//                    break; 
                     
                 case TRIG_INIT:
                     length = 1;
@@ -233,6 +233,36 @@ void main(void)
                     packet_data[0] = 1;
                     send_packet(TRIG_INIT, length, packet_data);
                     break;
+                    
+                case TRIG_CH1:
+                    length = 1;
+                    
+                    TMR1 = 0;
+                    TRIG1 = 1;                   
+                    while(TMR1 < 50000);
+                    
+                    TMR1 = 0;
+                    TRIG1 = 0;
+                    while(TMR1 < 50000);
+                    
+                    packet_data[0] = 1;
+                    send_packet(TRIG_CH1, length, packet_data);                    
+                    break;
+                    
+                case TRIG_CH2:
+                    length = 1;
+                    
+                    TMR1 = 0;
+                    TRIG2 = 1;                   
+                    while(TMR1 < 50000);
+                    
+                    TMR1 = 0;                    
+                    TRIG2 = 0;
+                    while(TMR1 < 50000);
+                    
+                    packet_data[0] = 1;
+                    send_packet(TRIG_CH2, length, packet_data); 
+                break;
                     
             }   // end of switch(rx_data[0])
             

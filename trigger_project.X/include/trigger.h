@@ -27,11 +27,12 @@
 // configure the trigger parameters
 #define CONFIG_T1       0x11                  /* Configure Trigger 1 parameters */
 #define CONFIG_T2       0x12                  /* Configure Trigger 2 parameters */
-#define CONFIG_T3       0x13                  /* Configure Trigger 3 parameters */
+//#define CONFIG_T3       0x13                  /* Configure Trigger 3 parameters */
 
 // initiate triggers
-#define TRIG_INIT       0x21                  /* initiate trigger */
-
+#define TRIG_INIT       0x20                  /* initiate trigger sequence */
+#define TRIG_CH1        0x21                  /* pulse channel 1 */ 
+#define TRIG_CH2        0x22                  /* pulse channel 2 */
 
 
 //------------------------------------------------------------------------------

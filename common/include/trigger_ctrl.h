@@ -21,13 +21,15 @@
 #define CONFIG_T3       0x13                  /* Configure Trigger 3 parameters */
 
 // initiate triggers
-#define TRIG_INIT       0x21                  /* initiate trigger */
+#define TRIG_INIT       0x20                  /* initiate trigger sequence */
+#define TRIG_CH1        0x21                  /* pulse channel 1 */ 
+#define TRIG_CH2        0x22                  /* pulse channel 2 */
 
 //-----------------------------------------------------------------------------
 typedef struct trigger_ctrl_info
 {
-    uint8_t serial_number;
-    uint8_t firmware[2];
+    uint8_t serial_number = 0;
+    uint8_t firmware[2] = { 0, 0 };
 
     trigger_ctrl_info() {}
 

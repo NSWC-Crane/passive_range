@@ -34,8 +34,21 @@
 // Project Includes
 #include "trigger_ctrl.h"
 
+//-----------------------------------------------------------------------------
+void help_menu(void)
+{
+    std::cout << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "Trigger Controller CLI Commands:" << std::endl;
+    std::cout << "  ? - print this menu" << std::endl;
+    std::cout << "  q - quit" << std::endl;
+    std::cout << "  1 - Trigger Channel 1" << std::endl;
+    std::cout << "  2 - Trigger Channel 2" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << std::endl;
+}
 
-
+//-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
     uint32_t idx;
@@ -57,9 +70,6 @@ int main(int argc, char** argv)
     uint32_t read_timeout = 5000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
-    //int32_t steps;
-    //int32_t focus_step = 0;
-    //int32_t zoom_step = 0;
 
 #if defined(__linux__)
     struct termios old_term, new_term;
@@ -114,7 +124,42 @@ int main(int argc, char** argv)
         }
 
         tc.set_trigger_info(tc.rx);
-        std::cout << tc << std::endl;    
+        std::cout << tc << std::endl;
+
+        // print out a short menu of commands for the CLI
+        help_menu();
+
+        // start the while loop
+        while (stop >= 0)
+        {
+            std::cout << "trigger_cli> ";
+            std::getline(std::cin, console_input);
+
+            if (console_input[0] == 'q')
+            {
+                stop = -1;
+                break;
+            }
+            else if (console_input[0] == '?')
+            {
+                help_menu();
+            }
+
+            else if (console_input[0] == '1')
+            {
+                tc.tx = data_packet(TRIG_CH1);
+                tc.send_packet(driver_handle, tc.tx);
+                status = tc.receive_packet(driver_handle, 3, tc.rx);
+            }
+            else if (console_input[0] == '2')
+            {
+                tc.tx = data_packet(TRIG_CH2);
+                tc.send_packet(driver_handle, tc.tx);
+                status = tc.receive_packet(driver_handle, 3, tc.rx);
+            }
+
+        }   // end of while (stop >= 0)
+
     }
     catch (std::exception e)
     {

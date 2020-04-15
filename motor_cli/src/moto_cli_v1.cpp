@@ -32,7 +32,7 @@
 // Project Includes
 #include "motor_driver.h"
 
-
+//-----------------------------------------------------------------------------
 void help_menu(void)
 {
     std::cout << std::endl;
@@ -52,7 +52,7 @@ void help_menu(void)
     std::cout << std::endl;
 }
 
-//
+//-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
     uint32_t idx;
@@ -148,6 +148,7 @@ int main(int argc, char** argv)
 
 		// print out a short menu of commands for the CLI
 		help_menu();
+
         // start the while loop
 		while(stop >= 0)
 		{
