@@ -39,13 +39,25 @@
 /*************************Declare Global Variables*****************************/
 
 unsigned char data_ready = 0;
-unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
-unsigned char t1[5] = {0, 0, 0, 0, 255};
-unsigned char t2[5] = {0, 0, 0, 0, 255};
-unsigned char t3[5] = {0, 0, 0, 0, 255};
+unsigned char rx_data[PKT_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+unsigned char t1_polarity = 0;
+unsigned short t1_offset = 0;
+unsigned short t1_length = 50000;
+unsigned char t1_out = 0;
+
+unsigned char t2_polarity = 0;
+unsigned short t2_offset = 0;
+unsigned short t2_length = 50000;
+unsigned char t2_out = 0;
+
+//unsigned char t3_polarity = 0;
+//unsigned short t3_offset = 0;
+//unsigned short t3_length = 50000;
+//unsigned char t3_out = 0;
     
 const unsigned short trigger_interval = 50000;
-const unsigned char firmware[2] = {0,50};
+const unsigned char firmware[2] = {1, 0};
 const unsigned char serial_num[1] = {1};
 
 /***************************Interrupt Definition*******************************/
@@ -96,7 +108,7 @@ void __interrupt () ISR(void)
                 RCSTAbits.CREN = 1;            
             }
             
-            // expect to receive a total of 8 characters in the packet
+            // expect to receive a total of rx_data[1] characters in the packet
             for(idx = 0; idx < rx_data[1]; ++idx)
             {
                 // wait for the next character to be received
@@ -188,40 +200,37 @@ void main(void)
                 
                 case CONFIG_T1:
                     length = 1;
+
+                    t1_polarity = rx_data[2] & 0x01;
+                    t1_offset = rx_data[3]<<8 | rx_data[4];
+                    t1_length = rx_data[5]<<8 | rx_data[6];
+                    TRIG1 = 0 ^ t1_polarity;
                     
-                    t1[0] = rx_data[1];
-                    t1[1] = rx_data[2];
-                    t1[2] = rx_data[3];
-                    t1[3] = rx_data[4];
-                    t1[4] = rx_data[5];
-                    
-                    packet_data[0] = 1;
+                    packet_data[0] = t1_polarity;
                     send_packet(CONFIG_T1, length, packet_data);
                     break;                
                 
                 case CONFIG_T2:
                     length = 1;
+
+                    t2_polarity = rx_data[2] & 0x01;
+                    t2_offset = rx_data[3]<<8 | rx_data[4];
+                    t2_length = rx_data[5]<<8 | rx_data[6];
+                    TRIG2 = 0 ^ t2_polarity;
                     
-                    t2[0] = rx_data[1];
-                    t2[1] = rx_data[2];
-                    t2[2] = rx_data[3];
-                    t2[3] = rx_data[4];
-                    t2[4] = rx_data[5];
-                    
-                    packet_data[0] = 1;
+                    packet_data[0] = t2_polarity;
                     send_packet(CONFIG_T2, length, packet_data);
                     break;                  
 
 //                case CONFIG_T3:
 //                    length = 1;
 //                    
-//                    t3[0] = rx_data[1];
-//                    t3[1] = rx_data[2];
-//                    t3[2] = rx_data[3];
-//                    t3[3] = rx_data[4];
-//                    t3[4] = rx_data[5];
+//                    t3_polarity = rx_data[2] & 0x01;
+//                    t3_offset = rx_data[3]<<8 | rx_data[4];
+//                    t3_length = rx_data[5]<<8 | rx_data[6];
+//                    TRIG3 = 0 ^ t3_polarity;
 //                    
-//                    packet_data[0] = 1;
+//                    packet_data[0] = t3_polarity;
 //                    send_packet(CONFIG_T3, length, packet_data);
 //                    break; 
                     
@@ -237,13 +246,14 @@ void main(void)
                 case TRIG_CH1:
                     length = 1;
                     
+                    TRIG1 = 0 ^ t1_polarity;
                     TMR1 = 0;
-                    TRIG1 = 1;                   
-                    while(TMR1 < 50000);
-                    
-                    TMR1 = 0;
-                    TRIG1 = 0;
-                    while(TMR1 < 50000);
+                    while(TMR1 < trigger_interval)
+                    {
+                        t1_out = ((TMR1 >= t1_offset) && (TMR1 <= t1_length));
+                        TRIG1 =  t1_out ^ t1_polarity;
+                    }                   
+                    TRIG1 = 0 ^ t1_polarity;
                     
                     packet_data[0] = 1;
                     send_packet(TRIG_CH1, length, packet_data);                    
@@ -252,13 +262,22 @@ void main(void)
                 case TRIG_CH2:
                     length = 1;
                     
+//                    TMR1 = 0;
+//                    TRIG2 = 1;                   
+//                    while(TMR1 < 50000);
+//                    
+//                    TMR1 = 0;                    
+//                    TRIG2 = 0;
+//                    while(TMR1 < 50000);
+//                    
+                    TRIG2 = 0 ^ t2_polarity;
                     TMR1 = 0;
-                    TRIG2 = 1;                   
-                    while(TMR1 < 50000);
-                    
-                    TMR1 = 0;                    
-                    TRIG2 = 0;
-                    while(TMR1 < 50000);
+                    while(TMR1 < trigger_interval)
+                    {
+                        t2_out = ((TMR1 >= t2_offset) && (TMR1 <= t2_length));
+                        TRIG2 =  t2_out ^ t2_polarity;
+                    }                   
+                    TRIG2 = 0 ^ t2_polarity;                    
                     
                     packet_data[0] = 1;
                     send_packet(TRIG_CH2, length, packet_data); 
@@ -326,71 +345,25 @@ void send_packet(unsigned char command, unsigned short length, unsigned char dat
 
 void initiate_trigger(void)
 {
-    unsigned short t1_off = t1[1]<<8 | t1[2];
-    unsigned short t1_len = t1[3]<<8 | t1[4];
-    unsigned short t2_off = t2[1]<<8 | t2[2];
-    unsigned short t2_len = t2[3]<<8 | t2[4];    
-    unsigned short t3_off = t3[1]<<8 | t3[2];
-    unsigned short t3_len = t3[3]<<8 | t3[4];
+    TRIG1 = 0 ^ t1_polarity;
+    TRIG2 = 0 ^ t2_polarity;
     
-    unsigned char t1_out = 0;
-    unsigned char t2_out = 0;
-    unsigned char t3_out = 0;
-
     // reset the counter
-    TMR1 = 0;
+    TMR1 = 0;  
     
     while(TMR1 < trigger_interval)
     {
-        t1_out = ((TMR1 >= t1_off) && (TMR1 <= t1_len));
-        TRIG1 = t1_out ^ t1[0];
+        t1_out = ((TMR1 >= t1_offset) && (TMR1 <= t1_length));
+        TRIG1 = t1_out ^ t1_polarity;
         
-        t2_out = ((TMR1 >= t2_off) && (TMR1 <= t2_len));
-        TRIG2 = t2_out ^ t2[0];
-
-                
-//        t3_out = ((TMR1 >= t3_off) && (TMR1 <= t3_len));
-//        TRIG3 = t3_out ^ t3[0];
-//        
-/*        
-        switch(((TMR1>=t1_off) && (TMR1<=t1_len)))
-        {
-            case 0:
-                
-                break;
-                
-            case 1:
-                
-                break;
-            
-        }
-        
-        switch(((TMR1>=t2_off) && (TMR1<=t2_len)))
-        {
-            case 0:
-                
-                
-                break;
-                
-            case 1:
-                
-                break;
-            
-        }
-
-        switch(((TMR1>=t3_off) && (TMR1<=t3_len)))
-        {
-            case 0:
-                
-                
-                break;
-                
-            case 1:
-                
-                break;
-            
-        }
-*/
-    }  
+        t2_out = ((TMR1 >= t2_offset) && (TMR1 <= t2_length));
+        TRIG2 = t2_out ^ t2_polarity;
+               
+//        t3_out = ((TMR1 >= t3_offset) && (TMR1 <= t3_length));
+//        TRIG3 = t3_out ^ t3_polarity;      
+    }
     
-}
+    TRIG1 = 0 ^ t1_polarity;
+    TRIG2 = 0 ^ t2_polarity;
+    
+}   // end of initiate_trigger

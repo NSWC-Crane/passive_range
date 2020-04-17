@@ -44,6 +44,12 @@ void help_menu(void)
     std::cout << "  q - quit" << std::endl;
     std::cout << "  1 - Trigger Channel 1" << std::endl;
     std::cout << "  2 - Trigger Channel 2" << std::endl;
+    std::cout << "  c1 <pol,offset,length> - Configure Channel 1" << std::endl;
+    std::cout << "  c2 <pol,offset,length> - Configure Channel 2" << std::endl;
+    std::cout << "      pol - trigger polarity: 0 - __|-|__, 1 - --|_|--" << std::endl;
+    std::cout << "      offset - offset delay in us - range: 0 - 25000" << std::endl;
+    std::cout << "      length - length of the trigger pulse (us) - range: 0 - 25000" << std::endl;
+    std::cout << "  a - Trigger all channels" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << std::endl;
 }
@@ -55,13 +61,10 @@ int main(int argc, char** argv)
 	int8_t stop = 0;
     bool status;
     std::string console_input;
-	std::string value_str;
-	int32_t value = 0;
-    //bool direct = false;
 
-    trigger_ctrl tc;
+    uint8_t command = 0;
 
-    // Motor Driver Variables
+    // Trigger Controller Variables
     uint32_t ftdi_device_count = 0;
     ftdiDeviceDetails driver_details;
     FT_HANDLE driver_handle = NULL;
@@ -71,10 +74,11 @@ int main(int argc, char** argv)
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
 
+    trigger_ctrl tc;
+
 #if defined(__linux__)
     struct termios old_term, new_term;
 #endif
-
 
     try
     {
@@ -135,27 +139,53 @@ int main(int argc, char** argv)
             std::cout << "trigger_cli> ";
             std::getline(std::cin, console_input);
 
-            if (console_input[0] == 'q')
+            switch (console_input[0])
             {
+            case 'q':
                 stop = -1;
                 break;
-            }
-            else if (console_input[0] == '?')
-            {
-                help_menu();
-            }
 
-            else if (console_input[0] == '1')
-            {
-                tc.tx = data_packet(TRIG_CH1);
-                tc.send_packet(driver_handle, tc.tx);
-                status = tc.receive_packet(driver_handle, 3, tc.rx);
-            }
-            else if (console_input[0] == '2')
-            {
-                tc.tx = data_packet(TRIG_CH2);
-                tc.send_packet(driver_handle, tc.tx);
-                status = tc.receive_packet(driver_handle, 3, tc.rx);
+            case '?':
+                help_menu();
+                break;
+
+            case '1':
+                //tc.tx = data_packet(TRIG_CH1);
+                //tc.send_packet(driver_handle, tc.tx);
+                //status = tc.receive_packet(driver_handle, 3, tc.rx);
+                status = trigger(driver_handle, TRIG_CH1, tc);
+                break;
+
+            case '2':
+                //tc.tx = data_packet(TRIG_CH2);
+                //tc.send_packet(driver_handle, tc.tx);
+                //status = tc.receive_packet(driver_handle, 3, tc.rx);
+                status = trigger(driver_handle, TRIG_CH2, tc);
+                break;
+
+            case 'a':
+                //tc.tx = data_packet(TRIG_INIT);
+                //tc.send_packet(driver_handle, tc.tx);
+                //status = tc.receive_packet(driver_handle, 3, tc.rx);
+                status = trigger(driver_handle, TRIG_ALL, tc);
+                break;
+
+            case 'c':
+                if (console_input[1] == '1')
+                {
+                    command = CONFIG_T1;
+                    status = config_channel(driver_handle, console_input.substr(2, console_input.length()), command, tc);
+                }
+                else if (console_input[1] == '2')
+                {
+                    command = CONFIG_T2;
+                    status = config_channel(driver_handle, console_input.substr(2, console_input.length()), command, tc);
+                }
+                break;
+
+            case 't':
+
+                break;
             }
 
         }   // end of while (stop >= 0)

@@ -46,7 +46,7 @@ typedef struct data_packet
         command = rx_data[0];
         byte_count = rx_data[1];
         try {
-            for (uint32_t idx = 0; idx < byte_count; ++idx)
+            for (size_t idx = 0; idx < byte_count; ++idx)
             {
                 data.push_back(rx_data[idx + 2]);
             }
