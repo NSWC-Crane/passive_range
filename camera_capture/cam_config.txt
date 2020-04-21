@@ -9,13 +9,30 @@
 # Line 5: trigger source (0 -> Line0, 1 -> Software)
 # Line 6: base directory where the results will be saved
 
-#---------------------------------------------------
+#------------------------------------------------------------------------------
 # General Settings
-#---------------------------------------------------
-#2000:160:40575
-11200:160:32320
+#------------------------------------------------------------------------------
+
+# Line 1: colon separated values of the focus motor: (start:inc:stop)
+#2000:320:40575
+#11200:320:32320
+18000:320:21200
+#1920:320:40000
+
+# Line 2: colon separated values of the zoom motor: (start:inc:stop)
+0:925:4625
+
+# Line 3: comma separated values for the x offset, y offset, width, height of the camera
 0, 0, 2048, 1536
+
+# Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
 12000:-12000:12000, 2.5
+
+# Line 5: the number of images to capture per focus/zoom/exposure setting
 1
+
+# Line 6: trigger source (0 -> Line0, 1 -> Software)
 1
+
+# Line 7: base directory where the results will be saved
 ../results/

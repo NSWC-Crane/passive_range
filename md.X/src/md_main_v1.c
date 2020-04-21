@@ -31,13 +31,13 @@ unsigned char direction = 0;
 
 unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {0,80};
+const unsigned char firmware[2] = {0,90};
 const unsigned char serial_num[1] = {2};
 
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-unsigned int focus_motor_pw = 2500;               // number of TMR2 ticks for 10MHz clock
+unsigned int focus_motor_pw = 3500;               // number of TMR2 ticks for 10MHz clock
 unsigned int zoom_motor_pw = 3500;                // number of TMR2 ticks for 10MHz clock
 const unsigned int max_pw = 30000;
 const unsigned int min_pw = 1000;
@@ -397,7 +397,7 @@ void main(void)
 						length = 4;
 						Green_LED = 1;
 						
-						FOC_DIR_PIN = 1;
+						ZM_DIR_PIN = 0;
 						step_focus_motor(zoom_step_count);
 						zoom_step_count = 0;
 						
@@ -416,7 +416,7 @@ void main(void)
 						
                         // run the motor control
 						steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
-						ZM_DIR_PIN = (rx_data[2] >> 7) & 0x01;
+						ZM_DIR_PIN = ((rx_data[2] >> 7) & 0x01) ^ 1;
                                 
 						// ensure that the steps do not go beyond the limits on the rings being turned
 						desired_steps = zoom_step_count + steps;
@@ -451,16 +451,15 @@ void main(void)
                         
                         if(steps >= zoom_step_count)
                         {
-                            ZM_DIR_PIN = 0;
+                            ZM_DIR_PIN = 1;
                             desired_steps = steps - zoom_step_count;
                             steps = desired_steps;                                                       
                         }
                         else
                         {
-                            ZM_DIR_PIN = 1;
+                            ZM_DIR_PIN = 0;
                             desired_steps = zoom_step_count - steps;
-                            steps = -desired_steps;
-                            
+                            steps = -desired_steps;                           
                         }
 
 						if(desired_steps < min_steps)
