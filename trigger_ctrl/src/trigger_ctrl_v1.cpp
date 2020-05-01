@@ -114,7 +114,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        tc.tx = data_packet(CONNECT);
+        tc.tx = data_packet(TC_CONNECT);
 
         // send connection request packet and get response back
         status = tc.send_packet(driver_handle, tc.tx);
