@@ -13,9 +13,9 @@ const uint16_t max_offset = 25000;
 const uint16_t max_length = 25000;
 
 /***********************Define Header Command Responses************************/
-#define CONNECT         0x01                  /* Check for data connection to motor controller */
-#define FIRM_READ       0x02                  /* Read firmware version return command */
-#define SER_NUM_READ    0x03                  /* Read serial number return command */
+#define TC_CONNECT         0x01                  /* Check for data connection to motor controller */
+#define TC_FIRM_READ       0x02                  /* Read firmware version return command */
+#define TC_SER_NUM_READ    0x03                  /* Read serial number return command */
 
 // configure the trigger parameters
 constexpr uint8_t CONFIG_T1 = 0x11;           /* Configure Trigger 1 parameters */
