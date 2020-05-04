@@ -113,6 +113,9 @@ int main(int argc, char** argv)
     std::string exposure_str;
     std::string image_str;
 
+    std::string img_save_folder;
+    int32_t stat;
+
     const std::string params =
         "{help h ?   |  | Display Usage message }"
         "{cfg_file   |  | Alternate input method to supply all parameters, all parameters must be included in the file }"
@@ -552,8 +555,18 @@ int main(int argc, char** argv)
 
         // grab an initial image to get the padding 
         //acquire_image(cam, image);
-        //acquire_single_image(cam, image);
-        aquire_software_trigger_image(cam, image);
+        switch (ts)
+        {
+        case 0:
+            cam->BeginAcquisition();
+            status = trigger(tc_handle, TRIG_ALL, tc);
+            aquire_trigger_image(cam, image);
+            cam->EndAcquisition();
+            break;
+        case 1:
+            aquire_software_trigger_image(cam, image);
+            break;
+        }
 
         x_padding = (uint32_t)image->GetXPadding();
         y_padding = (uint32_t)image->GetYPadding();
@@ -563,7 +576,18 @@ int main(int argc, char** argv)
 
             //acquire_image(cam, image);
             //acquire_single_image(cam, image);
-            aquire_software_trigger_image(cam, image);
+            switch (ts)
+            {
+            case 0:
+                cam->BeginAcquisition();
+                status = trigger(tc_handle, TRIG_ALL, tc);
+                aquire_trigger_image(cam, image);
+                cam->EndAcquisition();
+                break;
+            case 1:
+                aquire_software_trigger_image(cam, image);
+                break;
+            }
 
             //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding. 
             cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
@@ -573,14 +597,15 @@ int main(int argc, char** argv)
             //cv::resizeWindow(image_window, height / 2, width / 2);
             key = cv::waitKey(1);
 
-            // check to save the image
-            if (key == 's')
+
+            switch(key)
             {
-
+            // check to save the image
+            case 's':
                 get_current_time(sdate, stime);
-                std::string img_save_folder = output_save_location + sdate + "_" + stime + "/";
+                img_save_folder = output_save_location + sdate + "_" + stime + "/";
 
-                int32_t stat = mkdir(img_save_folder);
+                stat = mkdir(img_save_folder);
                 if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
                 {
                     std::cout << "Error creating directory: " << stat << std::endl;
@@ -653,8 +678,18 @@ int main(int argc, char** argv)
 
                                 // grab an image: either from the continuous, single or triggered
                                 //acquire_image(cam, image);
-                                //acquire_single_image(cam, image);
-                                aquire_software_trigger_image(cam, image);
+                                switch (ts)
+                                {
+                                case 0:
+                                    cam->BeginAcquisition();
+                                    status = trigger(tc_handle, TRIG_ALL, tc);
+                                    aquire_trigger_image(cam, image);
+                                    cam->EndAcquisition();
+                                    break;
+                                case 1:
+                                    aquire_software_trigger_image(cam, image);
+                                    break;
+                                }
 
                                 get_exposure_time(cam, tmp_exp_time);
                                 exposure_str = num2str(tmp_exp_time, "e%05.0f_");
@@ -704,8 +739,40 @@ int main(int argc, char** argv)
 
                 std::cout << "------------------------------------------------------------------" << std::endl;
                 data_log_stream << "#------------------------------------------------------------------" << std::endl;
+                break;
+                // end of key == 's'
 
-            }   // end of key == 's'
+            case 'f':
+                focus_step = 160;
+                md.step_focus_motor(md_handle, focus_step, CMD_FOCUS_CTRL);
+                std::cout << "focus step: " << focus_step << "   \r";
+                std::cout.flush();
+                break;
+
+            case 'g':
+                focus_step = -160;
+                md.step_focus_motor(md_handle, focus_step, CMD_FOCUS_CTRL);
+                std::cout << "focus step: " << focus_step << "   \r";
+                std::cout.flush();
+                break;
+
+            case 'z':
+                zoom_step = 160;
+                md.step_zoom_motor(md_handle, zoom_step, CMD_ZOOM_CTRL);
+                std::cout << "zoom step:  " << zoom_step << "   \r";
+                std::cout.flush();
+                break;
+
+            case 'x':
+                zoom_step = -160;
+                md.step_zoom_motor(md_handle, zoom_step, CMD_ZOOM_CTRL);
+                std::cout << "zoom step:  " << zoom_step << "   \r";
+                std::cout.flush();
+                break;
+
+            default:
+                break;
+            }   // end of switch case
 
         } while (key != 'q');
 

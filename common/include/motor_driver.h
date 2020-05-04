@@ -34,16 +34,16 @@
 
 // focus motor control
 #define ZERO_FOCUS		 0x20				  /* zero the focus motor */
-#define CMD_FOCUS_CTRL   0x21                 /* Focus motor control */
-#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
+constexpr auto CMD_FOCUS_CTRL = 0x21                 /* Focus motor control */;
+constexpr auto ABS_FOCUS_CTRL = 0x22                 /* Absolute focus motor control */;
 #define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
 #define SET_FOC_MOT_SPD  0x24				  /* set focus motor speed */
 #define GET_FOC_MOT_SPD  0x25				  /* get focus motor speed */
 
 // zoom motor control
 #define ZERO_ZOOM		 0x30				  /* zero the zoom motor */
-#define CMD_ZOOM_CTRL    0x31                 /* Zoom motor control */
-#define ABS_ZOOM_CTRL    0x32                 /* Absolute zoom motor control */
+constexpr auto CMD_ZOOM_CTRL = 0x31                 /* Zoom motor control */;
+constexpr auto ABS_ZOOM_CTRL = 0x32                 /* Absolute zoom motor control */;
 #define GET_ZM_MOT_STEP  0x33                 /* get the zoom motor step count */
 #define SET_ZM_MOT_SPD   0x34				  /* set zoom motor speed */
 #define GET_ZM_MOT_SPD   0x35				  /* get zoom motor speed */
@@ -196,6 +196,52 @@ public:
 
     }   // end of receive_packet
 
+
+    //-----------------------------------------------------------------------------
+    bool step_focus_motor(FT_HANDLE md_handle, int32_t &focus_step, uint8_t mode = ABS_FOCUS_CTRL)
+    {
+        bool status = true;
+
+        tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 3, rx);
+
+        tx = data_packet(mode, focus_step);
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 6, rx);
+
+        focus_step = (rx.data[0] << 24) | (rx.data[1] << 16) | (rx.data[2] << 8) | (rx.data[3]);
+
+        tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 3, rx);
+
+        return status;
+
+    }   // end of step_focus_motor
+
+    //-----------------------------------------------------------------------------
+    bool step_zoom_motor(FT_HANDLE md_handle, int32_t& zoom_step, uint8_t mode = ABS_ZOOM_CTRL)
+    {
+        bool status = true;
+
+        tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 3, rx);
+
+        tx = data_packet(mode, zoom_step);
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 6, rx);
+
+        zoom_step = (rx.data[0] << 24) | (rx.data[1] << 16) | (rx.data[2] << 8) | (rx.data[3]);
+
+        tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 3, rx);
+
+        return status;
+
+    }   // end of step_focus_motor
 
 };   // end of class
 

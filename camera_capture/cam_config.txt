@@ -32,7 +32,7 @@
 1
 
 # Line 6: trigger source (0 -> Line0, 1 -> Software)
-1
+0
 
 # Line 7: base directory where the results will be saved
 ../results/
