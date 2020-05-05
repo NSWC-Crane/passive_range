@@ -58,7 +58,7 @@ unsigned char t2_out = 0;
     
 const unsigned short trigger_interval = 50000;
 const unsigned char firmware[2] = {1, 0};
-const unsigned char serial_num[1] = {1};
+const unsigned char serial_num[1] = {2};
 
 /***************************Interrupt Definition*******************************/
 void __interrupt () ISR(void)
