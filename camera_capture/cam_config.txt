@@ -1,13 +1,15 @@
 # Camera configuration file
 # 
 # Parameters should be supplied in the following order:
-# Line 1: colon separated values of the motor driver step range (start:inc:stop)
+# Line 1: colon separated values of the focus motor step range (start:inc:stop)
 #         current settings: 16 steps per 1.8 degrees (8.9 steps/degree), gear ratio 2.43, ~21.6 steps/degree on focus ring
-# Line 2: comma separated values for the x offset, y offset, width, height of the camera
-# Line 3: comma separated values for the camera properties: sharpness, fps, exposure time (ms) range, gain
-# Line 4: single value for the number of images to capture to average
-# Line 5: trigger source (0 -> Line0, 1 -> Software)
-# Line 6: base directory where the results will be saved
+# Line 2: colon separated values of the zoom motor step range (start:inc:stop)
+#         current settings: 16 steps per 1.8 degrees (8.9 steps/degree), gear ratio 2.43, ~21.6 steps/degree on zoom ring
+# Line 3: comma separated values for the x offset, y offset, width, height of the camera
+# Line 4: comma separated values for the camera properties: sharpness, fps, exposure time (ms) range, gain
+# Line 5: single value for the number of images to capture to average
+# Line 6: trigger source (0 -> Line0, 1 -> Software)
+# Line 7: base directory where the results will be saved
 
 #------------------------------------------------------------------------------
 # General Settings
@@ -20,7 +22,7 @@
 18000:320:40000
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
-1850:925:1850
+0:925:0
 
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera
 0, 0, 2048, 1536
@@ -36,3 +38,4 @@
 
 # Line 7: base directory where the results will be saved
 ../results/
+

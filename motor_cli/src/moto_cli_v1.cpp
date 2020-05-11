@@ -7,7 +7,7 @@
 //#include <windows.h> 
 #include <conio.h>
 #elif defined(__linux__)
-#include <termios.h>
+#include <termios.h>           // Contains POSIX terminal control definitions
 #endif
 
 // C++ Includes
@@ -293,7 +293,7 @@ int main(int argc, char** argv)
                 tcgetattr(STDIN_FILENO, &old_term); //get the current terminal I/O structure
                 new_term = old_term;
                 new_term.c_lflag &= (~ICANON & ~ECHO); //Manipulate the flag bits to do what you want it to do
-                tcsetattr(STDIN_FILENO, TSCANOW, &new_term); //Apply the new settings
+                tcsetattr(STDIN_FILENO, TCSANOW, &new_term); //Apply the new settings
 
                 do
                 {
@@ -357,7 +357,7 @@ int main(int argc, char** argv)
                 } while (direct == true);
 
 #if defined(__linux__)
-                tcsetattr(STDIN_FILENO, TSCANOW, &old_term); //Apply the old settings
+                tcsetattr(STDIN_FILENO, TCSANOW, &old_term); //Apply the old settings
 #endif
             }
 		
