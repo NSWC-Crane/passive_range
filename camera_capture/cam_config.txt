@@ -34,7 +34,8 @@
 1
 
 # Line 6: trigger source (0 -> Line0, 1 -> Software)
-0
+# for hardware trigger add trigger level, offset and length for each channel
+1, 0, 0, 20000, 0, 0, 20000
 
 # Line 7: base directory where the results will be saved
 ../results/

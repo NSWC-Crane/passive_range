@@ -64,7 +64,8 @@ int main(int argc, char** argv)
     //Trigger controller variables
     FT_HANDLE tc_handle = NULL;
     trigger_ctrl tc;
-
+    std::vector<uint8_t> tc_ch1(5);
+    std::vector<uint8_t> tc_ch2(5);
 
     // camera variables
     uint32_t cam_index;
@@ -193,9 +194,43 @@ int main(int argc, char** argv)
             // line 6: trigger source
             ts = std::stoi(cfg_params[5][0]);
             if (ts == 0)
+            {
                 trigger_source = Spinnaker::TriggerSourceEnums::TriggerSource_Line0;
+                // parse the trigger settings
+                if (cfg_params[5].size() == 7)
+                {
+                    tc_ch1[0] = std::stoi(cfg_params[5][1]) & 0x01;
+
+                    uint16_t offset = min((uint16_t)(std::stoi(cfg_params[5][2]) & 0xFFFF), max_offset);
+                    tc_ch1[1] = (offset >> 8) & 0xFF;
+                    tc_ch1[2] = offset & 0xFF;
+
+                    uint16_t length = min((uint16_t)(std::stoi(cfg_params[5][3]) & 0xFFFF), max_length) + offset;
+                    tc_ch1[3] = (length >> 8) & 0xFF;
+                    tc_ch1[4] = length & 0xFF;
+
+                    tc_ch2[0] = std::stoi(cfg_params[5][4]) & 0x01;
+
+                    offset = min((uint16_t)(std::stoi(cfg_params[5][5]) & 0xFFFF), max_offset);
+                    tc_ch2[1] = (offset >> 8) & 0xFF;
+                    tc_ch2[2] = offset & 0xFF;
+
+                    length = min((uint16_t)(std::stoi(cfg_params[5][6]) & 0xFFFF), max_length) + offset;
+                    tc_ch2[3] = (length >> 8) & 0xFF;
+                    tc_ch2[4] = length & 0xFF;
+                }
+                else
+                {
+                    tc_ch1.clear();
+                    tc_ch1 = { 0,0,0, 0x61, 0xA8 };
+                    tc_ch2.clear();
+                    tc_ch2 = { 0,0,0, 0x61, 0xA8 };
+                }
+            }
             else
+            {
                 trigger_source = Spinnaker::TriggerSourceEnums::TriggerSource_Software;
+            }
 
             // line 7: output save location
             output_save_location = cfg_params[6][0];
@@ -424,6 +459,17 @@ int main(int argc, char** argv)
             tc.set_trigger_info(tc.rx);
             std::cout << tc << std::endl;
 
+            // configure the trigger according to the inputs
+            // channel 1
+            tc.tx = data_packet(CONFIG_T1, (uint8_t)tc_ch1.size(), tc_ch1);
+            tc.send_packet(tc_handle, tc.tx);
+            status = tc.receive_packet(tc_handle, 3, tc.rx);
+
+            // channel 2
+            tc.tx = data_packet(CONFIG_T2, (uint8_t)tc_ch2.size(), tc_ch2);
+            tc.send_packet(tc_handle, tc.tx);
+            status = tc.receive_packet(tc_handle, 3, tc.rx);
+
         }
 
 
@@ -537,6 +583,11 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
         std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
+        std::cout << "  f - Step the focus motor by 160 steps" << std::endl;
+        std::cout << "  g - Step the focus motor by -160 steps" << std::endl;
+        std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
+        std::cout << "  x - Step the zoom motor by -160 steps" << std::endl;
+
         std::cout << "  s - Save an image" << std::endl;
         std::cout << "  q - Quit" << std::endl;
         std::cout << std::endl;
