@@ -5,7 +5,7 @@ This project contains the project files for the Passive Range Project.
 
 ## Dependencies
 
-The code in this repository has the following dependecies:
+The code in this project has the following dependecies:
 
 1. [CMake 2.8.12+](https://cmake.org/download/)
 2. [FTDI D2XX Drivers](https://www.ftdichip.com/Drivers/D2XX.htm)
