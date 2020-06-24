@@ -31,7 +31,7 @@ unsigned char direction = 0;
 
 unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {0,90};
+const unsigned char firmware[2] = {1,00};
 const unsigned char serial_num[1] = {2};
 
 int focus_step_count = 0;
@@ -287,13 +287,15 @@ void main(void)
                         // run the motor control
                         steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
 						FOC_DIR_PIN = (rx_data[2] >> 7) & 0x01;
+                        
+                        //steps = (((rx_data[2] >> 7) & 0x01) == 1) ? -steps : steps;
 						
 						// ensure that the steps do not go beyond the limits on the rings being turned
 						desired_steps = focus_step_count + steps;
 						
 						if(desired_steps < min_steps)
 						{
-							steps = min_steps - focus_step_count;
+							steps = focus_step_count - min_steps;
 						}
 						else if(desired_steps > max_focus_steps)
 						{

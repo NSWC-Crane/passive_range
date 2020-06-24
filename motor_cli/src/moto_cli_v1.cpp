@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     FT_HANDLE driver_handle = NULL;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
-    uint32_t read_timeout = 25000;
+    uint32_t read_timeout = 30000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     int32_t steps;
@@ -204,8 +204,11 @@ int main(int argc, char** argv)
                     md.send_packet(driver_handle, md.tx);
                     status = md.receive_packet(driver_handle, 6, md.rx);
 
-                    steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                    std::cout << "steps: " << steps << std::endl;
+                    if (status)
+                    {
+                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << "steps: " << steps << std::endl;
+                    }
                 }
                 else
                 {
@@ -228,8 +231,11 @@ int main(int argc, char** argv)
                     md.send_packet(driver_handle, md.tx);
                     status = md.receive_packet(driver_handle, 6, md.rx);
 
-                    steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                    std::cout << "steps: " << steps << std::endl;
+                    if (status)
+                    {
+                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << "steps: " << steps << std::endl;
+                    }
                 }
                 else
                 {
@@ -241,7 +247,7 @@ int main(int argc, char** argv)
             {
                 if (console_input.length() > 3)
                 {
-
+                    status = false;
                     switch (console_input[1])
                     {
                     case 'f':
@@ -250,8 +256,8 @@ int main(int argc, char** argv)
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
 
-                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "steps: " << steps << std::endl;
+                        //steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        //std::cout << "steps: " << steps << std::endl;
                         break;
 
                     case 'z':
@@ -260,10 +266,13 @@ int main(int argc, char** argv)
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
 
-                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "steps: " << steps << std::endl;
                         break;
 
+                    }
+                    if (status)
+                    {
+                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << "steps: " << steps << std::endl;
                     }
                 }
             }
