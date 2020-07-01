@@ -145,26 +145,6 @@ void init_UART(void)
     U2MODEbits.ON = 1;          // Turn UART2 On
 }
 
-//void init_CN(void)
-//{
-//    // Configure Change Notification
-//    //TRISGbits.TRISG6 = 1;       // set TRIS status as input
-//    TRISGbits.TRISG7 = 1;       // set TRIS status as input
-//    //CN1 = 0;
-//
-//    // enable change notification pins
-//    //CNENbits.CNEN8 = 1;         // enable CN8/RG6
-//    //CNENbits.CNEN9 = 1;         // enable CN9/RG7
-//
-//    // enable pull-up resistors
-//    //CNPUEbits.CNPUE8 = 1;
-//    //CNPUEbits.CNPUE9 = 1;
-//    
-//    CNCONbits.SIDL = 1;         // Idle Mode halts CN operation
-//    CNCONbits.ON = 1;           // turn change notification on
-//
-//}
-
 void init_SPI3(void)
 {
     // configure TRIS Registers

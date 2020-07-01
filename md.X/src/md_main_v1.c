@@ -32,12 +32,12 @@ unsigned char direction = 0;
 unsigned char rx_data[PKT_SIZE] = {0, 0, 0};
 unsigned char data_ready = 0;
 const unsigned char firmware[2] = {1,00};
-const unsigned char serial_num[1] = {2};
+const unsigned char serial_num[1] = {1};
 
 int focus_step_count = 0;
 int zoom_step_count = 0;
 
-unsigned int focus_motor_pw = 3500;               // number of TMR2 ticks for 10MHz clock
+unsigned int focus_motor_pw = 3200;               // number of TMR2 ticks for 10MHz clock
 unsigned int zoom_motor_pw = 3500;                // number of TMR2 ticks for 10MHz clock
 const unsigned int max_pw = 30000;
 const unsigned int min_pw = 1000;
@@ -47,61 +47,6 @@ const int max_zoom_steps = 4628;					// 3000
 const int min_steps = 0;
 
 /***************************Interrupt Definitions******************************/
-
-/*****************************Timer 2 Interrupt********************************/
-void __ISR(_TIMER_2_VECTOR, IPL6) Timer2Handler(void)
-{
-    //count1 = _CP0_GET_COUNT();
-    TMR2 = 0;
-//    while (IFS1bits.AD1IF == 0);        // wait for conversion to be done
-//    AD1[count] = max_ADC1;
-//    AD2[count] = max_ADC2;
-//    AD3[count] = max_ADC3;
-//    AD4[count] = max_ADC4;
-//    IFS1bits.AD1IF = 0;                 // reset interrupt flag
-
-//    max_ADC1 = 0;                       // reset max for ADC channels
-//    max_ADC2 = 0;
-//    max_ADC3 = 0;
-//    max_ADC4 = 0;
-//
-//    delay_count++;
-//    count++;
-    switch(direction)
-    {
-        case 0:
-            break;
-        case 1:
-            break;
-    }
-
-    mT2ClearIntFlag();
-    //count2 = _CP0_GET_COUNT();
-}   // end of Timer 2 interrupt
-
-/*****************************Timer 3 Interrupt********************************/
-void __ISR(12, IPL7AUTO) Timer3Handler(void)
-{
-    
-    TMR3 = 0;
-//    while (IFS1bits.AD1IF == 0);        // wait for conversion to be done
-    
-//    if(ADC1BUF0>max_ADC1)               // check max values
-//        max_ADC1 = ADC1BUF0;
-//    if(ADC1BUF1>max_ADC2)
-//        max_ADC2 = ADC1BUF1;
-//    if(ADC1BUF2>max_ADC3)
-//        max_ADC3 = ADC1BUF2;
-//    if(ADC1BUF3>max_ADC4)
-//        max_ADC4 = ADC1BUF3;
-
-//    IFS1bits.AD1IF = 0;                 // reset interrupt flag
-
-    mT3ClearIntFlag();
-    
-}   // end of Timer 3 interrupt
-
-
 void __ISR(32,IPL4) UART_Rx(void)
 {
     char tmp_data = 0;
@@ -124,8 +69,7 @@ void main(void)
     // Variable Declarations
     int idx = 0;
     int length = 0;
-    //int int_temp = 0;
-	int desired_steps = 0;
+	int final_step = 0;
 	int steps = 0;
 	
 	unsigned int tmp_pw = 0;
@@ -287,17 +231,15 @@ void main(void)
                         // run the motor control
                         steps = (rx_data[2]&0xFF)<<24 | (rx_data[3]<<16) | (rx_data[4]<<8) | (rx_data[5]);
 						FOC_DIR_PIN = (rx_data[2] >> 7) & 0x01;
-                        
-                        //steps = (((rx_data[2] >> 7) & 0x01) == 1) ? -steps : steps;
-						
+                        						
 						// ensure that the steps do not go beyond the limits on the rings being turned
-						desired_steps = focus_step_count + steps;
+						final_step = focus_step_count + steps;
 						
-						if(desired_steps < min_steps)
+						if(final_step < min_steps)
 						{
-							steps = focus_step_count - min_steps;
+							steps = -(focus_step_count - min_steps);
 						}
-						else if(desired_steps > max_focus_steps)
+						else if(final_step > max_focus_steps)
 						{
 							steps = max_focus_steps - focus_step_count;
 						}
@@ -324,22 +266,22 @@ void main(void)
                         if(steps >= focus_step_count)
                         {
                             FOC_DIR_PIN = 0;
-                            desired_steps = steps - focus_step_count;
-                            steps = desired_steps;
+                            steps -= focus_step_count;
                         }
                         else
                         {
                             FOC_DIR_PIN = 1;
-                            desired_steps = focus_step_count - steps;
-                            steps = -desired_steps;
-                            
+                            steps = -(focus_step_count - steps);
                         }
 						
-						if(desired_steps < min_steps)
+						// ensure that the steps do not go beyond the limits on the rings being turned
+						final_step = focus_step_count + steps;
+
+						if(final_step < min_steps)
 						{
-							steps = min_steps - focus_step_count;
+							steps = -(focus_step_count - min_steps);
 						}
-						else if(desired_steps > max_focus_steps)
+						else if(final_step > max_focus_steps)
 						{
 							steps = max_focus_steps - focus_step_count;
 						}
@@ -421,13 +363,13 @@ void main(void)
 						ZM_DIR_PIN = ((rx_data[2] >> 7) & 0x01) ^ 1;
                                 
 						// ensure that the steps do not go beyond the limits on the rings being turned
-						desired_steps = zoom_step_count + steps;
+						final_step = zoom_step_count + steps;
 
-						if(desired_steps < min_steps)
+						if(final_step < min_steps)
 						{
-							steps = min_steps - zoom_step_count;
+							steps = -(zoom_step_count - min_steps);
 						}
-						else if(desired_steps > max_zoom_steps)
+						else if(final_step > max_zoom_steps)
 						{
 							steps = max_zoom_steps - zoom_step_count;
 						}
@@ -454,21 +396,22 @@ void main(void)
                         if(steps >= zoom_step_count)
                         {
                             ZM_DIR_PIN = 1;
-                            desired_steps = steps - zoom_step_count;
-                            steps = desired_steps;                                                       
+                            steps -= zoom_step_count;
                         }
                         else
                         {
                             ZM_DIR_PIN = 0;
-                            desired_steps = zoom_step_count - steps;
-                            steps = -desired_steps;                           
+                            steps = -(zoom_step_count - steps);
                         }
-
-						if(desired_steps < min_steps)
+                     
+						// ensure that the steps do not go beyond the limits on the rings being turned
+						final_step = zoom_step_count + steps;
+                        
+						if(final_step < min_steps)
 						{
-							steps = min_steps - zoom_step_count;
+							steps = -(zoom_step_count - min_steps);
 						}
-						else if(desired_steps > max_zoom_steps)
+						else if(final_step > max_zoom_steps)
 						{
 							steps = max_zoom_steps - zoom_step_count;
 						}
@@ -705,76 +648,6 @@ unsigned char get_U2_char(void)
     
     return temp;
 }   // end of get_U2_char
-
-
-//-----------------------------------------------------------------------------
-/* Function: void BCD_Convert(short ADC_Value)
- *
- * Arguments:
- * 1. Value: Value to convert
- *
- * Return Value: None
- *
- * Description: Function to convert a number to a hex representation over serial port */
-void BCD_Convert(short Value)
-{
-    short temp, i;
-    char Convert_Array[4];
-
-    temp = Value;
-    Convert_Array[0] = temp / 1000;
-    temp = temp % 1000;
-    Convert_Array[1] = temp / 100;
-    temp = temp % 100;
-    Convert_Array[2] = temp / 10;
-    temp = temp % 10;
-    Convert_Array[3] = temp;
-
-    for (i=0; i<4; i++)
-    {
-        send_char(Convert_Array[i] + 48);
-    }
-    
-}   // end of BCD_Convert
-
-
-//-----------------------------------------------------------------------------
-/* Function: void bin2hex(unsigned char convert)
- *
- * Arguments:
- * 1. convert: binary 1-byte number to convert
- *
- * Return Value: None
- *
- * Description: convert a single byte to a 2 character number to send over serial
- * comms  */
-void bin2hex(unsigned char convert)
-{
-    unsigned char i, temp;
-
-    for(i=2; i>0; i--)
-    {
-        temp = (convert>>4*(i-1))&0x0F;
-
-        if(temp <= 9)
-            temp += 48;
-        else if(temp == 10)
-            temp = 'A';
-        else if(temp == 11)
-            temp = 'B';
-        else if(temp == 12)
-            temp = 'C';
-        else if(temp == 13)
-            temp = 'D';
-        else if(temp == 14)
-            temp = 'E';
-        else if(temp == 15)
-            temp = 'F';
-
-        send_char(temp);
-    }
-
-} // end of bin2hex
 
 //-----------------------------------------------------------------------------
 /* Function: void send_packet(unsigned char code)
