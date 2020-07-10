@@ -76,11 +76,13 @@ int main(int argc, char** argv)
     uint32_t read_timeout = 30000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
+
+    std::string motor_type = "";
     int32_t steps, pw;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
-    unsigned int focus_pw = 0;
-    unsigned int zoom_pw = 0;
+    int32_t focus_pw = 0;
+    int32_t zoom_pw = 0;
 
 #if defined(__linux__)
     struct termios old_term, new_term;
@@ -137,19 +139,47 @@ int main(int argc, char** argv)
         md.set_driver_info(md.rx);
         std::cout << md << std::endl;
 
+        //-----------------------------------------------------------------------------
         // get the current step count reported by the controller
         md.tx = data_packet(GET_FOC_MOT_STEP);
         md.send_packet(driver_handle, md.tx);
         status = md.receive_packet(driver_handle, 6, md.rx);
-        focus_step = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+        if (status)
+            focus_step = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+        else
+            focus_step = -1;
 
         md.tx = data_packet(GET_ZM_MOT_STEP);
         md.send_packet(driver_handle, md.tx);
         status = md.receive_packet(driver_handle, 6, md.rx);
-        zoom_step = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+        if (status)
+            zoom_step = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+        else
+            zoom_step = -1;
 
         std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
 
+        //-----------------------------------------------------------------------------
+        // get the current motor pulse widths reported by the controller
+        md.tx = data_packet(GET_FOC_MOT_SPD);
+        md.send_packet(driver_handle, md.tx);
+        status = md.receive_packet(driver_handle, 6, md.rx);
+        if (status)
+            focus_pw = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+        else
+            focus_pw = -1;
+
+        md.tx = data_packet(GET_ZM_MOT_SPD);
+        md.send_packet(driver_handle, md.tx);
+        status = md.receive_packet(driver_handle, 6, md.rx);
+        if (status)
+            zoom_pw = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+        else
+            zoom_pw = -1;
+
+        std::cout << "Focus PW: " << focus_pw << ", Zoom PW: " << zoom_pw << std::endl;
+
+        //-----------------------------------------------------------------------------
 		// print out a short menu of commands for the CLI
 		help_menu();
 
@@ -200,11 +230,6 @@ int main(int argc, char** argv)
                 if (console_input.length() >= 3)
                 {
                     focus_step = std::stoi(console_input.substr(2, console_input.length()-1));
-                    // try to step the focus motor
-                    //if (value < 0)
-                    //    focus_step = abs(value) | MOTOR_CCW;
-                    //else
-                    //    focus_step = value | MOTOR_CW;
 
                     md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                     md.send_packet(driver_handle, md.tx);
@@ -213,7 +238,7 @@ int main(int argc, char** argv)
                     if (status)
                     {
                         steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "steps: " << steps << std::endl;
+                        std::cout << "focus steps: " << steps << std::endl;
                     }
                 }
                 else
@@ -229,11 +254,6 @@ int main(int argc, char** argv)
                 {
                     zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
 
-                    //if (value < 0)
-                    //    zoom_step = abs(value) | MOTOR_CCW;
-                    //else
-                    //    zoom_step = value | MOTOR_CW;
-
                     md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                     md.send_packet(driver_handle, md.tx);
                     status = md.receive_packet(driver_handle, 6, md.rx);
@@ -241,7 +261,7 @@ int main(int argc, char** argv)
                     if (status)
                     {
                         steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "steps: " << steps << std::endl;
+                        std::cout << "zoom steps: " << steps << std::endl;
                     }
                 }
                 else
@@ -256,19 +276,20 @@ int main(int argc, char** argv)
                 if (console_input.length() > 3)
                 {
                     status = false;
+                    motor_type = "";
                     switch (console_input[1])
                     {
                     case 'f':
+                        motor_type = "focus";
                         focus_step = std::stoi(console_input.substr(3, console_input.length() - 1));
                         md.tx = data_packet(ABS_FOCUS_CTRL, focus_step);
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
 
-                        //steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        //std::cout << "steps: " << steps << std::endl;
                         break;
 
                     case 'z':
+                        motor_type = "zoom";
                         zoom_step = std::stoi(console_input.substr(3, console_input.length() - 1));
                         md.tx = data_packet(ABS_ZOOM_CTRL, zoom_step);
                         md.send_packet(driver_handle, md.tx);
@@ -281,7 +302,7 @@ int main(int argc, char** argv)
                     if (status)
                     {
                         steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "steps: " << steps << std::endl;
+                        std::cout << motor_type << " steps: " << steps << std::endl;
                     }
                 }
             }
@@ -292,12 +313,12 @@ int main(int argc, char** argv)
                 if (console_input.length() > 3)
                 {
                     status = false;
-                    std::string motor_type = "";
+                    motor_type = "";
                     switch (console_input[1])
                     {
                     case 'f':
                         motor_type = "focus";
-                        focus_pw = (unsigned int)std::abs(std::stoi(console_input.substr(3, console_input.length() - 1)));
+                        focus_pw = std::abs(std::stoi(console_input.substr(3, console_input.length() - 1)));
                         focus_pw = min(max_pw, max(min_pw, focus_pw));
                         md.tx = data_packet(SET_FOC_MOT_SPD, focus_pw);
                         md.send_packet(driver_handle, md.tx);
@@ -309,7 +330,7 @@ int main(int argc, char** argv)
 
                     case 'z':
                         motor_type = "zoom";
-                        zoom_pw = (unsigned int)std::abs(std::stoi(console_input.substr(3, console_input.length() - 1)));
+                        zoom_pw = std::abs(std::stoi(console_input.substr(3, console_input.length() - 1)));
                         zoom_pw = min(max_pw, max(min_pw, zoom_pw));
                         md.tx = data_packet(SET_ZM_MOT_SPD, zoom_pw);
                         md.send_packet(driver_handle, md.tx);
@@ -360,13 +381,14 @@ int main(int argc, char** argv)
 
 #endif
                     status = false;
+                    motor_type = "";
 
                     switch (key)
                     {
                     case (int)('w'):
                     //case 72:    // up arrow key
                         zoom_step = -16;
-
+                        motor_type = "zoom";
                         md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
@@ -375,7 +397,7 @@ int main(int argc, char** argv)
                     case (int)('a') :
                     //case 75:    // left arrow key
                         focus_step = -16;
-
+                        motor_type = "focus";
                         md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
@@ -386,7 +408,7 @@ int main(int argc, char** argv)
                     case (int)('d') :
                     //case 77:    // right arrow key
                         focus_step = 16;
-
+                        motor_type = "focus";
                         md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
@@ -396,7 +418,7 @@ int main(int argc, char** argv)
                     case (int)('s') :
                     //case 80:    // down arrow key
                         zoom_step = 16;
-
+                        motor_type = "zoom";
                         md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
                         md.send_packet(driver_handle, md.tx);
                         status = md.receive_packet(driver_handle, 6, md.rx);
@@ -412,7 +434,7 @@ int main(int argc, char** argv)
                     if (status)
                     {
                         steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "steps: " << steps << std::endl;
+                        std::cout << motor_type << " steps: " << steps << std::endl;
                     }
 
                 } while (direct == true);
