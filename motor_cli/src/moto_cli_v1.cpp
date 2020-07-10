@@ -46,6 +46,8 @@ void help_menu(void)
     std::cout << "  d - step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
     std::cout << "  af <step> - set the absolute focus motor step value [0 - " << max_focus_steps << "]" << std::endl;
     std::cout << "  az <step> - set the absolute zoom motor step value [0 - " << max_zoom_steps << "]" << std::endl;
+    std::cout << "  sf <step> - set the focus motor step speed [" << min_pw << " - " << max_pw << "]" << std::endl;
+    std::cout << "  sz <step> - set the zoom motor step speed [" << min_pw << " - " << max_pw << "]" << std::endl;
 
     //std::cout << "  x - zero the motor counter" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
@@ -74,9 +76,11 @@ int main(int argc, char** argv)
     uint32_t read_timeout = 30000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
-    int32_t steps;
+    int32_t steps, pw;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
+    unsigned int focus_pw = 0;
+    unsigned int zoom_pw = 0;
 
 #if defined(__linux__)
     struct termios old_term, new_term;
@@ -189,7 +193,9 @@ int main(int argc, char** argv)
                     std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }
             }
-			else if(console_input[0] == 'f')
+
+            //-----------------------------------------------------------------------------
+            else if(console_input[0] == 'f')
 			{
                 if (console_input.length() >= 3)
                 {
@@ -216,7 +222,8 @@ int main(int argc, char** argv)
                 }
             }
 
-			else if(console_input[0] == 'z')
+            //-----------------------------------------------------------------------------
+            else if(console_input[0] == 'z')
 			{
                 if (console_input.length() >= 3)
                 {
@@ -243,6 +250,7 @@ int main(int argc, char** argv)
                 }				
 			}
 
+            //-----------------------------------------------------------------------------
             else if (console_input[0] == 'a')
             {
                 if (console_input.length() > 3)
@@ -269,6 +277,7 @@ int main(int argc, char** argv)
                         break;
 
                     }
+
                     if (status)
                     {
                         steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
@@ -277,11 +286,52 @@ int main(int argc, char** argv)
                 }
             }
 
+            //-----------------------------------------------------------------------------
+            else if (console_input[0] == 's')
+            {
+                if (console_input.length() > 3)
+                {
+                    status = false;
+                    std::string motor_type = "";
+                    switch (console_input[1])
+                    {
+                    case 'f':
+                        motor_type = "focus";
+                        focus_pw = (unsigned int)std::abs(std::stoi(console_input.substr(3, console_input.length() - 1)));
+                        focus_pw = min(max_pw, max(min_pw, focus_pw));
+                        md.tx = data_packet(SET_FOC_MOT_SPD, focus_pw);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
 
+                        //steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        //std::cout << "steps: " << steps << std::endl;
+                        break;
 
+                    case 'z':
+                        motor_type = "zoom";
+                        zoom_pw = (unsigned int)std::abs(std::stoi(console_input.substr(3, console_input.length() - 1)));
+                        zoom_pw = min(max_pw, max(min_pw, zoom_pw));
+                        md.tx = data_packet(SET_ZM_MOT_SPD, zoom_pw);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+
+                        break;
+
+                    }
+
+                    if (status)
+                    {
+                        pw = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << motor_type << " pw: " << pw << std::endl;
+                    }
+                }
+            }
+
+            //-----------------------------------------------------------------------------
             else if (console_input[0] == 'd')
             {
                 std::cout << "Step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
+                std::cout << "Press any other key to exit direct control mode." << std::endl;
 
                 direct = true;
                 //wchar_t key;
@@ -295,7 +345,7 @@ int main(int argc, char** argv)
                     //key = _getch();
                     //if (key == 0xE0)
                     //{
-                        key = _getch();
+                    key = _getch();
 
 #elif defined(__linux__)
                 // http://shtrom.ssji.net/skb/getc.html
@@ -309,59 +359,61 @@ int main(int argc, char** argv)
                     key = std::getchar();
 
 #endif
+                    status = false;
 
-                        switch (key)
-                        {
-                        case (int)('w'):
-                        //case 72:    // up arrow key
-                            zoom_step = -16;
+                    switch (key)
+                    {
+                    case (int)('w'):
+                    //case 72:    // up arrow key
+                        zoom_step = -16;
 
-                            md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
-                            md.send_packet(driver_handle, md.tx);
-                            status = md.receive_packet(driver_handle, 6, md.rx);
-                            break;
+                        md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+                        break;
 
-                        case (int)('a') :
-                        //case 75:    // left arrow key
-                            focus_step = -16;
+                    case (int)('a') :
+                    //case 75:    // left arrow key
+                        focus_step = -16;
 
-                            md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
-                            md.send_packet(driver_handle, md.tx);
-                            status = md.receive_packet(driver_handle, 6, md.rx);
-                            //printf("left");
-                            //std::cout << "left" << std::endl;
-                            break;
+                        md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+                        //printf("left");
+                        //std::cout << "left" << std::endl;
+                        break;
 
-                        case (int)('d') :
-                        //case 77:    // right arrow key
-                            focus_step = 16;
+                    case (int)('d') :
+                    //case 77:    // right arrow key
+                        focus_step = 16;
 
-                            md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
-                            md.send_packet(driver_handle, md.tx);
-                            status = md.receive_packet(driver_handle, 6, md.rx);
-                            //std::cout << "right" << std::endl;
-                            break;
+                        md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+                        //std::cout << "right" << std::endl;
+                        break;
 
-                        case (int)('s') :
-                        //case 80:    // down arrow key
-                            zoom_step = 16;
+                    case (int)('s') :
+                    //case 80:    // down arrow key
+                        zoom_step = 16;
 
-                            md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
-                            md.send_packet(driver_handle, md.tx);
-                            status = md.receive_packet(driver_handle, 6, md.rx);
-                            //std::cout << "down" << std::endl;
-                            break;
+                        md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
+                        md.send_packet(driver_handle, md.tx);
+                        status = md.receive_packet(driver_handle, 6, md.rx);
+                        //std::cout << "down" << std::endl;
+                        break;
 
-                        default:
-                            direct = false;
+                    default:
+                        direct = false;
 
-                            break;
-                        }
-                    //}
-                    //else
-                    //{
-                    //    direct = false;
-                    //}
+                        break;
+                    }
+
+                    if (status)
+                    {
+                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
+                        std::cout << "steps: " << steps << std::endl;
+                    }
 
                 } while (direct == true);
 
