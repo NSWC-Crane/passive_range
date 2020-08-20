@@ -1,9 +1,76 @@
 
+#include "dynamixel_protocol_v2.h"
 
 
-unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
+
+data_packet initialize_packet(void);
+{
+    data_packet packet;
+    
+     // create the header
+    packet.data[0] = 0xFF;
+    packet.data[1] = 0xFF;
+    packet.data[2] = 0xFD;
+    packet.data[3] = 0x00;
+    
+    return packet;
+}   // end of initialize_packet
+
+//-----------------------------------------------------------------------------
+void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, data_packet packet)
+{
+    unsigned short idx;
+    unsigned char length_lb = 0; length_ub = 0;
+    unsigned char crc_lb = 0; crc_ub = 0;
+    unsigned short crc;
+    
+    
+    // fill in the id field
+    packet.data[ID] = id;
+    
+    // get the total packet length
+    split_uint16((7+param_length), &length_lb, &length_ub);
+    packet.data[LENGTH] = length_lb;
+    packet.data[LENGTH+1] = length_ub;
+
+    // fill in the instruction field
+    packet.data[INSTRUCTION] = instruction;
+
+    // fill in the params
+    for(idx=0; idx<param_length; ++idx)
+    {
+        packet.data[PARAMETER+idx] = params[idx];       
+    }
+    
+    
+    //calculate the crc
+    crc = calculate_crc((5+param_length), packet.data);
+    split_uint16(crc, &crc_lb, &crc_ub);
+    packet.data[PARAMETER+idx++] = crc_lb;
+    packet.data[PARAMETER+idx] = crc_ub;
+    
+    
+}   // end of create_packet
+
+
+//-----------------------------------------------------------------------------
+void split_uint16(unsigned short data, unsigned char *lower_byte, unsigned char *upper_byte)
+{
+    *lower_byte = data & 0x00FF;
+    *upper_byte = (data >> 8) & 0x00FF;
+}
+
+//-----------------------------------------------------------------------------
+unsigned short make_uint16(unsigned char lower_byte, unsigned char upper_byte)
+{
+    return (unsigned short)((upper_byte<<8) | lower_byte);
+}
+
+//-----------------------------------------------------------------------------
+unsigned short calculate_crc(unsigned short data_size, unsigned char *data)
 {
     unsigned short idx, jdx;
+    unsigned short crc_accum = 0;
     
     unsigned short crc_table[256] = {
         0x0000, 0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
@@ -40,9 +107,9 @@ unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr,
         0x8213, 0x0216, 0x021C, 0x8219, 0x0208, 0x820D, 0x8207, 0x0202
     };
 
-    for(idx = 0; idx < data_blk_size; ++idx)
+    for(idx = 0; idx < data_size; ++idx)
     {
-        jdx = ((unsigned short)(crc_accum >> 8) ^ data_blk_ptr[idx]) & 0x00FF;
+        jdx = ((unsigned short)(crc_accum >> 8) ^ data[idx]) & 0x00FF;
         crc_accum = (crc_accum << 8) ^ crc_table[jdx];
     }
 
