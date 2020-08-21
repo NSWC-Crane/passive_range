@@ -155,7 +155,7 @@ int main(int argc, char** argv)
 /*************************Engineering Operations******************************/
 // ----------------------------------------------------------------------------
                         
-                    // read the control firmware
+                    // read the controller firmware
                     case FIRM_READ:
                         length = 2;
                         send_packet(2, FIRM_READ, length, firmware);
