@@ -1,9 +1,9 @@
 
-#include "dynamixel_protocol_v2.h"
+#include "../include/dynamixel_protocol_v2.h"
 
 
 
-data_packet initialize_packet(void);
+data_packet initialize_packet(void)
 {
     data_packet packet;
     
@@ -20,8 +20,8 @@ data_packet initialize_packet(void);
 void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, data_packet packet)
 {
     unsigned short idx;
-    unsigned char length_lb = 0; length_ub = 0;
-    unsigned char crc_lb = 0; crc_ub = 0;
+    unsigned char length_lb = 0, length_ub = 0;
+    unsigned char crc_lb = 0, crc_ub = 0;
     unsigned short crc;
     
     

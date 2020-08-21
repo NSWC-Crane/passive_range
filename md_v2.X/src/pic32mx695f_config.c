@@ -21,7 +21,7 @@ void init_CLOCK(void)
     OSCCONbits.COSC = 3;        // Enable Primary OSC w/PLL
     OSCCONbits.SLPEN = 1;       // Enable Sleep on "wait"
     OSCCONbits.UFRCEN = 0;      // USB PLL as USB Clock Source
-    OSCCONbits.SOSCEN = 1;      // Enable Secondary OSC
+    OSCCONbits.SOSCEN = 0;      // disable Secondary OSC
     OSCCONbits.PBDIV = 0;       // Peripheral Bus CLock diveded by 1
 
     RTCCONbits.RTCWREN = 0;     // Enable write operation for RTCC
@@ -43,10 +43,10 @@ void init_TMR1(void)
 {
     // Configure Timer 1 - used for general timing and delays
     T1CONbits.SIDL = 1;         // Discontinue operation in Idle mode
+    T1CONbits.TWDIS = 0;        // Back-to-back writes are enabled
     T1CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    //T1CONbits.TWDIS = 1;        // Back-to-back writes are disabled
-    T1CONbits.TCKPS = 2;        // 1:64 prescale value, FPBclk = 80MHz -> T1 period ~= 0.8us
-    T1CONbits.TSYNC = 0;        // 
+    T1CONbits.TCKPS = 1;        // 1:64 prescale value, FPBclk = 80MHz -> T1 period ~= 0.1us
+    T1CONbits.TSYNC = 0;        // When TCS = 0: This bit is ignored
     T1CONbits.TCS = 0;          // Internal PBCLK
     PR1 = 0xFFFF;               // Period Register to max
     T1CONbits.ON = 1;           // Turn Timer1 on
@@ -114,7 +114,7 @@ void init_UART1(void)
     U1MODEbits.LPBACK = 0;      // Loopback mode is disabled
     U1MODEbits.ABAUD = 0;       // Auto Baud rate measurement disabled
     U1MODEbits.RXINV = 0;       // UxRX Idle state is 1
-    U1MODEbits.BRGH = 0;        // Standard Speed mode ? 16x baud clock enabled
+    U1MODEbits.BRGH = 1;        // High Speed mode - 4x baud clock enabled
     U1MODEbits.PDSEL = 0;       // 8-bit data, no parity
     U1MODEbits.STSEL = 0;       // 1 Stop bit
 
@@ -127,12 +127,8 @@ void init_UART1(void)
     U1STAbits.URXISEL = 0;      // Interrupt flag bit is set while receive buffer is not empty
     U1STAbits.ADDEN = 0;        // Address Detect mode is disabled
 
-    // Fpb = 80MHz; BRG = Fpb/(16*baudrate) - 1
-    U1BRG = 0x00000013;         // BRG = 42 (0x2A); 115.2k baud rate; 0.9% error
-                                // BRG = 19 (0x13); 250k baud rate; 0.00% error
-                                // BRG = 21 (0x15); 230.4k baud rate; -1.36% error
-                                // BRG = 10 (0x0A); 460.8k baud rate; -1.36% error
-                                // BRG = 9 (0x09); 500k baud rate; 0.00% error
+    // Fpb = 80MHz; BRG = Fpb/(4*baudrate) - 1
+    U1BRG = 0x00000013;         // BRG = 19 (0x13); 1M baud rate; 0.00% error
 
     U1MODEbits.ON = 1;          // Turn UART1 On
 }
@@ -168,6 +164,7 @@ void init_UART2(void)
                                 // BRG = 21 (0x15); 230.4k baud rate; -1.36% error
                                 // BRG = 10 (0x0A); 460.8k baud rate; -1.36% error
                                 // BRG = 9 (0x09); 500k baud rate; 0.00% error
+                                // BRG =  (0x); 1M baud rate)
 
     U2MODEbits.ON = 1;          // Turn UART2 On
 }
