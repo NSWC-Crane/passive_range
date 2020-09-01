@@ -14,6 +14,7 @@
 
 #define _SUPPRESS_PLIB_WARNING 1
 
+
 //#include <stdio.h>
 //#include <stdlib.h>
 #include <xc.h>
@@ -44,22 +45,54 @@ const int min_step = 0;
 // ----------------------------------------------------------------------------
 // Interrupt Definitions
 // ----------------------------------------------------------------------------
-void __ISR(32,IPL4) UART2_Rx(void)
+void __ISR(32, IPL4AUTO) UART2_Rx(void)
 {
     char tmp_data = 0;
 
-    tmp_data = get_char(2);
+    tmp_data = get_char(U2);
 
     if(tmp_data == '$')
     {
         data_ready = 1;
-        rx_data[0] = get_char(2);
-        rx_data[1] = get_char(2);
-        //rx_data[2] = get_U2_char();
+        rx_data[0] = get_char(U2);
+        rx_data[1] = get_char(U2);
     }
 
     mU2RXClearIntFlag();
 }   // end of UART2 interrupt
+
+
+void __ISR(49, IPL5AUTO) UART1_RX(void)
+{
+    int idx = 0;
+    unsigned short length;
+    
+    // get the header and reserved byte
+    rx_data[0] = get_char(U1);
+    rx_data[1] = get_char(U1);
+    rx_data[2] = get_char(U1);
+    rx_data[3] = get_char(U1);
+    
+    // get the id
+    rx_data[4] = get_char(U1);
+    
+    // get the length
+    rx_data[5] = get_char(U1);
+    rx_data[6] = get_char(U1);
+    length = (rx_data[6]<<8) | rx_data[5];
+    
+    // get the data
+    for(idx=0; idx<length-3; ++idx)
+    {
+        rx_data[idx+7] = get_char(U1);
+    }
+        
+    mU1RXClearIntFlag();
+
+}// end of UART2 interrupt
+
+
+
 
 
 // ----------------------------------------------------------------------------

@@ -50,6 +50,9 @@
 
 #define TRIG_CTRL       0x61                  /* Camera trigger control */
 
+#define U1              1
+#define U2              2
+
 
 // ----------------------------------------------------------------------------
 // Function Definitions

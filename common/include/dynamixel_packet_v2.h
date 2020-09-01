@@ -78,14 +78,14 @@ public:
         add_uint8(instruction);
     }
 
-    //dynamixel_packet(uint8_t id, uint16_t length, uint8_t instruction, std::vector<uint8_t> d)
-    //{
-    //    data.clear();
-    //    add_uint8(id);
-    //    add_uint16(length);
-    //    add_uint8(instruction);
-    //    std::copy(d.begin(), d.end(), std::back_inserter(data));
-    //}
+    dynamixel_packet(uint8_t id, uint16_t length, uint8_t instruction, uint16_t address)
+    {
+        data.clear();
+        add_uint8(id);
+        add_uint16(length);
+        add_uint8(instruction);
+        add_uint16(address);
+    }
 
     dynamixel_packet(uint8_t id, uint16_t length, uint8_t instruction, uint16_t address, std::vector<uint8_t> d)
     {
@@ -136,6 +136,11 @@ public:
         data.push_back((uint8_t)((d>>24)&0x00FF));
     }
     
+    uint8_t get_status_error()
+    {
+
+    }
+
     //void init(uint8_t id, uint16_t length, uint8_t instruction)
     //{
     //    data.clear();
