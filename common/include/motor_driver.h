@@ -8,40 +8,46 @@
 
 #include "ftd2xx_functions.h"
 #include "data_packet.h"
+#include "dynamixel_packet_v2.h"
 
 //#define MAX_DATA_LENGTH		16
 //#define MAX_PACKET_LENGTH	(MAX_DATA_LENGTH+2)
 
-constexpr auto CMD_MOTOR_ENABLE = 0x10;       /* Enable/Disable motors */
+//constexpr auto CMD_MOTOR_ENABLE = 0x10;       /* Enable/Disable motors */
 
-// focus motor control
-#define ZERO_FOCUS		 0x20				  /* zero the focus motor */
-constexpr auto CMD_FOCUS_CTRL = 0x21;         /* Focus motor control */
-constexpr auto ABS_FOCUS_CTRL = 0x22;         /* Absolute focus motor control */
-constexpr auto GET_FOC_MOT_STEP = 0x23;       /* get the focus motor step count */
-constexpr auto SET_FOC_MOT_SPD = 0x24;        /* set focus motor speed */
-constexpr auto GET_FOC_MOT_SPD = 0x25;        /* get focus motor speed */
+// motor control
+constexpr uint8_t FOCUS_MOTOR_ID = (uint8_t)10;         /* The ID for the focus motor */
+constexpr uint8_t ZOOM_MOTOR_ID = (uint8_t)20;          /* The ID for the zoom motor */
+constexpr uint8_t BROADCAST_ID = (uint8_t)254;
 
-// zoom motor control
-#define ZERO_ZOOM		 0x30				  /* zero the zoom motor */
-constexpr auto CMD_ZOOM_CTRL = 0x31;          /* Zoom motor control */
-constexpr auto ABS_ZOOM_CTRL = 0x32;          /* Absolute zoom motor control */
-constexpr auto GET_ZM_MOT_STEP = 0x33;        /* get the zoom motor step count */
-constexpr auto SET_ZM_MOT_SPD = 0x34;         /* set zoom motor speed */
-constexpr auto GET_ZM_MOT_SPD = 0x35;         /* get zoom motor speed */
+constexpr uint8_t MOTOR_CTRL = (uint8_t)0x20;           /* Initiate motor control */
 
-constexpr auto MD_FIRM_READ = 0x51;           /* Read firmware version return command */
-constexpr auto MD_SER_NUM_READ = 0x52;        /* Read serial number return command */
-constexpr auto MD_CONNECT = 0x53;             /* Check for data connection to motor controller */
+constexpr uint8_t GET_MOTOR_STEP = (uint8_t)0x21;       /* get the step count for a given motor ID */
 
-//#define TRIG_CTRL        0x61                 /* Camera trigger control */
+//// focus motor control
+//constexpr auto CMD_FOCUS_CTRL = 0x21;       /* Focus motor control */
+//constexpr auto ABS_FOCUS_CTRL = 0x22;       /* Absolute focus motor control */
+//constexpr auto GET_FOC_MOT_STEP = 0x23;     /* get the focus motor step count */
+//constexpr auto SET_FOC_MOT_SPD = 0x24;      /* set focus motor speed */
+//constexpr auto GET_FOC_MOT_SPD = 0x25;      /* get focus motor speed */
+//
+//// zoom motor control
+//constexpr auto CMD_ZOOM_CTRL = 0x31;          /* Zoom motor control */
+//constexpr auto ABS_ZOOM_CTRL = 0x32;          /* Absolute zoom motor control */
+//constexpr auto GET_ZM_MOT_STEP = 0x33;        /* get the zoom motor step count */
+//constexpr auto SET_ZM_MOT_SPD = 0x34;         /* set zoom motor speed */
+//constexpr auto GET_ZM_MOT_SPD = 0x35;         /* get zoom motor speed */
+
+constexpr uint8_t MD_FIRM_READ = (uint8_t)0x51;           /* Read firmware version return command */
+constexpr uint8_t MD_SER_NUM_READ = (uint8_t)0x52;        /* Read serial number return command */
+constexpr uint8_t MD_CONNECT = (uint8_t)0x53;             /* Check for data connection to motor controller */
 
 #define ENABLE_MOTOR     0x00                 /* Enable the motors */
 #define DISABLE_MOTOR    0x01                 /* Disable the motors */
 #define MOTOR_CW         0x80000000           /* turn the motor clockwise */
 #define MOTOR_CCW        0x00000000           /* turn the motor coutner-clockwise */
 
-const uint8_t motor_packet_size = 6;
+const uint8_t motor_packet_size = (uint8_t)6;
 
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;
@@ -55,7 +61,7 @@ typedef struct motor_driver_info
     uint8_t serial_number;
     uint8_t firmware[2];
 
-    motor_driver_info() {}
+    motor_driver_info() = default;
 
     motor_driver_info(std::vector<uint8_t> data)
     {
@@ -69,74 +75,34 @@ typedef struct motor_driver_info
 
 } motor_driver_info;
 
-//-----------------------------------------------------------------------------
-//typedef struct data_packet
-//{
-//    uint8_t start;
-//    uint8_t command;
-//    uint8_t byte_count;
-//    std::vector<uint8_t> data;
-//    //uint16_t checksum;
-//
-//
-//    data_packet() : start('$'), command(0), byte_count(0)
-//    {
-//        data.clear();
-//    }
-//
-//    data_packet(uint8_t com) : start('$'), command(com), byte_count(0)
-//    {
-//
-//    }
-//
-//    data_packet(uint8_t com, uint8_t bc, std::vector<uint8_t> d) : start('$'), command(com), byte_count(bc)
-//    {
-//        data = d;
-//    }
-//
-//    data_packet(uint8_t com, uint32_t d) : start('$'), command(com), byte_count(4)
-//    {
-//
-//        data.clear();
-//        data.push_back((d >> 24) & 0x00FF);
-//        data.push_back((d >> 16) & 0x00FF);
-//        data.push_back((d >> 8) & 0x00FF);
-//        data.push_back(d & 0x00FF);
-//    }
-//
-//    data_packet(std::vector<uint8_t> rx_data)
-//    {
-//        start = '$';
-//        command = rx_data[0];
-//        byte_count = rx_data[1];
-//        try {
-//            for (uint32_t idx = 0; idx < byte_count; ++idx)
-//            {
-//                data.push_back(rx_data[idx + 2]);
-//            }
-//        }
-//        catch (std::exception e)
-//        {
-//            std::cout << "Error converting std::vector<uint8_t> rx_data to data_packet" << std::endl;
-//            std::cout << e.what() << std::endl;
-//        }
-//    }
-//
-//    std::vector<uint8_t> to_vector()
-//    {
-//        std::vector<uint8_t> packet_data;
-//
-//        packet_data.push_back(start);
-//        packet_data.push_back(command);
-//        packet_data.push_back(byte_count);
-//
-//        for (uint32_t idx = 0; idx < data.size(); ++idx)
-//            packet_data.push_back(data[idx]);
-//
-//        return std::move(packet_data);
-//    }
-//
-//} data_packet;
+typedef struct motor_info
+{
+    uint8_t id;
+    uint16_t model;
+    uint8_t firmware;
+
+    motor_info() = default;
+
+    motor_info(std::vector<uint8_t> data)
+    {
+        id = data[ID_POS];
+        model = (data[SP_DATA_POS + 1] << 8) | data[SP_DATA_POS];
+        firmware = data[SP_DATA_POS + 2];
+    }
+
+    inline friend std::ostream& operator<< (
+        std::ostream& out,
+        const motor_info& item
+        )
+    {
+        out << "Motor Information: " << std::endl;
+        out << "  ID:               " << (uint32_t)item.id << std::endl;
+        out << "  Model Number:     " << (uint32_t)item.model << std::endl;
+        out << "  Firmware Version: " << (uint32_t)item.firmware << std::endl;
+        return out;
+    }
+
+} motor_info;
 
 //-----------------------------------------------------------------------------
 class motor_driver
@@ -148,7 +114,7 @@ public:
     data_packet tx;
     data_packet rx;
 
-    motor_driver() {}
+    motor_driver() = default;
 
     void set_driver_info(data_packet packet)
     {
@@ -180,50 +146,88 @@ public:
 
 
     //-----------------------------------------------------------------------------
-    bool step_focus_motor(FT_HANDLE md_handle, int32_t &focus_step, uint8_t mode = ABS_FOCUS_CTRL)
+    bool step_motor(FT_HANDLE md_handle, uint8_t id, int32_t &step)
     {
         bool status = true;
 
-        tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
+        dynamixel_packet dyn_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { 1 });
+
+        // enable the focus motor
+        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 3, rx);
 
-        tx = data_packet(mode, focus_step);
+        // step the focus motor
+        dyn_packet  = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_GOAL_POSITION, split_uint32(step));
+        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 6, rx);
 
-        focus_step = (rx.data[0] << 24) | (rx.data[1] << 16) | (rx.data[2] << 8) | (rx.data[3]);
+        step = (rx.data[SP_DATA_POS] << 24) | (rx.data[SP_DATA_POS+1] << 16) | (rx.data[SP_DATA_POS+2] << 8) | (rx.data[SP_DATA_POS+3]);
 
-        tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
+        // disable the focus motor
+        dyn_packet = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { 0 });
+        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 3, rx);
 
         return status;
 
-    }   // end of step_focus_motor
+    }   // end of step_motor
 
     //-----------------------------------------------------------------------------
-    bool step_zoom_motor(FT_HANDLE md_handle, int32_t& zoom_step, uint8_t mode = ABS_ZOOM_CTRL)
+/*
+    bool step_zoom_motor(FT_HANDLE md_handle, int32_t& zoom_step, uint8_t mode)
     {
         bool status = true;
+        dynamixel_packet dyn_packet(ZOOM_MOTOR_ID, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { 1 });
 
-        tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
+
+        tx = data_packet(MOTOR_CTRL, 1, { ENABLE_MOTOR });
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 3, rx);
 
-        tx = data_packet(mode, zoom_step);
+        tx = data_packet(MOTOR_CTRL, zoom_step);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 6, rx);
 
         zoom_step = (rx.data[0] << 24) | (rx.data[1] << 16) | (rx.data[2] << 8) | (rx.data[3]);
 
-        tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
+        tx = data_packet(MOTOR_CTRL, 1, { DISABLE_MOTOR });
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 3, rx);
 
         return status;
 
     }   // end of step_focus_motor
+*/
+
+//-----------------------------------------------------------------------------
+
+    bool ping_motors(FT_HANDLE md_handle)
+    {
+        bool status = true;
+
+        dynamixel_packet dyn_packet(FOCUS_MOTOR_ID, (uint16_t)3, DYN_PING);
+        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 8, rx);
+
+        motor_info focus_motor(rx.data);
+
+        dyn_packet = dynamixel_packet(ZOOM_MOTOR_ID, (uint16_t)3, DYN_PING);
+        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, 8, rx);
+
+        motor_info zoom_motor(rx.data);
+
+
+        std::cout << focus_motor << std::endl;
+        std::cout << zoom_motor << std::endl;
+
+        return status;
+    }
 
 };   // end of class
 

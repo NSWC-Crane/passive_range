@@ -31,6 +31,7 @@
 
 // Project Includes
 #include "motor_driver.h"
+#include "dynamixel_packet_v2.h"
 
 //-----------------------------------------------------------------------------
 void help_menu(void)
@@ -59,7 +60,7 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
 	int8_t stop = 0;
-    uint8_t status;
+    bool status;
     std::string console_input;
 	std::string value_str;
 	int32_t value = 0;
@@ -78,6 +79,7 @@ int main(int argc, char** argv)
     std::vector<ftdiDeviceDetails> ftdi_devices;
 
     std::string motor_type = "";
+    dynamixel_packet dyn_packet;
     int32_t steps, pw;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
@@ -141,7 +143,10 @@ int main(int argc, char** argv)
 
         //-----------------------------------------------------------------------------
         // get the current step count reported by the controller
-        md.tx = data_packet(GET_FOC_MOT_STEP);
+        //dyn_packet.init(FOCUS_MOTOR_ID, 7, DYN_READ);
+        //dyn_packet.add_uint16(ADD_GOAL_POSITION);
+/*
+        md.tx = data_packet(GET_MOTOR_STEP, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         md.send_packet(driver_handle, md.tx);
         status = md.receive_packet(driver_handle, 6, md.rx);
         if (status)
@@ -182,7 +187,7 @@ int main(int argc, char** argv)
         //-----------------------------------------------------------------------------
 		// print out a short menu of commands for the CLI
 		help_menu();
-
+*/
         // start the while loop
 		while(stop >= 0)
 		{
@@ -204,6 +209,7 @@ int main(int argc, char** argv)
             //    md.send_packet(driver_handle, md.tx);
             //    status = md.receive_packet(driver_handle, 3, md.rx);
             //}
+            /*
             else if (console_input[0] == 'e')
             {
                 if (console_input.length() >= 3)
@@ -443,7 +449,7 @@ int main(int argc, char** argv)
                 tcsetattr(STDIN_FILENO, TCSANOW, &old_term); //Apply the old settings
 #endif
             }
-		
+*/		
 		}	// end of while loop
 
 
