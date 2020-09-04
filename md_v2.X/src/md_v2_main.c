@@ -7,9 +7,16 @@
 
 // ----------------------------------------------------------------------------
 // Configuration Bits
+//DEVICE CONFIGURATION WORD 0
 #pragma config CP = OFF, BWP = OFF, PWP = OFF, ICESEL = ICS_PGx2, DEBUG = OFF
+
+//DEVICE CONFIGURATION WORD 1
 #pragma config FWDTEN = OFF, WDTPS = PS4096, FCKSM = CSDCMD, FPBDIV = DIV_1, OSCIOFNC = OFF, POSCMOD = HS, IESO = OFF, FSOSCEN = OFF, FNOSC = PRIPLL
+
+// DEVICE CONFIGURATION WORD 2
 #pragma config FPLLODIV = DIV_1, UPLLEN = OFF, UPLLIDIV = DIV_1, FPLLMUL = MUL_20, FPLLIDIV = DIV_2
+
+// DEVICE CONFIGURATION WORD 3
 #pragma config FVBUSONIO = OFF, FUSBIDIO = OFF, FMIIEN = ON, FSRSSEL = PRIORITY_7
 
 #define _SUPPRESS_PLIB_WARNING 1
@@ -45,10 +52,13 @@ const int min_step = 0;
 // ----------------------------------------------------------------------------
 // Interrupt Definitions
 // ----------------------------------------------------------------------------
+// this is the interrupt to handle the comms between the pic and the pc
 void __ISR(32, IPL4AUTO) UART2_Rx(void)
 {
     char tmp_data = 0;
 
+    mU2RXIntEnable(0);          // disable UART Rx interrupt
+    
     tmp_data = get_char(U2);
 
     if(tmp_data == '$')
@@ -61,11 +71,13 @@ void __ISR(32, IPL4AUTO) UART2_Rx(void)
     mU2RXClearIntFlag();
 }   // end of UART2 interrupt
 
-
+// this is the interrupt that handles the comms between the pic and the motors
 void __ISR(49, IPL5AUTO) UART1_RX(void)
 {
     int idx = 0;
     unsigned short length;
+    
+    mU1RXIntEnable(0);          // disable UART Rx interrupt
     
     // get the header and reserved byte
     rx_data[0] = get_char(U1);
@@ -88,10 +100,9 @@ void __ISR(49, IPL5AUTO) UART1_RX(void)
     }
         
     mU1RXClearIntFlag();
-
+    mU1RXIntEnable(1);          // enable UART Rx interrupt
+    
 }// end of UART2 interrupt
-
-
 
 
 
@@ -124,36 +135,53 @@ int main(int argc, char** argv)
     //init_SPI3();                // Setup and Initialize SPI3 Module
 
     // TRIS Configurations
-    TRISB = 0x00FAEB;             // RB2, RB4, RB8 & RB10 set to outputs
-    TRISE = 0x00FFE3;             // RE2, RE3 & RE4 => outputs
-    TRISF = 0x00FFF7;             // RF3 => output
-    TRISG = 0x00FFBF;             // RG6 => output
+    TRISB = 0x00FFBF;               // RB6 => outputs
+    TRISC = 0x009FFF;               // RC13 & RC14 => outputs
+    TRISD = 0x00FFF4;               // RD0, RD1 & RD3 => outputs
+    TRISE = 0x00FFDF;               // RE5 => outputs
+    TRISF = 0x00FFDF;               // RF5 => output
+    TRISG = 0x00FFFF;               // All Inputs
     
     // make sure that the motor is disabled on startup
-    MOT_EN_PIN = 1;
+    //MOT_EN_PIN = 1;
 
     // configure interrupt sources
     mU2SetIntPriority(4);       // configure UART2 Interrupt priority 4
+    mU1SetIntPriority(5);       // configure UART1 Interrupt priority 5
+    
     //mT2SetIntPriority(6);       // Configure Timer2 Interrupt priority to 6
     //mT3SetIntPriority(7);       // Configure Timer3 Interrupt priority to 7
 	
-    //mU2RXClearIntFlag();
+    mU2RXClearIntFlag();
+    mU1RXClearIntFlag();
     //mT3ClearIntFlag();
     //mT2ClearIntFlag();
     
     INTEnableSystemMultiVectoredInt();
 
-    // Configure LEDs
-    Green_LED = 0;                          // turn off green LED
-    Blue_LED = 1;                           // turn on blue led
+    // turn off  LEDs
+    RED_LED = 0;
+    GREEN_LED = 0;
+    BLUE_LED = 0;
 
-    for(idx=0; idx<5; ++idx)              	// wait 250ms to begin
+    for(idx=10; idx>0; --idx)              	// wait 250ms to begin
     {
-        delay_ms(50);
         
-        Blue_LED = ~Blue_LED;
-        Green_LED = ~Green_LED;
+        RED_LED = 1;
+        delay_ms(20*idx);
+        RED_LED = 0;
+        
+        GREEN_LED = 1;
+        delay_ms(20*idx);
+        GREEN_LED = 0;
+        
+        BLUE_LED = 1;
+        delay_ms(20*idx);        
+        BLUE_LED = 0;     
+        
     }
+    
+    
     
     // clear out the UART2 interrupts and enable
     temp = U2RXREG;
@@ -168,12 +196,12 @@ int main(int argc, char** argv)
     
        if(data_ready == 1)
        {
-           mU2RXIntEnable(0);          // disable UART Rx interrupt
+           
 
            // read in the remaining data bytes
            for(idx=0; idx<rx_data[1]; ++idx)
            {
-               rx_data[2+idx] = get_char(2);
+               rx_data[2+idx] = get_char(U2);
            }
 
            // This is the main command number

@@ -11,17 +11,17 @@
 // ----------------------------------------------------------------------------
 // Define Constants
 // ----------------------------------------------------------------------------
-#define PKT_SIZE      192                      /* maximum number of bytes in a packet */
+#define PKT_SIZE        192                     /* maximum number of bytes in a packet */
 
-#define Blue_LED      LATFbits.LATF3          /* define Blue LED */
-#define Green_LED     LATEbits.LATE4          /* define green LED */
-#define ZM_STEP_PIN   PORTBbits.RB10          /* Motor control - zoom steps */
-#define ZM_DIR_PIN    PORTBbits.RB8           /* Motor control - zoom direction */
-#define FOC_STEP_PIN  PORTBbits.RB4           /* Motor control - focus steps */
-#define FOC_DIR_PIN   PORTBbits.RB2           /* Motor control - focus direction */
-#define CMD_SW_PIN    PORTBbits.RB15          /* Switch in Command Position */
-#define RUN_SW_PIN    PORTBbits.RB14          /* Switch in Run Posistion */
-#define MOT_EN_PIN    PORTGbits.RG6           /* Motor control - enable all */
+#define RED_LED         LATDbits.LATD0          /* define RED LED */
+#define GREEN_LED       LATCbits.LATC13         /* define GREEN LED */
+#define BLUE_LED        LATCbits.LATC14         /* define BLUE LED */
+
+#define DIR_485_PIN     LATDbits.LATD1          /* RS485 Direction pin */
+
+#define TRIG1_PIN       LATBbits.LATB6           /* Trigger 1 control */
+#define TRIG2_PIN       LATEbits.LATE5           /* Trigger 2 control */
+
 
 /***********************Define Header Command Responses************************/
 

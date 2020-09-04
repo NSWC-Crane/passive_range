@@ -52,8 +52,8 @@ const uint8_t motor_packet_size = (uint8_t)6;
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;
 
-extern const int min_pw = 1000;
-extern const int max_pw = 30000;
+//extern const int min_pw = 1000;
+//extern const int max_pw = 30000;
 
 //-----------------------------------------------------------------------------
 typedef struct motor_driver_info
