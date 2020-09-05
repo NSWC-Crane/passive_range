@@ -28,20 +28,20 @@
 #define MOTOR_ENABLE    0x10                  /* Enable/Disable motors */
 
 // focus motor control
-#define ZERO_FOCUS		 0x20				  /* zero the focus motor */
-#define FOCUS_CTRL       0x21                 /* Focus motor control */
-#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
-#define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
-#define SET_FOC_MOT_SPD  0x24				  /* set focus motor speed */
-#define GET_FOC_MOT_SPD  0x25				  /* get focus motor speed */
-
-// zoom motor control
-#define ZERO_ZOOM		 0x30				  /* zero the zoom motor */
-#define ZOOM_CTRL        0x31                 /* Zoom motor control */
-#define ABS_ZOOM_CTRL    0x32                 /* Absolute zoom motor control */
-#define GET_ZM_MOT_STEP  0x33                 /* get the zoom motor step count */
-#define SET_ZM_MOT_SPD   0x34				  /* set zoom motor speed */
-#define GET_ZM_MOT_SPD   0x35				  /* get zoom motor speed */
+#define MOTOR_CTRL		 0x20				  /* zero the focus motor */
+//#define FOCUS_CTRL       0x21                 /* Focus motor control */
+//#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
+//#define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
+//#define SET_FOC_MOT_SPD  0x24				  /* set focus motor speed */
+//#define GET_FOC_MOT_SPD  0x25				  /* get focus motor speed */
+//
+//// zoom motor control
+//#define ZERO_ZOOM		 0x30				  /* zero the zoom motor */
+//#define ZOOM_CTRL        0x31                 /* Zoom motor control */
+//#define ABS_ZOOM_CTRL    0x32                 /* Absolute zoom motor control */
+//#define GET_ZM_MOT_STEP  0x33                 /* get the zoom motor step count */
+//#define SET_ZM_MOT_SPD   0x34				  /* set zoom motor speed */
+//#define GET_ZM_MOT_SPD   0x35				  /* get zoom motor speed */
 
 
 #define FIRM_READ       0x51                  /* Read firmware version return command */

@@ -8,7 +8,7 @@
 // ----------------------------------------------------------------------------
 // Configuration Bits
 //DEVICE CONFIGURATION WORD 0
-#pragma config CP = OFF, BWP = OFF, PWP = OFF, ICESEL = ICS_PGx2, DEBUG = OFF
+#pragma config CP = OFF, BWP = OFF, PWP = OFF, ICESEL = ICS_PGx1, DEBUG = OFF
 
 //DEVICE CONFIGURATION WORD 1
 #pragma config FWDTEN = OFF, WDTPS = PS4096, FCKSM = CSDCMD, FPBDIV = DIV_1, OSCIOFNC = OFF, POSCMOD = HS, IESO = OFF, FSOSCEN = OFF, FNOSC = PRIPLL
@@ -30,7 +30,7 @@
 #include "../include/md.h"
 #include "../include/pic32mx695f_config.h"
 #include "../include/uart_ctrl.h"
-
+#include "../include/dynamixel_protocol_v2.h"
 
 
 // ----------------------------------------------------------------------------
@@ -114,6 +114,10 @@ int main(int argc, char** argv)
 
     unsigned char temp;
     unsigned char packet_data[PKT_SIZE] = {0};
+    
+    data_packet motor_packet = initialize_packet();
+    
+    unsigned char p2[PKT_SIZE] = {0x74,0x00,0x00,0x02,0x00,0x00};
     
     if(RCON & 0x18)             // The WDT caused a wake from Sleep
     {
@@ -211,32 +215,35 @@ int main(int argc, char** argv)
                
                
                
-               
+                case MOTOR_CTRL:
+                   build_packet(10, 6, DYN_WRITE, p2 , motor_packet);
+                   send_motor_packet(U1, motor_packet);
+                   break;
 // ----------------------------------------------------------------------------
 /*************************Engineering Operations******************************/
 // ----------------------------------------------------------------------------
                         
-                    // read the controller firmware
-                    case FIRM_READ:
-                        length = 2;
-                        send_packet(2, FIRM_READ, length, firmware);
-                        break;  
+                // read the controller firmware
+                case FIRM_READ:
+                    length = 2;
+                    send_packet(2, FIRM_READ, length, firmware);
+                    break;  
 
-                    // read the controller serial number
-                    case SER_NUM_READ:
-                        length = 1;
-                        send_packet(2, SER_NUM_READ, length, serial_num);
-                        break;
-                        
-                    // send back a connected message
-                    case CONNECT:
-                        length = 4;
-                        packet_data[0] = 1;
-                        packet_data[1] = serial_num[0];
-                        packet_data[2] = firmware[0];
-                        packet_data[3] = firmware[1];
-                        send_packet(2, CONNECT, length, packet_data);
-                        break;               
+                // read the controller serial number
+                case SER_NUM_READ:
+                    length = 1;
+                    send_packet(2, SER_NUM_READ, length, serial_num);
+                    break;
+
+                // send back a connected message
+                case CONNECT:
+                    length = 4;
+                    packet_data[0] = 1;
+                    packet_data[1] = serial_num[0];
+                    packet_data[2] = firmware[0];
+                    packet_data[3] = firmware[1];
+                    send_packet(2, CONNECT, length, packet_data);
+                    break;               
            }    // end of switch
            
         }   // end of if(data_ready == 1)
