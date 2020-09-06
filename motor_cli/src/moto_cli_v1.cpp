@@ -90,6 +90,24 @@ int main(int argc, char** argv)
     struct termios old_term, new_term;
 #endif
 
+
+    dynamixel_packet p1(1, DYN_READ);
+    dynamixel_packet p2;
+
+    p1.add_params((uint16_t)132, (uint16_t)4);
+
+    p2 = dynamixel_packet(1, DYN_WRITE);
+    p2.add_params((uint16_t)116, (uint32_t)512);
+
+    std::vector<uint8_t> p1_arr = p1.get_packet_array();
+    std::vector<uint8_t> p2_arr = p2.get_packet_array();
+
+
+    dynamixel_packet p3(1, DYN_WRITE_REG, {0x68,0x00,0xC8,0x00,0x00,0x00});
+    std::vector<uint8_t> p3_arr = p3.get_packet_array();
+
+    int bp = 3;
+
     try
     {
 

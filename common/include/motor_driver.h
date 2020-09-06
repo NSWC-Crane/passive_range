@@ -86,8 +86,8 @@ typedef struct motor_info
     motor_info(std::vector<uint8_t> data)
     {
         id = data[ID_POS];
-        model = (data[SP_DATA_POS + 1] << 8) | data[SP_DATA_POS];
-        firmware = data[SP_DATA_POS + 2];
+        model = (data[SP_PARAMS_POS + 1] << 8) | data[SP_PARAMS_POS];
+        firmware = data[SP_PARAMS_POS + 2];
     }
 
     inline friend std::ostream& operator<< (
@@ -149,15 +149,15 @@ public:
     {
         bool status = true;
 
-        dynamixel_packet dyn_packet(FOCUS_MOTOR_ID, (uint16_t)3, DYN_PING);
-        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        dynamixel_packet dyn_packet(FOCUS_MOTOR_ID, DYN_PING);
+        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 8, rx);
 
         motor_info focus_motor(rx.data);
 
-        dyn_packet = dynamixel_packet(ZOOM_MOTOR_ID, (uint16_t)3, DYN_PING);
-        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        dyn_packet = dynamixel_packet(ZOOM_MOTOR_ID, DYN_PING);
+        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 8, rx);
 
@@ -175,24 +175,24 @@ public:
     {
         bool status = true;
 
-        dynamixel_packet dyn_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { ENABLE_MOTOR });
+        //dynamixel_packet dyn_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { ENABLE_MOTOR });
 
         // enable the focus motor
-        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 3, rx);
 
         // step the focus motor
-        dyn_packet  = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_GOAL_POSITION, split_uint32(step));
-        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        //dyn_packet  = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_GOAL_POSITION, split_uint32(step));
+        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 7, rx);
 
-        step = (rx.data[SP_DATA_POS] << 24) | (rx.data[SP_DATA_POS+1] << 16) | (rx.data[SP_DATA_POS+2] << 8) | (rx.data[SP_DATA_POS+3]);
+        step = (rx.data[SP_PARAMS_POS] << 24) | (rx.data[SP_PARAMS_POS +1] << 16) | (rx.data[SP_PARAMS_POS +2] << 8) | (rx.data[SP_PARAMS_POS +3]);
 
         // disable the focus motor
-        dyn_packet = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { DISABLE_MOTOR });
-        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        //dyn_packet = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { DISABLE_MOTOR });
+        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 3, rx);
 
@@ -204,9 +204,9 @@ public:
     bool get_position(FT_HANDLE md_handle, uint8_t id, int32_t& step)
     {
         bool status = true;
-        dynamixel_packet dyn_packet(id, (uint16_t)5, DYN_WRITE, ADD_PRESENT_POSITION);
+        //dynamixel_packet dyn_packet(id, (uint16_t)5, DYN_WRITE, ADD_PRESENT_POSITION);
 
-        tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, 11, rx);
 
