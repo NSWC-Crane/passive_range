@@ -41,6 +41,7 @@ unsigned char data_ready = 0;
 const unsigned char firmware[2] = {0,50};
 const unsigned char serial_num[1] = {1};
 
+// motor parameters
 int current_focus_step = 0;
 int current_zoom_step = 0;
 
@@ -48,6 +49,18 @@ const int max_focus_step = 40575;
 const int max_zoom_step = 4628;
 const int min_step = 0;
 
+// trigger parameters
+unsigned char t1_polarity = 0;
+unsigned int t1_offset = 0;
+unsigned int t1_length = 500000;
+unsigned char t1_out = 0;
+
+unsigned char t2_polarity = 0;
+unsigned int t2_offset = 0;
+unsigned int t2_length = 500000;
+unsigned char t2_out = 0;
+    
+const unsigned short trigger_interval = 500000;
 
 // ----------------------------------------------------------------------------
 // Interrupt Definitions
@@ -64,8 +77,8 @@ void __ISR(32, IPL4AUTO) UART2_Rx(void)
     if(tmp_data == '$')
     {
         data_ready = 1;
-        rx_data[0] = get_char(U2);
-        rx_data[1] = get_char(U2);
+        rx_data[0] = get_char(U2);          // get the command byte
+        rx_data[1] = get_char(U2);          // get the packet length byte
     }
 
     mU2RXClearIntFlag();
@@ -115,7 +128,7 @@ int main(int argc, char** argv)
     unsigned char temp;
     unsigned char packet_data[PKT_SIZE] = {0};
     
-    data_packet motor_packet = initialize_packet();
+    //data_packet motor_packet = initialize_packet();
     
     unsigned char p2[PKT_SIZE] = {0x74,0x00,0x00,0x02,0x00,0x00};
     
@@ -201,7 +214,6 @@ int main(int argc, char** argv)
        if(data_ready == 1)
        {
            
-
            // read in the remaining data bytes
            for(idx=0; idx<rx_data[1]; ++idx)
            {
@@ -211,28 +223,127 @@ int main(int argc, char** argv)
            // This is the main command number
            switch(rx_data[0])
            {
-               
-               
-               
-               
-                case MOTOR_CTRL:
-                   build_packet(10, 6, DYN_WRITE, p2 , motor_packet);
-                   send_motor_packet(U1, motor_packet);
-                   break;
+                
+// -----------------------------------------------------------------------------
+//                              Trigger Operations
+// -----------------------------------------------------------------------------
+               case CONFIG_T1:
+                    length = 1;
+
+                    t1_polarity = rx_data[2] & 0x01;
+                    t1_offset = rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6];
+                    t1_length = rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10];
+                    TRIG1_PIN = 0 ^ t1_polarity;
+                    
+                    packet_data[0] = t1_polarity;
+                    send_packet(U2, CONFIG_T1, length, packet_data);
+                    break;                
+                
+                case CONFIG_T2:
+                    length = 1;
+
+                    t2_polarity = rx_data[2] & 0x01;
+                    t2_offset = rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6];
+                    t2_length = rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10];
+                    TRIG2_PIN = 0 ^ t2_polarity;
+                    
+                    packet_data[0] = t2_polarity;
+                    send_packet(U2, CONFIG_T2, length, packet_data);
+                    break;  
+                    
+                case TRIG_INIT:
+                    length = 1;
+                    
+                    initiate_trigger();
+                    
+                    packet_data[0] = 1;
+                    send_packet(U2, TRIG_INIT, length, packet_data);
+                    break;
+                    
+                case TRIG_CH1:
+                    length = 1;
+                    
+                    TRIG1_PIN = 0 ^ t1_polarity;
+                    TMR1 = 0;
+                    while(TMR1 < trigger_interval)
+                    {
+                        t1_out = ((TMR1 >= t1_offset) && (TMR1 <= t1_length));
+                        TRIG1_PIN =  t1_out ^ t1_polarity;
+                    }                   
+                    TRIG1_PIN = 0 ^ t1_polarity;
+                    
+                    packet_data[0] = 1;
+                    send_packet(U2, TRIG_CH1, length, packet_data);                    
+                    break;
+                    
+                case TRIG_CH2:
+                    length = 1;
+                                        
+                    TRIG2_PIN = 0 ^ t2_polarity;
+                    TMR1 = 0;
+                    while(TMR1 < trigger_interval)
+                    {
+                        t2_out = ((TMR1 >= t2_offset) && (TMR1 <= t2_length));
+                        TRIG2_PIN =  t2_out ^ t2_polarity;
+                    }                   
+                    TRIG2_PIN = 0 ^ t2_polarity;                    
+                    
+                    packet_data[0] = 1;
+                    send_packet(U2, TRIG_CH2, length, packet_data); 
+                    break;
+                
+// -----------------------------------------------------------------------------
+//                             Motor Operations
+// -----------------------------------------------------------------------------
+               case MOTOR_CTRL_RD:
+                    length = 15;
+                    IFS0bits.U1RXIF = 0;
+                    
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
+                    
+                    while(IFS0bits.U1RXIF == 0);
+                    
+                    // get the return info from the motor
+                    for(idx=0; idx< length; ++idx)
+                    {
+                        packet_data[idx] = get_char(U1);
+                    }
+                    
+                    send_packet(U2, MOTOR_CTRL_RD, length, packet_data);                    
+                    
+                    break;
+
+               case MOTOR_CTRL_WR:
+                    length = 11;
+                    IFS0bits.U1RXIF = 0;
+                    
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
+                    
+                    while(IFS0bits.U1RXIF == 0);
+
+                    // get the return info from the motor
+                    for(idx=0; idx< length; ++idx)
+                    {
+                        packet_data[idx] = get_char(U1);
+                    }
+                    
+                    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);                    
+                                        
+                    break;
 // ----------------------------------------------------------------------------
-/*************************Engineering Operations******************************/
+//                        Engineering Operations
 // ----------------------------------------------------------------------------
                         
                 // read the controller firmware
                 case FIRM_READ:
                     length = 2;
-                    send_packet(2, FIRM_READ, length, firmware);
+                    send_packet(U2, FIRM_READ, length, firmware);
                     break;  
 
                 // read the controller serial number
                 case SER_NUM_READ:
                     length = 1;
-                    send_packet(2, SER_NUM_READ, length, serial_num);
+                    send_packet(U2, SER_NUM_READ, length, serial_num);
                     break;
 
                 // send back a connected message
@@ -242,7 +353,7 @@ int main(int argc, char** argv)
                     packet_data[1] = serial_num[0];
                     packet_data[2] = firmware[0];
                     packet_data[3] = firmware[1];
-                    send_packet(2, CONNECT, length, packet_data);
+                    send_packet(U2, CONNECT, length, packet_data);
                     break;               
            }    // end of switch
            
@@ -256,6 +367,15 @@ int main(int argc, char** argv)
 
 
 // ----------------------------------------------------------------------------
+/* Function: void delay(int count)
+ *
+ * Arguments:
+ * 1. count: number of milliseconds to delay
+ *
+ * Return Value: None
+ *
+ * Description: delay function in milliseconds
+ */
 void delay_ms(int count)
 {
     int idx;
@@ -263,6 +383,52 @@ void delay_ms(int count)
     for(idx=0; idx<count; ++idx)
     {
         TMR1 = 0;
-        while(TMR1 < 10000);        		// wait 1ms before starting
+        while(TMR1 < 10000);        		// wait 1ms
     }
 }
+
+//-----------------------------------------------------------------------------
+/* Function: void send_motor_packet(unsigned char uart, unsigned char length, unsigned char* data)
+ *
+ * Arguments:
+ * 1. uart: the uart number to send data to
+ * 2. length: length of the data to be sent
+ * 3. *data: pointer to the data to be sent
+ *
+ * Return Value: None
+ *
+ * Description: Send message with command header, packet byte size, data
+ */
+void send_motor_packet(unsigned char uart, unsigned char length, unsigned char* data)
+{
+    unsigned short idx;
+    
+    for(idx=0; idx<length; ++idx)                 // send data and perform CRC calculations
+    {
+        send_char(data[idx], uart);
+    }
+
+}   // end of send_motor_packet
+
+void initiate_trigger(void)
+{
+    TRIG1_PIN = 0 ^ t1_polarity;
+    TRIG2_PIN = 0 ^ t2_polarity;
+    
+    // reset the counter
+    TMR1 = 0;  
+    
+    while(TMR1 < trigger_interval)
+    {
+        t1_out = ((TMR1 >= t1_offset) && (TMR1 <= t1_length));
+        TRIG1_PIN = t1_out ^ t1_polarity;
+        
+        t2_out = ((TMR1 >= t2_offset) && (TMR1 <= t2_length));
+        TRIG2_PIN = t2_out ^ t2_polarity;     
+    }
+    
+    TRIG1_PIN = 0 ^ t1_polarity;
+    TRIG2_PIN = 0 ^ t2_polarity;
+    
+}   // end of initiate_trigger
+

@@ -27,8 +27,18 @@
 
 #define MOTOR_ENABLE    0x10                  /* Enable/Disable motors */
 
+// configure the trigger parameters
+#define CONFIG_T1       0x11                  /* Configure Trigger 1 parameters */
+#define CONFIG_T2       0x12                  /* Configure Trigger 2 parameters */
+
+// initiate triggers
+#define TRIG_INIT       0x20                  /* initiate trigger sequence */
+#define TRIG_CH1        0x21                  /* pulse channel 1 */
+#define TRIG_CH2        0x22                  /* pulse channel 2 */
+
 // focus motor control
-#define MOTOR_CTRL		 0x20				  /* zero the focus motor */
+#define MOTOR_CTRL_RD	0x30				  /* send read command to motor */
+#define MOTOR_CTRL_WR	0x31				  /* send write command to motor */
 //#define FOCUS_CTRL       0x21                 /* Focus motor control */
 //#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
 //#define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
@@ -48,8 +58,6 @@
 #define SER_NUM_READ    0x52                  /* Read serial number return command */
 #define CONNECT         0x53                  /* Check for data connection to motor controller */
 
-#define TRIG_CTRL       0x61                  /* Camera trigger control */
-
 #define U1              1
 #define U2              2
 
@@ -58,6 +66,11 @@
 // Function Definitions
 // ----------------------------------------------------------------------------
 void delay_ms(int count);
+
+void send_motor_packet(unsigned char uart, unsigned char length, unsigned char* data);
+
+void initiate_trigger(void);
+
 
 #ifdef	__cplusplus
 extern "C" {
