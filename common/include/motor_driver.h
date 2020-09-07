@@ -20,9 +20,10 @@ constexpr uint8_t FOCUS_MOTOR_ID = (uint8_t)10;         /* The ID for the focus 
 constexpr uint8_t ZOOM_MOTOR_ID = (uint8_t)20;          /* The ID for the zoom motor */
 constexpr uint8_t BROADCAST_ID = (uint8_t)254;
 
-constexpr uint8_t MOTOR_CTRL = (uint8_t)0x20;           /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_RD = (uint8_t)0x30;        /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x31;        /* Initiate motor control */
 
-constexpr uint8_t GET_MOTOR_STEP = (uint8_t)0x21;       /* get the step count for a given motor ID */
+//constexpr uint8_t GET_MOTOR_STEP = (uint8_t)0x21;       /* get the step count for a given motor ID */
 
 //// focus motor control
 //constexpr auto CMD_FOCUS_CTRL = 0x21;       /* Focus motor control */
@@ -47,7 +48,9 @@ constexpr auto DISABLE_MOTOR = 0;                /* Disable the motors */
 //#define MOTOR_CW         0x80000000           /* turn the motor clockwise */
 //#define MOTOR_CCW        0x00000000           /* turn the motor coutner-clockwise */
 
-const uint8_t motor_packet_size = (uint8_t)6;
+const uint8_t packet_size = (uint8_t)3;
+const uint8_t read_sp_size = (uint8_t)15;
+const uint8_t write_sp_size = (uint8_t)11;
 
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;

@@ -32,8 +32,20 @@ enum control_value {
     ADD_LED = 65,
     ADD_GOAL_POSITION = 116,
     ADD_PRESENT_POSITION = 132
-    
     };
+
+//-----------------------------------------------------------------------------
+const std::vector<std::string> mtr_error_string = {
+    "None",
+    "Result Fail",
+    "Instruction Error",
+    "CRC Error",
+    "Data Range Error",
+    "Data Length Error",
+    "Data Limit Error",
+    "Access Error"
+};
+
 
 //-----------------------------------------------------------------------------
 constexpr auto ID_POS = 4;
@@ -76,7 +88,7 @@ public:
     //-----------------------------------------------------------------------------
     void update_length()
     {
-        length = 3 + params.size();
+        length = (uint16_t)(3 + params.size());
     }
 
     //-----------------------------------------------------------------------------
@@ -120,6 +132,10 @@ public:
         return data;
     }
 
+    inline uint8_t get_size()
+    {
+        return (uint8_t)(params.size() + 10);
+    }
 
     //-----------------------------------------------------------------------------
     uint8_t get_status_error()
