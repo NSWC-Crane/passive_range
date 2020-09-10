@@ -60,7 +60,7 @@ unsigned int t2_offset = 0;
 unsigned int t2_length = 500000;
 unsigned char t2_out = 0;
     
-const unsigned short trigger_interval = 500000;
+const unsigned int trigger_interval = 500000;
 
 // ----------------------------------------------------------------------------
 // Interrupt Definitions
@@ -180,6 +180,7 @@ int main(int argc, char** argv)
     RED_LED = 0;
     GREEN_LED = 0;
     BLUE_LED = 0;
+    DIR_485_PIN  = 1;
 
     for(idx=10; idx>0; --idx)              	// wait 250ms to begin
     {
@@ -299,8 +300,10 @@ int main(int argc, char** argv)
                     length = 15;
                     IFS0bits.U1RXIF = 0;
                     
+                    DIR_485_PIN  = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
-                    
+                    DIR_485_PIN  = 0;
+
                     while(IFS0bits.U1RXIF == 0);
                     
                     // get the return info from the motor
@@ -311,14 +314,20 @@ int main(int argc, char** argv)
                     
                     send_packet(U2, MOTOR_CTRL_RD, length, packet_data);                    
                     
+                    
+                    DIR_485_PIN  = 1;
+                    IFS0bits.U1RXIF = 0;
                     break;
 
                case MOTOR_CTRL_WR:
                     length = 11;
                     IFS0bits.U1RXIF = 0;
                     
+                    DIR_485_PIN  = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
-                    
+                    DIR_485_PIN  = 0;
+
+                                        
                     while(IFS0bits.U1RXIF == 0);
 
                     // get the return info from the motor
@@ -328,7 +337,8 @@ int main(int argc, char** argv)
                     }
                     
                     send_packet(U2, MOTOR_CTRL_WR, length, packet_data);                    
-                                        
+                    DIR_485_PIN  = 1;
+                    IFS0bits.U1RXIF = 0;
                     break;
 // ----------------------------------------------------------------------------
 //                        Engineering Operations
