@@ -365,8 +365,11 @@ int main(int argc, char** argv)
                     packet_data[3] = firmware[1];
                     send_packet(U2, CONNECT, length, packet_data);
                     break;               
-           }    // end of switch
-           
+            }    // end of switch
+
+            data_ready = 0;
+            mU2RXIntEnable(1);          // enable UART Rx Interrupt
+
         }   // end of if(data_ready == 1)
     
     }   // end of while(1)
