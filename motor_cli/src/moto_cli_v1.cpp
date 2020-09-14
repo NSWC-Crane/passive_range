@@ -161,7 +161,13 @@ int main(int argc, char** argv)
 
         //-----------------------------------------------------------------------------
         // get the current step count reported by each motor
-        mtr_packet = dynamixel_packet(FOCUS_MOTOR_ID, DYN_READ, { ADD_PRESENT_POSITION, (uint16_t)4 });
+        focus_step = 3000;
+        md.set_position(md_handle, FOCUS_MOTOR_ID, (int32_t)focus_step);
+
+        /*
+//        mtr_packet = dynamixel_packet(FOCUS_MOTOR_ID, DYN_READ);// , { ADD_PRESENT_POSITION, (uint16_t)4 });
+        mtr_packet = dynamixel_packet(FOCUS_MOTOR_ID, DYN_WRITE);// , { ADD_PRESENT_POSITION, (uint16_t)4 });
+        mtr_packet.add_params((uint16_t)ADD_GOAL_POSITION, (uint32_t)5000);
 
         md.tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         md.send_packet(md_handle, md.tx);
@@ -175,8 +181,10 @@ int main(int argc, char** argv)
         {
             std::cout << "Error getting focus step: " << mtr_error_string[mtr_error] << std::endl;
         }
-
-        mtr_packet = dynamixel_packet(ZOOM_MOTOR_ID, DYN_READ, { ADD_PRESENT_POSITION, (uint16_t)4 });
+        */
+/*
+        mtr_packet = dynamixel_packet(ZOOM_MOTOR_ID, DYN_READ);//, { ADD_PRESENT_POSITION, (uint16_t)4 });
+        mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
 
         md.tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         md.send_packet(md_handle, md.tx);
@@ -190,7 +198,7 @@ int main(int argc, char** argv)
         {
             std::cout << "Error getting zoom step: " << mtr_error_string[mtr_error] << std::endl;
         }
-
+*/
         std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;       
         
 /*

@@ -126,7 +126,10 @@ void init_UART1(void)
     U1STAbits.ADDEN = 0;        // Address Detect mode is disabled
 
     // Fpb = 80MHz; BRG = Fpb/(4*baudrate) - 1
-    U1BRG = 19;                 // BRG = 19 (0x13); 1M baud rate; 0.00% error
+    U1BRG = 19;                 // BRG = 19; 1M baud rate; 0.00% error
+                                // BRG = 79; 250k baud rate; 0.00% error
+                                // BRG = 173; 115.2k baud rate; -0.22% error
+                                // BRG = 345; 57.6k baud rate; 0.35% error
 
     U1MODEbits.ON = 1;          // Turn UART1 On
 }

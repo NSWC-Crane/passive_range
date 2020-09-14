@@ -128,6 +128,10 @@ int main(int argc, char** argv)
     unsigned char temp;
     unsigned char packet_data[PKT_SIZE] = {0};
     
+    unsigned char TORQUE_ENABLE[]  = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x06, 0x00, 0x03, 0x40, 0x00, 0x01, 0x68, 0xED};
+    unsigned char STEP_FM[]        = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x09, 0x00, 0x03, 0x74, 0x00, 0xB8, 0x0B, 0x00, 0x00, 0xDD, 0xC9};
+    unsigned char TORQUE_DISABLE[] = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x06, 0x00, 0x03, 0x40, 0x00, 0x00, 0x6D, 0x6D};
+    
     //data_packet motor_packet = initialize_packet();
     
     unsigned char p2[PKT_SIZE] = {0x74,0x00,0x00,0x02,0x00,0x00};
@@ -324,10 +328,24 @@ int main(int argc, char** argv)
                     IFS0bits.U1RXIF = 0;
                     
                     DIR_485_PIN  = 1;
-                    send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
+                    //send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
+                    
+                    send_motor_packet(U1, 13, TORQUE_ENABLE);   
+                    DIR_485_PIN  = 0;
+                    delay_ms(10);
+                    DIR_485_PIN  = 1;
+                    
+                    send_motor_packet(U1, 16, STEP_FM);   
+                    DIR_485_PIN  = 0;
+                    delay_ms(10);
+                    DIR_485_PIN  = 1;
+
+                    send_motor_packet(U1, 13, TORQUE_DISABLE);   
+                    
+                    
                     DIR_485_PIN  = 0;
 
-                                        
+/*                                        
                     while(IFS0bits.U1RXIF == 0);
 
                     // get the return info from the motor
@@ -336,7 +354,8 @@ int main(int argc, char** argv)
                         packet_data[idx] = get_char(U1);
                     }
                     
-                    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);                    
+                    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);  
+ */                  
                     DIR_485_PIN  = 1;
                     IFS0bits.U1RXIF = 0;
                     break;

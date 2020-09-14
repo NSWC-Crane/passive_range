@@ -7,6 +7,27 @@
 #include <vector>
 #include <array>
 
+/*
+
+ping focus motor
+FF FF FD 00 0A 03 00 01 1A 52
+FF FF FD 00 0A 07 00 55 00 FC 03 29 36 73
+
+focus motor enable torque
+FF FF FD 00 0A 06 00 03 40 00 01 68 ED
+FF FF FD 00 0A 04 00 55 00 EA 8F
+
+send goal position to focus motor 3000
+FF FF FD 00 0A 09 00 03 74 00 B8 0B 00 00 DD C9
+FF FF FD 00 0A 04 00 55 00 EA 8F
+
+focus motor disable torque
+FF FF FD 00 0A 06 00 03 40 00 00 6D 6D
+FF FF FD 00 0A 04 00 55 00 EA 8F
+
+*/
+
+
 //-----------------------------------------------------------------------------
 enum instruction {
     DYN_PING = 0x01, 
@@ -89,6 +110,17 @@ public:
     void update_length()
     {
         length = (uint16_t)(3 + params.size());
+    }
+
+    //-----------------------------------------------------------------------------
+    void add_params(uint16_t address, uint8_t data)
+    {
+        params.clear();
+        insert_uint16(address, params);
+        params.push_back(data);
+
+        update_length();
+        crc = calculate_crc();
     }
 
     //-----------------------------------------------------------------------------

@@ -178,26 +178,30 @@ public:
     {
         bool status = true;
 
-        //dynamixel_packet dyn_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { ENABLE_MOTOR });
+        dynamixel_packet mtr_packet(id, DYN_WRITE);
+        mtr_packet.add_params((uint16_t)ADD_TORQUE_ENABLE, (uint8_t)ENABLE_MOTOR);
 
         // enable the focus motor
-        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 3, rx);
+        //status &= receive_packet(md_handle, 3, rx);
 
         // step the focus motor
         //dyn_packet  = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_GOAL_POSITION, split_uint32(step));
-        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        mtr_packet.add_params((uint16_t)ADD_GOAL_POSITION, (uint32_t)step);
+        
+        tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 7, rx);
+        //status &= receive_packet(md_handle, 7, rx);
 
         step = (rx.data[SP_PARAMS_POS] << 24) | (rx.data[SP_PARAMS_POS +1] << 16) | (rx.data[SP_PARAMS_POS +2] << 8) | (rx.data[SP_PARAMS_POS +3]);
 
         // disable the focus motor
         //dyn_packet = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { DISABLE_MOTOR });
-        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        mtr_packet.add_params((uint16_t)ADD_TORQUE_ENABLE, (uint8_t)DISABLE_MOTOR);
+        tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 3, rx);
+        //status &= receive_packet(md_handle, 3, rx);
 
         return status;
 
@@ -207,12 +211,22 @@ public:
     bool get_position(FT_HANDLE md_handle, uint8_t id, int32_t& step)
     {
         bool status = true;
-        //dynamixel_packet dyn_packet(id, (uint16_t)5, DYN_WRITE, ADD_PRESENT_POSITION);
+        dynamixel_packet mtr_packet(id, DYN_READ);
+        mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
 
-        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 11, rx);
+        status &= receive_packet(md_handle, packet_size + read_sp_size, rx);
+        uint8_t mtr_error = rx.data[SP_ERROR_POS];
 
+        if ((status == true) && (mtr_error == 0))
+        {
+            step = (rx.data[SP_PARAMS_POS + 3] << 24) | (rx.data[SP_PARAMS_POS + 2] << 16) | (rx.data[SP_PARAMS_POS + 1] << 8) | (rx.data[SP_PARAMS_POS]);
+        }
+        else
+        {
+            std::cout << "Error getting focus step: " << mtr_error_string[mtr_error] << std::endl;
+        }
         return status;
     }
 /*
