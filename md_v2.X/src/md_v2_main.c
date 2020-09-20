@@ -332,12 +332,12 @@ int main(int argc, char** argv)
                     
                     send_motor_packet(U1, 13, TORQUE_ENABLE);   
                     DIR_485_PIN  = 0;
-                    delay_ms(10);
+                    delay_ms(2);
                     DIR_485_PIN  = 1;
                     
                     send_motor_packet(U1, 16, STEP_FM);   
                     DIR_485_PIN  = 0;
-                    delay_ms(10);
+                    delay_ms(2);
                     DIR_485_PIN  = 1;
 
                     send_motor_packet(U1, 13, TORQUE_DISABLE);   

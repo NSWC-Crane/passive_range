@@ -49,8 +49,9 @@ constexpr auto DISABLE_MOTOR = 0;                /* Disable the motors */
 //#define MOTOR_CCW        0x00000000           /* turn the motor coutner-clockwise */
 
 const uint8_t packet_size = (uint8_t)3;
-const uint8_t read_sp_size = (uint8_t)15;
-const uint8_t write_sp_size = (uint8_t)11;
+const uint8_t read_sp_size = (uint8_t)(15 + packet_size);
+const uint8_t ping_sp_size = (uint8_t)(14 + packet_size);
+const uint8_t write_sp_size = (uint8_t)(11 + packet_size);
 
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;
@@ -148,24 +149,23 @@ public:
     }   // end of receive_packet
 
     //-----------------------------------------------------------------------------
-    bool ping_motors(FT_HANDLE md_handle)
+    bool ping_motor(FT_HANDLE md_handle)
     {
         bool status = true;
 
-        dynamixel_packet dyn_packet(FOCUS_MOTOR_ID, DYN_PING);
-        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        dynamixel_packet mtr_packet(FOCUS_MOTOR_ID, DYN_PING);
+        tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 8, rx);
+        status &= receive_packet(md_handle, ping_sp_size, rx);
 
         motor_info focus_motor(rx.data);
 
-        dyn_packet = dynamixel_packet(ZOOM_MOTOR_ID, DYN_PING);
-        //tx = data_packet(MOTOR_CTRL, (uint8_t)dyn_packet.data.size(), dyn_packet.data);
+        mtr_packet = dynamixel_packet(ZOOM_MOTOR_ID, DYN_PING);
+        tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 8, rx);
+        status &= receive_packet(md_handle, ping_sp_size, rx);
 
         motor_info zoom_motor(rx.data);
-
 
         std::cout << focus_motor << std::endl;
         std::cout << zoom_motor << std::endl;
@@ -184,7 +184,7 @@ public:
         // enable the focus motor
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        //status &= receive_packet(md_handle, 3, rx);
+        //status &= receive_packet(md_handle, write_sp_size, rx);
 
         // step the focus motor
         //dyn_packet  = dynamixel_packet(id, (uint16_t)4, DYN_WRITE, ADD_GOAL_POSITION, split_uint32(step));
@@ -192,7 +192,7 @@ public:
         
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        //status &= receive_packet(md_handle, 7, rx);
+        //status &= receive_packet(md_handle, write_sp_size, rx);
 
         step = (rx.data[SP_PARAMS_POS] << 24) | (rx.data[SP_PARAMS_POS +1] << 16) | (rx.data[SP_PARAMS_POS +2] << 8) | (rx.data[SP_PARAMS_POS +3]);
 
@@ -201,7 +201,7 @@ public:
         mtr_packet.add_params((uint16_t)ADD_TORQUE_ENABLE, (uint8_t)DISABLE_MOTOR);
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        //status &= receive_packet(md_handle, 3, rx);
+        //status &= receive_packet(md_handle, write_sp_size, rx);
 
         return status;
 
@@ -216,7 +216,7 @@ public:
 
         tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, packet_size + read_sp_size, rx);
+        status &= receive_packet(md_handle, read_sp_size, rx);
         uint8_t mtr_error = rx.data[SP_ERROR_POS];
 
         if ((status == true) && (mtr_error == 0))
@@ -228,7 +228,23 @@ public:
             std::cout << "Error getting focus step: " << mtr_error_string[mtr_error] << std::endl;
         }
         return status;
-    }
+    }   // end of get_position
+
+    //-----------------------------------------------------------------------------
+    bool reset_motor(FT_HANDLE md_handle, uint8_t id)
+    {
+        bool status = true;
+
+        dynamixel_packet mtr_packet(id, DYN_REBOOT);
+        tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        
+        send_packet(md_handle, tx);
+        status &= receive_packet(md_handle, write_sp_size, rx);
+
+        return status;
+
+    }   // end of reset_motor
+
 /*
     bool step_zoom_motor(FT_HANDLE md_handle, int32_t& zoom_step, uint8_t mode)
     {
