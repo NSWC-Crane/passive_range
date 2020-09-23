@@ -37,8 +37,10 @@
 #define TRIG_CH2        0x22                  /* pulse channel 2 */
 
 // focus motor control
-#define MOTOR_CTRL_RD	0x30				  /* send read command to motor */
-#define MOTOR_CTRL_WR	0x31				  /* send write command to motor */
+#define MOTOR_CTRL_PING 0x30
+#define MOTOR_CTRL_RD	0x31				  /* send read command to motor */
+#define MOTOR_CTRL_WR	0x32				  /* send write command to motor */
+
 //#define FOCUS_CTRL       0x21                 /* Focus motor control */
 //#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
 //#define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
@@ -61,6 +63,9 @@
 #define U1              1
 #define U2              2
 
+#define PING_PACKET_LENGTH  14
+#define READ_PACKET_LENGTH  15
+#define WRITE_PACKET_LENGTH 11
 
 // ----------------------------------------------------------------------------
 // Function Definitions

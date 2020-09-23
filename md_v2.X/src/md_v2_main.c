@@ -26,6 +26,7 @@
 //#include <stdlib.h>
 #include <xc.h>
 #include <plib.h>
+#include <proc/p32mx695f512h.h>
 
 #include "../include/md.h"
 #include "../include/pic32mx695f_config.h"
@@ -184,7 +185,7 @@ int main(int argc, char** argv)
     RED_LED = 0;
     GREEN_LED = 0;
     BLUE_LED = 0;
-    DIR_485_PIN  = 1;
+    DIR_485_PIN  = 0;
 
     for(idx=10; idx>0; --idx)              	// wait 250ms to begin
     {
@@ -202,7 +203,6 @@ int main(int argc, char** argv)
         BLUE_LED = 0;     
         
     }
-    
     
     
     // clear out the UART2 interrupts and enable
@@ -300,51 +300,72 @@ int main(int argc, char** argv)
 // -----------------------------------------------------------------------------
 //                             Motor Operations
 // -----------------------------------------------------------------------------
+               case MOTOR_CTRL_PING:     
+                    length = PING_PACKET_LENGTH;
+                    IFS0bits.U1RXIF = 0;
+
+                    DIR_485_PIN = 1;
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
+                   
+                    delay_ms(4);
+                    receive_motor_packet(U1, length, packet_data);
+                    
+                    send_packet(U2, MOTOR_CTRL_PING, length, packet_data);
+
+                    break;
+                   
                case MOTOR_CTRL_RD:
-                    length = 15;
+                    length = READ_PACKET_LENGTH;
                     IFS0bits.U1RXIF = 0;
                     
-                    DIR_485_PIN  = 1;
-                    send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
-                    DIR_485_PIN  = 0;
+                    DIR_485_PIN = 1;
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
 
-                    while(IFS0bits.U1RXIF == 0);
+//                    while(IFS0bits.U1RXIF == 0);
+//                    
+//                    // get the return info from the motor
+//                    for(idx=0; idx< length; ++idx)
+//                    {
+//                        packet_data[idx] = get_char(U1);
+//                    }
                     
-                    // get the return info from the motor
-                    for(idx=0; idx< length; ++idx)
-                    {
-                        packet_data[idx] = get_char(U1);
-                    }
+                    delay_ms(4);
+                    receive_motor_packet(U1, length, packet_data);
                     
                     send_packet(U2, MOTOR_CTRL_RD, length, packet_data);                    
-                    
-                    
-                    DIR_485_PIN  = 1;
-                    IFS0bits.U1RXIF = 0;
+                                        
                     break;
 
                case MOTOR_CTRL_WR:
-                    length = 11;
+                    length = WRITE_PACKET_LENGTH;
                     IFS0bits.U1RXIF = 0;
                     
-                    DIR_485_PIN  = 1;
-                    //send_motor_packet(U1, rx_data[1], &rx_data[2]);                  
-                    
-                    send_motor_packet(U1, 13, TORQUE_ENABLE);   
-                    DIR_485_PIN  = 0;
-                    delay_ms(2);
-                    DIR_485_PIN  = 1;
-                    
+                    DIR_485_PIN = 1;
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
+                    //send_motor_packet(U1, 13, TORQUE_ENABLE);
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
+
+                    delay_ms(4);
+                   
+                    /*
+                    DIR_485_PIN = 1;
                     send_motor_packet(U1, 16, STEP_FM);   
-                    DIR_485_PIN  = 0;
-                    delay_ms(2);
-                    DIR_485_PIN  = 1;
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
+                     
+                    delay_ms(4);
 
+                    
+                    DIR_485_PIN = 1;                   
                     send_motor_packet(U1, 13, TORQUE_DISABLE);   
-                    
-                    
-                    DIR_485_PIN  = 0;
-
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;    
+                     */                                  
 /*                                        
                     while(IFS0bits.U1RXIF == 0);
 
@@ -353,10 +374,12 @@ int main(int argc, char** argv)
                     {
                         packet_data[idx] = get_char(U1);
                     }
-                    
+*/                    
+                    receive_motor_packet(U1, length, packet_data);
+
                     send_packet(U2, MOTOR_CTRL_WR, length, packet_data);  
- */                  
-                    DIR_485_PIN  = 1;
+                   
+                    //DIR_485_PIN  = 1;
                     IFS0bits.U1RXIF = 0;
                     break;
 // ----------------------------------------------------------------------------
@@ -435,12 +458,32 @@ void send_motor_packet(unsigned char uart, unsigned char length, unsigned char* 
 {
     unsigned short idx;
     
-    for(idx=0; idx<length; ++idx)                 // send data and perform CRC calculations
+    for(idx=0; idx<length; ++idx)                 // send data
     {
         send_char(data[idx], uart);
     }
 
 }   // end of send_motor_packet
+
+
+void receive_motor_packet(unsigned char uart, unsigned char length, unsigned char* data)
+{
+    unsigned short idx;
+    
+    while(IFS0bits.U1RXIF == 0);
+
+    for(idx=0; idx<length; ++idx)                 // receive data
+    {
+        data[idx] = get_char(uart);
+    }
+    
+    IFS0bits.U1RXIF = 0;
+
+}   // end of receive_motor_packet
+
+
+
+
 
 void initiate_trigger(void)
 {

@@ -59,11 +59,11 @@ void init_TMR2(void)
     // Configure Timer 2 
     T2CONbits.SIDL = 0;         // Do not Discontinue operation in Idle mode
     T2CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T2CONbits.TCKPS = 3;        // 1:8 prescale value, TPBclk = 80MHz -> T2 period ~= 0.1 us
+    T2CONbits.TCKPS = 0;        // 1:1 prescale value, TPBclk = 80MHz -> T2 period ~= 0.0125 us
     T2CONbits.T32 = 0;          // TMR2 and TMR3 form separate 16-bit timer
-    PR2 = 1000;               // Period Register (0.1 us)*PR2 = ~100 us => 10kHz
+    PR2 = 1000;                 // Period Register (0.1 us)*PR2 = ~100 us => 10kHz
 
-    T2CONbits.ON = 1;           // Turn Timer2 on
+    T2CONbits.ON = 0;           // Turn Timer2 on
     TMR2 = 0;                   // set Timer2 counter = 0    
 }
 

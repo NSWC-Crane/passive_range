@@ -45,8 +45,8 @@ void help_menu(void)
 	std::cout << "  f <step> - step the focus motor, use '-' for CCW otherwise CW" << std::endl;
 	std::cout << "  z <step> - step the zoom motor, use '-' for CCW otherwise CW" << std::endl;
     std::cout << "  d - step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
-    std::cout << "  af <step> - set the absolute focus motor step value [0 - " << max_focus_steps << "]" << std::endl;
-    std::cout << "  az <step> - set the absolute zoom motor step value [0 - " << max_zoom_steps << "]" << std::endl;
+    //std::cout << "  af <step> - set the absolute focus motor step value [0 - " << max_focus_steps << "]" << std::endl;
+    //std::cout << "  az <step> - set the absolute zoom motor step value [0 - " << max_zoom_steps << "]" << std::endl;
     //std::cout << "  sf <step> - set the focus motor step speed [" << min_pw << " - " << max_pw << "]" << std::endl;
     //std::cout << "  sz <step> - set the zoom motor step speed [" << min_pw << " - " << max_pw << "]" << std::endl;
 
@@ -87,26 +87,13 @@ int main(int argc, char** argv)
     uint8_t mtr_error;
     //int32_t focus_pw = 0;
     //int32_t zoom_pw = 0;
+    motor_info focus_motor;
+    motor_info zoom_motor;
 
 #if defined(__linux__)
     struct termios old_term, new_term;
 #endif
 
-/*
-    dynamixel_packet p1(1, DYN_READ);
-    dynamixel_packet p2;
-
-    p1.add_params((uint16_t)132, (uint16_t)4);
-
-    p2 = dynamixel_packet(1, DYN_WRITE);
-    p2.add_params((uint16_t)116, (uint32_t)512);
-
-    std::vector<uint8_t> p1_arr = p1.get_packet_array();
-    std::vector<uint8_t> p2_arr = p2.get_packet_array();
-
-    dynamixel_packet p3(1, DYN_WRITE_REG, {0x68,0x00,0xC8,0x00,0x00,0x00});
-    std::vector<uint8_t> p3_arr = p3.get_packet_array();
-*/
 
     try
     {
@@ -160,46 +147,23 @@ int main(int argc, char** argv)
         std::cout << md << std::endl;
 
         //-----------------------------------------------------------------------------
-        // get the current step count reported by each motor
-        focus_step = 3000;
-        md.set_position(md_handle, FOCUS_MOTOR_ID, (int32_t)focus_step);
+        // ping the motors to get the model number and firmware version
+        status = md.ping_motor(md_handle, FOCUS_MOTOR_ID, focus_motor);
 
-        /*
-//        mtr_packet = dynamixel_packet(FOCUS_MOTOR_ID, DYN_READ);// , { ADD_PRESENT_POSITION, (uint16_t)4 });
-        mtr_packet = dynamixel_packet(FOCUS_MOTOR_ID, DYN_WRITE);// , { ADD_PRESENT_POSITION, (uint16_t)4 });
-        mtr_packet.add_params((uint16_t)ADD_GOAL_POSITION, (uint32_t)5000);
-
-        md.tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        md.send_packet(md_handle, md.tx);
-        status = md.receive_packet(md_handle, packet_size + read_sp_size, md.rx);
-        mtr_error = md.rx.data[SP_ERROR_POS];
-        if ((status == true) && (mtr_error == 0))
-        {
-            focus_step = (md.rx.data[SP_PARAMS_POS + 3] << 24) | (md.rx.data[SP_PARAMS_POS + 2] << 16) | (md.rx.data[SP_PARAMS_POS + 1] << 8) | (md.rx.data[SP_PARAMS_POS]);
-        }
+        if (status)
+            std::cout << focus_motor << std::endl;
         else
-        {
-            std::cout << "Error getting focus step: " << mtr_error_string[mtr_error] << std::endl;
-        }
-        */
-/*
-        mtr_packet = dynamixel_packet(ZOOM_MOTOR_ID, DYN_READ);//, { ADD_PRESENT_POSITION, (uint16_t)4 });
-        mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
+            std::cout << "Error getting focus motor info" << std::endl;
 
-        md.tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        md.send_packet(md_handle, md.tx);
-        status = md.receive_packet(md_handle, packet_size + read_sp_size, md.rx);
-        mtr_error = md.rx.data[SP_ERROR_POS];
-        if ((status == true) && (mtr_error == 0))
-        {
-            zoom_step = (md.rx.data[SP_PARAMS_POS + 3] << 24) | (md.rx.data[SP_PARAMS_POS + 2] << 16) | (md.rx.data[SP_PARAMS_POS + 1] << 8) | (md.rx.data[SP_PARAMS_POS]);
-        }
+        status = md.ping_motor(md_handle, ZOOM_MOTOR_ID, zoom_motor);
+
+        if (status)
+            std::cout << zoom_motor << std::endl;
         else
-        {
-            std::cout << "Error getting zoom step: " << mtr_error_string[mtr_error] << std::endl;
-        }
-*/
-        std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;       
+            std::cout << "Error getting zoom motor info" << std::endl;
+
+        //-----------------------------------------------------------------------------
+        std::cout << std::endl << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
         
 /*
         //-----------------------------------------------------------------------------
@@ -239,49 +203,69 @@ int main(int argc, char** argv)
 				stop = -1;
 				break;
 			}
-            // get the help menu
+
+            // display the help menu
 			else if(console_input[0] == '?')
 			{
 				help_menu();
 			}
+
             // experimental - not listed in help
             else if (console_input[0] == 'x')
             {
-                md.tx = data_packet(MOTOR_CTRL_RD, 0);
-                md.send_packet(md_handle, md.tx);
-                //status = md.receive_packet(md_handle, 3, md.rx);
+                focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+
+                status = md.set_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+
             }
-            /*
+
+            // experimental - not listed in help
+            else if (console_input[0] == 'i')
+            {
+                status = md.ping_motor(md_handle, FOCUS_MOTOR_ID, focus_motor);
+
+                if (status)
+                    std::cout << focus_motor << std::endl;
+                else
+                    std::cout << "Error getting focus motor info" << std::endl;
+
+            }
+
+            // enable/disable the motors
             else if (console_input[0] == 'e')
             {
                 if (console_input.length() >= 3)
                 {
                     value = std::stoi(console_input.substr(2,1));
-                    // send the motor enable command
-                    if(value == 1)
-                        md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
-                    else
-                        md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
 
-                    md.send_packet(md_handle, md.tx);
-                    status = md.receive_packet(md_handle, 3, md.rx);
+                    // send the motor enable command
+                    if (value == 1)
+                    {
+                        status = md.enable_motor(md_handle, FOCUS_MOTOR_ID, true);
+                        status &= md.enable_motor(md_handle, ZOOM_MOTOR_ID, true);
+                    }
+                    else
+                    {
+                        status = md.enable_motor(md_handle, FOCUS_MOTOR_ID, true);
+                        status &= md.enable_motor(md_handle, ZOOM_MOTOR_ID, true);
+                    }
+
                 }
                 else
                 {
                     std::cout << "The number of parameters passed for '" << console_input[0] << "' is incorrect." << std::endl;
                 }
             }
-
+            
             //-----------------------------------------------------------------------------
+            // control the focus motor
             else if(console_input[0] == 'f')
 			{
                 if (console_input.length() >= 3)
                 {
                     focus_step = std::stoi(console_input.substr(2, console_input.length()-1));
 
-                    md.tx = data_packet(CMD_FOCUS_CTRL, focus_step);
-                    md.send_packet(md_handle, md.tx);
-                    status = md.receive_packet(md_handle, 6, md.rx);
+                    status = md.set_position(md_handle, FOCUS_MOTOR_ID, focus_step);
 
                     if (status)
                     {
@@ -296,15 +280,14 @@ int main(int argc, char** argv)
             }
 
             //-----------------------------------------------------------------------------
+            // control the zoom motor
             else if(console_input[0] == 'z')
 			{
                 if (console_input.length() >= 3)
                 {
                     zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
 
-                    md.tx = data_packet(CMD_ZOOM_CTRL, zoom_step);
-                    md.send_packet(md_handle, md.tx);
-                    status = md.receive_packet(md_handle, 6, md.rx);
+                    status = md.set_position(md_handle, ZOOM_MOTOR_ID, zoom_step);
 
                     if (status)
                     {
@@ -318,6 +301,7 @@ int main(int argc, char** argv)
                 }				
 			}
 
+            /*
             //-----------------------------------------------------------------------------
             else if (console_input[0] == 'a')
             {
@@ -395,7 +379,9 @@ int main(int argc, char** argv)
                     }
                 }
             }
+            */
 
+            /*
             //-----------------------------------------------------------------------------
             else if (console_input[0] == 'd')
             {
@@ -428,6 +414,7 @@ int main(int argc, char** argv)
                     key = std::getchar();
 
 #endif
+
                     status = false;
                     motor_type = "";
 
@@ -491,7 +478,7 @@ int main(int argc, char** argv)
                 tcsetattr(STDIN_FILENO, TCSANOW, &old_term); //Apply the old settings
 #endif
             }
-*/		
+		*/
 		}	// end of while loop
 
 
