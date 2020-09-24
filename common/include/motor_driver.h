@@ -47,7 +47,7 @@ constexpr uint8_t MD_CONNECT = (uint8_t)0x53;             /* Check for data conn
 constexpr auto ENABLE_MOTOR = 1;                 /* Enable the motors */
 constexpr auto DISABLE_MOTOR = 0;                /* Disable the motors */
 
-const uint8_t packet_size = (uint8_t)3;
+const uint8_t packet_size = (uint8_t)2;
 const uint8_t read_sp_size = (uint8_t)(15 + packet_size);
 const uint8_t ping_sp_size = (uint8_t)(14 + packet_size);
 const uint8_t write_sp_size = (uint8_t)(11 + packet_size);
@@ -98,7 +98,6 @@ typedef struct motor_info
         const motor_info& item
         )
     {
-        out << "Motor Information: " << std::endl;
         out << "  ID:               " << (uint32_t)item.id << std::endl;
         out << "  Model Number:     " << (uint32_t)item.model << std::endl;
         out << "  Firmware Version: " << (uint32_t)item.firmware << std::endl;
@@ -186,16 +185,16 @@ public:
         bool status = true;
         uint8_t mtr_error = 0;
 
-        dynamixel_packet mtr_packet(FOCUS_MOTOR_ID, DYN_PING);
+        dynamixel_packet mtr_packet(id, DYN_PING);
         tx = data_packet(MOTOR_CTRL_PING, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, ping_sp_size, rx);
 
         if (status == true)
         {
-            mtr_error = rx.data[SP_ERROR_POS];
+            //mtr_error = rx.data[SP_ERROR_POS];
 
-            if (mtr_error == 0)
+            if (rx.data[SP_ERROR_POS] == 0)
             {
                 mi = motor_info(rx.data);
             }
@@ -225,13 +224,16 @@ public:
             mtr_packet.add_params((uint16_t)ADD_TORQUE_ENABLE, (uint8_t)DISABLE_MOTOR);
         }
 
-        // enable the focus motor
+        // send the enable/disable motor packet
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, write_sp_size, rx);
-        uint8_t mtr_error = rx.data[SP_ERROR_POS];
+        status &= (rx.data[SP_ERROR_POS] == 0);
 
-        status &= (mtr_error == 0);
+        if (status == false)
+        {
+            std::cout << "Error enabling motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
 
         return status;
 
@@ -249,9 +251,13 @@ public:
         
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
-        //status &= receive_packet(md_handle, write_sp_size, rx);
+        status &= receive_packet(md_handle, write_sp_size, rx);
+        status &= (rx.data[SP_ERROR_POS] == 0);
 
-        //step = (rx.data[SP_PARAMS_POS] << 24) | (rx.data[SP_PARAMS_POS +1] << 16) | (rx.data[SP_PARAMS_POS +2] << 8) | (rx.data[SP_PARAMS_POS +3]);
+        if (status == false)
+        {
+            std::cout << "Error setting position for motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
 
         return status;
 
@@ -267,15 +273,15 @@ public:
         tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, read_sp_size, rx);
-        uint8_t mtr_error = rx.data[SP_ERROR_POS];
+        //uint8_t mtr_error = rx.data[SP_ERROR_POS];
 
-        if ((status == true) && (mtr_error == 0))
+        if ((status == true) && (rx.data[SP_ERROR_POS] == 0))
         {
             step = (rx.data[SP_PARAMS_POS + 3] << 24) | (rx.data[SP_PARAMS_POS + 2] << 16) | (rx.data[SP_PARAMS_POS + 1] << 8) | (rx.data[SP_PARAMS_POS]);
         }
         else
         {
-            std::cout << "Error getting focus step: " << mtr_error_string[mtr_error] << std::endl;
+            std::cout << "Error getting position for motor id: " <<  (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
         }
         return status;
     }   // end of get_position
@@ -290,6 +296,12 @@ public:
         
         send_packet(md_handle, tx);
         status &= receive_packet(md_handle, write_sp_size, rx);
+        status &= (rx.data[SP_ERROR_POS] == 0);
+
+        if(status == false)
+        {
+            std::cout << "Error reseting motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
 
         return status;
 

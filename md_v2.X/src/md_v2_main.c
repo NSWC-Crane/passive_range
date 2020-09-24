@@ -150,6 +150,7 @@ int main(int argc, char** argv)
     //init_RTCC();                // Setup and Initialize RTCC
     //init_ETH();                 // Setup Ethernet module
     init_TMR1();              // Setup and Initialize Timer Modules
+    init_TMR3();              // Setup and Initialize Timer Modules
     //init_Comparator();          // Setup Comparator Module
     
     init_UART1();                // Setup and Initialize UART
@@ -302,14 +303,13 @@ int main(int argc, char** argv)
 // -----------------------------------------------------------------------------
                case MOTOR_CTRL_PING:     
                     length = PING_PACKET_LENGTH;
-                    IFS0bits.U1RXIF = 0;
+                    mU1RXClearIntFlag();
 
                     DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
                     while(U1STAbits.TRMT == 0);
                     DIR_485_PIN = 0;
                    
-                    delay_ms(4);
                     receive_motor_packet(U1, length, packet_data);
                     
                     send_packet(U2, MOTOR_CTRL_PING, length, packet_data);
@@ -318,22 +318,13 @@ int main(int argc, char** argv)
                    
                case MOTOR_CTRL_RD:
                     length = READ_PACKET_LENGTH;
-                    IFS0bits.U1RXIF = 0;
+                    mU1RXClearIntFlag();
                     
                     DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
                     while(U1STAbits.TRMT == 0);
                     DIR_485_PIN = 0;
 
-//                    while(IFS0bits.U1RXIF == 0);
-//                    
-//                    // get the return info from the motor
-//                    for(idx=0; idx< length; ++idx)
-//                    {
-//                        packet_data[idx] = get_char(U1);
-//                    }
-                    
-                    delay_ms(4);
                     receive_motor_packet(U1, length, packet_data);
                     
                     send_packet(U2, MOTOR_CTRL_RD, length, packet_data);                    
@@ -342,45 +333,17 @@ int main(int argc, char** argv)
 
                case MOTOR_CTRL_WR:
                     length = WRITE_PACKET_LENGTH;
-                    IFS0bits.U1RXIF = 0;
+                    mU1RXClearIntFlag();
                     
                     DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    //send_motor_packet(U1, 13, TORQUE_ENABLE);
                     while(U1STAbits.TRMT == 0);
                     DIR_485_PIN = 0;
 
-                    delay_ms(4);
-                   
-                    /*
-                    DIR_485_PIN = 1;
-                    send_motor_packet(U1, 16, STEP_FM);   
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
-                     
-                    delay_ms(4);
-
-                    
-                    DIR_485_PIN = 1;                   
-                    send_motor_packet(U1, 13, TORQUE_DISABLE);   
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;    
-                     */                                  
-/*                                        
-                    while(IFS0bits.U1RXIF == 0);
-
-                    // get the return info from the motor
-                    for(idx=0; idx< length; ++idx)
-                    {
-                        packet_data[idx] = get_char(U1);
-                    }
-*/                    
                     receive_motor_packet(U1, length, packet_data);
 
                     send_packet(U2, MOTOR_CTRL_WR, length, packet_data);  
                    
-                    //DIR_485_PIN  = 1;
-                    IFS0bits.U1RXIF = 0;
                     break;
 // ----------------------------------------------------------------------------
 //                        Engineering Operations
@@ -417,6 +380,7 @@ int main(int argc, char** argv)
     }   // end of while(1)
     
     return (EXIT_SUCCESS);
+    
 }   // end of main
 
 
@@ -470,9 +434,21 @@ void receive_motor_packet(unsigned char uart, unsigned char length, unsigned cha
 {
     unsigned short idx;
     
-    while(IFS0bits.U1RXIF == 0);
+    TMR3 = 0;
 
-    for(idx=0; idx<length; ++idx)                 // receive data
+    while(IFS0bits.U1RXIF == 0)
+    {
+        if(TMR3 > 62500)                        // wait ~200ms before kicking out of waiting for the interrupt
+        {
+            for(idx=0; idx<length; ++idx)       // fill in 1's for the data
+            {
+                data[idx] = 1;
+            }                
+            return;
+        }
+    }
+
+    for(idx=0; idx<length; ++idx)               // receive data
     {
         data[idx] = get_char(uart);
     }

@@ -28,6 +28,7 @@
 #include "file_ops.h"
 #include "file_parser.h"
 //#include "ftdi_motor_driver.h"
+#include "sleep_ms.h"
 
 // Project Includes
 #include "motor_driver.h"
@@ -81,14 +82,16 @@ int main(int argc, char** argv)
     std::string motor_type = "";
     dynamixel_packet mtr_packet;
     int32_t steps;
-    //uint32_t pw;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
     uint8_t mtr_error;
-    //int32_t focus_pw = 0;
-    //int32_t zoom_pw = 0;
     motor_info focus_motor;
     motor_info zoom_motor;
+    uint32_t step_delta = 2;
+
+    //uint32_t pw;
+    //int32_t focus_pw = 0;
+    //int32_t zoom_pw = 0;
 
 #if defined(__linux__)
     struct termios old_term, new_term;
@@ -144,27 +147,47 @@ int main(int argc, char** argv)
         }
 
         md.set_driver_info(md.rx);
-        std::cout << md << std::endl;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << md;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         //-----------------------------------------------------------------------------
         // ping the motors to get the model number and firmware version
         status = md.ping_motor(md_handle, FOCUS_MOTOR_ID, focus_motor);
 
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Focus Motor Information: " << std::endl;
+
         if (status)
-            std::cout << focus_motor << std::endl;
+        {
+            std::cout << focus_motor;
+        }
         else
-            std::cout << "Error getting focus motor info" << std::endl;
+        {
+            std::cout << "  Error getting focus motor info" << std::endl;
+        }
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         status = md.ping_motor(md_handle, ZOOM_MOTOR_ID, zoom_motor);
 
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Zoom Motor Information: " << std::endl;
+        
         if (status)
-            std::cout << zoom_motor << std::endl;
+        {
+            std::cout << zoom_motor;
+        }
         else
-            std::cout << "Error getting zoom motor info" << std::endl;
+        {
+            std::cout << "  Error getting zoom motor info" << std::endl;
+        }
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         //-----------------------------------------------------------------------------
-        std::cout << std::endl << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
-        
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+
 /*
         //-----------------------------------------------------------------------------
         // get the current motor pulse widths reported by the controller
@@ -246,8 +269,8 @@ int main(int argc, char** argv)
                     }
                     else
                     {
-                        status = md.enable_motor(md_handle, FOCUS_MOTOR_ID, true);
-                        status &= md.enable_motor(md_handle, ZOOM_MOTOR_ID, true);
+                        status = md.enable_motor(md_handle, FOCUS_MOTOR_ID, false);
+                        status &= md.enable_motor(md_handle, ZOOM_MOTOR_ID, false);
                     }
 
                 }
@@ -263,14 +286,20 @@ int main(int argc, char** argv)
 			{
                 if (console_input.length() >= 3)
                 {
-                    focus_step = std::stoi(console_input.substr(2, console_input.length()-1));
+                    steps = std::stoi(console_input.substr(2, console_input.length()-1));
 
-                    status = md.set_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+                    status = md.set_position(md_handle, FOCUS_MOTOR_ID, steps);
+                    status &= md.get_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+
+                    while (std::abs(steps - focus_step) > step_delta)
+                    {
+                        sleep_ms(50);
+                        status &= md.get_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+                    }
 
                     if (status)
                     {
-                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "focus steps: " << steps << std::endl;
+                        std::cout << "current focus position: " << focus_step << std::endl;
                     }
                 }
                 else
@@ -285,14 +314,20 @@ int main(int argc, char** argv)
 			{
                 if (console_input.length() >= 3)
                 {
-                    zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    steps = std::stoi(console_input.substr(2, console_input.length() - 1));
 
-                    status = md.set_position(md_handle, ZOOM_MOTOR_ID, zoom_step);
+                    status = md.set_position(md_handle, ZOOM_MOTOR_ID, steps);
+                    status &= md.get_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+
+                    while (std::abs(steps - focus_step) > step_delta)
+                    {
+                        sleep_ms(50);
+                        status &= md.get_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+                    }
 
                     if (status)
                     {
-                        steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                        std::cout << "zoom steps: " << steps << std::endl;
+                        std::cout << "current zoom position: " << zoom_step << std::endl;
                     }
                 }
                 else

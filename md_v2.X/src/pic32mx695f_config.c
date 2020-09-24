@@ -73,9 +73,9 @@ void init_TMR3(void)
     // Configure Timer 3
     T3CONbits.SIDL = 1;         // Discontinue operation in Idle mode
     T3CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T3CONbits.TCKPS = 3;        // 1:8 prescale value -> T3 period = 0.1us;
-    PR3 = 190;                  // Period Register: T3per = (0.1us)*PR3 = ~20us => 50kHz
-    T3CONbits.ON = 0;           // Turn Timer3 on
+    T3CONbits.TCKPS = 7;        // 1:256 prescale value -> T3 period = 3.2us;
+    PR3 = 65535;                  // Period Register: T3per = (0.1us)*PR3 = ~20us => 50kHz
+    T3CONbits.ON = 1;           // Turn Timer3 on
     TMR3 = 0;                   // set Timer3 counter = 0
 }
 

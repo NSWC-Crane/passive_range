@@ -52,7 +52,7 @@ void send_char(unsigned char data, unsigned char uart)
 
 unsigned char get_char(unsigned char uart)
 {
-    unsigned char temp;
+    unsigned char temp = 0;
    
     switch(uart)
     {

@@ -45,6 +45,8 @@ typedef struct data_packet
         start = '$';
         command = rx_data[0];
         byte_count = rx_data[1];
+        
+        // add a check to compare the byte_count to the size of rx_data 
         try {
             for (size_t idx = 0; idx < byte_count; ++idx)
             {
