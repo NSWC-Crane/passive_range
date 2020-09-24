@@ -13,36 +13,29 @@
 //#define MAX_DATA_LENGTH		16
 //#define MAX_PACKET_LENGTH	(MAX_DATA_LENGTH+2)
 
-//constexpr auto CMD_MOTOR_ENABLE = 0x10;       /* Enable/Disable motors */
+// configure the trigger parameters
+constexpr uint8_t CONFIG_T1 = 0x11;           /* Configure Trigger 1 parameters */
+constexpr uint8_t CONFIG_T2 = 0x12;           /* Configure Trigger 2 parameters */
 
-// motor control
-constexpr uint8_t FOCUS_MOTOR_ID = (uint8_t)10;         /* The ID for the focus motor */
-constexpr uint8_t ZOOM_MOTOR_ID = (uint8_t)20;          /* The ID for the zoom motor */
-constexpr uint8_t BROADCAST_ID = (uint8_t)254;
+// initiate triggers
+constexpr uint8_t TRIG_ALL = 0x20;            /* initiate trigger sequence */
+constexpr uint8_t TRIG_CH1 = 0x21;            /* pulse channel 1 */
+constexpr uint8_t TRIG_CH2 = 0x22;            /* pulse channel 2 */
 
+// motor control commands
 constexpr uint8_t MOTOR_CTRL_PING = (uint8_t)0x30;
 constexpr uint8_t MOTOR_CTRL_RD = (uint8_t)0x31;        /* Initiate motor control */
 constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x32;        /* Initiate motor control */
 
-//constexpr uint8_t GET_MOTOR_STEP = (uint8_t)0x21;       /* get the step count for a given motor ID */
-
-//// focus motor control
-//constexpr auto CMD_FOCUS_CTRL = 0x21;       /* Focus motor control */
-//constexpr auto ABS_FOCUS_CTRL = 0x22;       /* Absolute focus motor control */
-//constexpr auto GET_FOC_MOT_STEP = 0x23;     /* get the focus motor step count */
-//constexpr auto SET_FOC_MOT_SPD = 0x24;      /* set focus motor speed */
-//constexpr auto GET_FOC_MOT_SPD = 0x25;      /* get focus motor speed */
-//
-//// zoom motor control
-//constexpr auto CMD_ZOOM_CTRL = 0x31;          /* Zoom motor control */
-//constexpr auto ABS_ZOOM_CTRL = 0x32;          /* Absolute zoom motor control */
-//constexpr auto GET_ZM_MOT_STEP = 0x33;        /* get the zoom motor step count */
-//constexpr auto SET_ZM_MOT_SPD = 0x34;         /* set zoom motor speed */
-//constexpr auto GET_ZM_MOT_SPD = 0x35;         /* get zoom motor speed */
-
+// firmware read info
 constexpr uint8_t MD_FIRM_READ = (uint8_t)0x51;           /* Read firmware version return command */
 constexpr uint8_t MD_SER_NUM_READ = (uint8_t)0x52;        /* Read serial number return command */
 constexpr uint8_t MD_CONNECT = (uint8_t)0x53;             /* Check for data connection to motor controller */
+
+// motor specific parameters
+constexpr uint8_t FOCUS_MOTOR_ID = (uint8_t)10;         /* The ID for the focus motor */
+constexpr uint8_t ZOOM_MOTOR_ID = (uint8_t)20;          /* The ID for the zoom motor */
+constexpr uint8_t BROADCAST_ID = (uint8_t)254;
 
 constexpr auto ENABLE_MOTOR = 1;                 /* Enable the motors */
 constexpr auto DISABLE_MOTOR = 0;                /* Disable the motors */
