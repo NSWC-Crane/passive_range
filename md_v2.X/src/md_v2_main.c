@@ -352,13 +352,13 @@ int main(int argc, char** argv)
                 // read the controller firmware
                 case FIRM_READ:
                     length = 2;
-                    send_packet(U2, FIRM_READ, length, firmware);
+                    send_packet(U2, FIRM_READ, length, (unsigned char *)firmware);
                     break;  
 
                 // read the controller serial number
                 case SER_NUM_READ:
                     length = 1;
-                    send_packet(U2, SER_NUM_READ, length, serial_num);
+                    send_packet(U2, SER_NUM_READ, length, (unsigned char *)serial_num);
                     break;
 
                 // send back a connected message
@@ -430,7 +430,7 @@ void send_motor_packet(unsigned char uart, unsigned char length, unsigned char* 
 }   // end of send_motor_packet
 
 
-void receive_motor_packet(unsigned char uart, unsigned char length, unsigned char* data)
+void receive_motor_packet(unsigned char uart, unsigned short length, unsigned char* data)
 {
     unsigned short idx;
     

@@ -316,12 +316,12 @@ int main(int argc, char** argv)
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
 
                     status = md.set_position(md_handle, ZOOM_MOTOR_ID, steps);
-                    status &= md.get_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+                    status &= md.get_position(md_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                    while (std::abs(steps - focus_step) > step_delta)
+                    while (std::abs(steps - zoom_step) > step_delta)
                     {
                         sleep_ms(50);
-                        status &= md.get_position(md_handle, FOCUS_MOTOR_ID, focus_step);
+                        status &= md.get_position(md_handle, ZOOM_MOTOR_ID, zoom_step);
                     }
 
                     if (status)
