@@ -45,9 +45,9 @@ void init_TMR1(void)
     T1CONbits.SIDL = 1;         // Discontinue operation in Idle mode
     T1CONbits.TWDIS = 0;        // Back-to-back writes are enabled
     T1CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T1CONbits.TCKPS = 1;        // 1:64 prescale value, FPBclk = 80MHz -> T1 period ~= 0.1us
+    T1CONbits.TCKPS = 1;        // 1:8 prescale value, FPBclk = 80MHz -> T1 period ~= 0.1us
     T1CONbits.TSYNC = 0;        // When TCS = 0: This bit is ignored
-    T1CONbits.TCS = 0;          // Internal PBCLK
+    T1CONbits.TCS = 0;          // Internal Peripheral Clock
     PR1 = 0xFFFF;               // Period Register to max
     T1CONbits.ON = 1;           // Turn Timer1 on
     TMR1 = 0;                   // set Timer1 counter = 0    
@@ -57,14 +57,12 @@ void init_TMR1(void)
 void init_TMR2(void)
 {
     // Configure Timer 2 
-    //T2CONbits.TCS = 0;
     T2CONbits.SIDL = 0;         // Do not Discontinue operation in Idle mode
     T2CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T2CONbits.TCKPS = 3;        // 1:8 prescale value, FPBclk = 80MHz -> T2 period ~= 0.01250us
+    T2CONbits.TCKPS = 0;        // 1:1 prescale value, TPBclk = 80MHz -> T2 period ~= 0.0125 us
     T2CONbits.T32 = 0;          // TMR2 and TMR3 form separate 16-bit timer
-    PR2 = 0xFFFF;               // Period Register (0.01250us)*PR2 = ~200 us => 5kHz
-                                // A3 -> 15942
-                                // A5 -> 15940    
+    PR2 = 1000;                 // Period Register (0.1 us)*PR2 = ~100 us => 10kHz
+
     T2CONbits.ON = 0;           // Turn Timer2 on
     TMR2 = 0;                   // set Timer2 counter = 0    
 }
@@ -75,9 +73,9 @@ void init_TMR3(void)
     // Configure Timer 3
     T3CONbits.SIDL = 1;         // Discontinue operation in Idle mode
     T3CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T3CONbits.TCKPS = 3;        // 1:8 prescale value -> T3 period = 0.1us; original 64/304
-    PR3 = 190;                  // Period Register: T3per = (0.1us)*PR3 = ~20us => 50kHz
-    T3CONbits.ON = 0;           // Turn Timer3 on
+    T3CONbits.TCKPS = 7;        // 1:256 prescale value -> T3 period = 3.2us;
+    PR3 = 65535;                  // Period Register: T3per = (0.1us)*PR3 = ~20us => 50kHz
+    T3CONbits.ON = 1;           // Turn Timer3 on
     TMR3 = 0;                   // set Timer3 counter = 0
 }
 
@@ -128,7 +126,9 @@ void init_UART1(void)
     U1STAbits.ADDEN = 0;        // Address Detect mode is disabled
 
     // Fpb = 80MHz; BRG = Fpb/(4*baudrate) - 1
-    U1BRG = 0x00000013;         // BRG = 19 (0x13); 1M baud rate; 0.00% error
+    U1BRG = 346;                // BRG = 79; 250k baud rate; 0.00% error
+                                // BRG = 173; 115.2k baud rate; -0.22% error
+                                // BRG = 346; 57.6k baud rate; 0.06% error
 
     U1MODEbits.ON = 1;          // Turn UART1 On
 }

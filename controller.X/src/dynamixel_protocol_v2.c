@@ -29,7 +29,7 @@ void build_packet(unsigned char id, unsigned short param_length, unsigned char i
     packet.data[ID] = id;
     
     // get the total packet length
-    split_uint16((7+param_length), &length_lb, &length_ub);
+    split_uint16((3+param_length), &length_lb, &length_ub);
     packet.data[LENGTH] = length_lb;
     packet.data[LENGTH+1] = length_ub;
 
@@ -44,7 +44,7 @@ void build_packet(unsigned char id, unsigned short param_length, unsigned char i
     
     
     //calculate the crc
-    crc = calculate_crc((5+param_length), packet.data);
+    crc = calculate_crc((3+param_length), packet.data);
     split_uint16(crc, &crc_lb, &crc_ub);
     packet.data[PARAMETER+idx++] = crc_lb;
     packet.data[PARAMETER+idx] = crc_ub;

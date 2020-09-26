@@ -4,7 +4,7 @@
 #include <plib.h>
 
 
-#include "../include/uart_ctrl.h"
+#include "../include/uart_functions.h"
 #include "../include/dynamixel_protocol_v2.h"
 
 //-----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ void send_char(unsigned char data, unsigned char uart)
 
 unsigned char get_char(unsigned char uart)
 {
-    unsigned char temp;
+    unsigned char temp = 0;
    
     switch(uart)
     {
@@ -114,26 +114,4 @@ void send_packet(unsigned char uart, unsigned char command, unsigned short lengt
 
 }   // end of send_packet
 
-//-----------------------------------------------------------------------------
-/* Function: void send_packet(unsigned char code)
- *
- * Arguments:
- * 1. command: command code to be sent
- * 2. length: length of the data to be sent
- * 3. *data: pointer to the data to be sent
- *
- * Return Value: None
- *
- * Description: Send message with command header, packet byte size, data
- */
-void send_motor_packet(unsigned char uart, data_packet data)
-{
-    unsigned short idx;
-    unsigned short length = make_uint16(data.data[LENGTH], data.data[LENGTH+1]);
-    
-    for(idx=0; idx<length; ++idx)                 // send data and perform CRC calculations
-    {
-        send_char(data.data[idx], uart);
-    }
 
-}   // end of send_packet
