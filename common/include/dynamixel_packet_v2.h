@@ -52,6 +52,7 @@ enum control_value {
     ADD_TORQUE_ENABLE = 64,
     ADD_LED = 65,
     ADD_GOAL_POSITION = 116,
+    ADD_MOVING = 122,
     ADD_PRESENT_POSITION = 132
     };
 

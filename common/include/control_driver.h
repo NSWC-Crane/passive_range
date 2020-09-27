@@ -24,8 +24,10 @@ constexpr uint8_t TRIG_CH2 = 0x22;            /* pulse channel 2 */
 
 // motor control commands
 constexpr uint8_t MOTOR_CTRL_PING = (uint8_t)0x30;
-constexpr uint8_t MOTOR_CTRL_RD = (uint8_t)0x31;        /* Initiate motor control */
-constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x32;        /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x31;        /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_RD1 = (uint8_t)0x32;        /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_RD2 = (uint8_t)0x33;        /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_RD4 = (uint8_t)0x34;        /* Initiate motor control */
 
 // firmware read info
 constexpr uint8_t MD_FIRM_READ = (uint8_t)0x51;           /* Read firmware version return command */
@@ -48,18 +50,22 @@ const uint8_t write_sp_size = (uint8_t)(11 + packet_size);
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;
 
+const uint16_t max_offset = 25000;
+const uint16_t max_length = 25000;
+
+
 //extern const int min_pw = 1000;
 //extern const int max_pw = 30000;
 
 //-----------------------------------------------------------------------------
-typedef struct motor_driver_info
+typedef struct controller_info
 {
     uint8_t serial_number;
     uint8_t firmware[2];
 
-    motor_driver_info() = default;
+    controller_info() = default;
 
-    motor_driver_info(std::vector<uint8_t> data)
+    controller_info(std::vector<uint8_t> data)
     {
         if ((data[0] == 1) && (data.size() >= 4))
         {
@@ -69,7 +75,7 @@ typedef struct motor_driver_info
         }
     }
 
-} motor_driver_info;
+} controller_info;
 
 typedef struct motor_info
 {
@@ -133,37 +139,37 @@ typedef struct trigger_info
 } trigger_info;
 
 //-----------------------------------------------------------------------------
-class motor_driver
+class controller
 {
 
 public:
 
-    motor_driver_info md_info;
+    controller_info ctrl_info;
     data_packet tx;
     data_packet rx;
 
-    motor_driver() = default;
+    controller() = default;
 
     void set_driver_info(data_packet packet)
     {
-        md_info = motor_driver_info(packet.data);
+        ctrl_info = controller_info(packet.data);
     }
 
     //-----------------------------------------------------------------------------
-    bool send_packet(FT_HANDLE driver, data_packet packet)
+    bool send_packet(FT_HANDLE ctrl_handle, data_packet packet)
     {
 
-        return send_data(driver, packet.to_vector());
+        return send_data(ctrl_handle, packet.to_vector());
 
     }	// end of send_packet
 
     //-----------------------------------------------------------------------------
-    bool receive_packet(FT_HANDLE driver, uint32_t count, data_packet &packet)
+    bool receive_packet(FT_HANDLE ctrl_handle, uint32_t count, data_packet &packet)
     {
 
         std::vector<uint8_t> rx_data;
 
-        bool status = receive_data(driver, count, rx_data);
+        bool status = receive_data(ctrl_handle, count, rx_data);
         
         if(status)
             packet = data_packet(rx_data);
@@ -173,15 +179,15 @@ public:
     }   // end of receive_packet
 
     //-----------------------------------------------------------------------------
-    bool ping_motor(FT_HANDLE md_handle, uint8_t id, motor_info &mi)
+    bool ping_motor(FT_HANDLE ctrl_handle, uint8_t id, motor_info &mi)
     {
         bool status = true;
         uint8_t mtr_error = 0;
 
         dynamixel_packet mtr_packet(id, DYN_PING);
         tx = data_packet(MOTOR_CTRL_PING, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, ping_sp_size, rx);
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, ping_sp_size, rx);
 
         if (status == true)
         {
@@ -202,7 +208,7 @@ public:
     }   // end of ping_motor
 
     //-----------------------------------------------------------------------------
-    bool enable_motor(FT_HANDLE md_handle, uint8_t id, bool value)
+    bool enable_motor(FT_HANDLE ctrl_handle, uint8_t id, bool value)
     {
         bool status = true;
 
@@ -219,8 +225,8 @@ public:
 
         // send the enable/disable motor packet
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, write_sp_size, rx);
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, write_sp_size, rx);
         status &= (rx.data[SP_ERROR_POS] == 0);
 
         if (status == false)
@@ -233,7 +239,7 @@ public:
     }   // end of enable_motor
 
     //-----------------------------------------------------------------------------
-    bool set_position(FT_HANDLE md_handle, uint8_t id, int32_t &step)
+    bool set_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t &step)
     {
         bool status = true;
 
@@ -243,8 +249,8 @@ public:
         mtr_packet.add_params((uint16_t)ADD_GOAL_POSITION, (uint32_t)step);
         
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, write_sp_size, rx);
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, write_sp_size, rx);
         status &= (rx.data[SP_ERROR_POS] == 0);
 
         if (status == false)
@@ -257,15 +263,15 @@ public:
     }   // end of step_motor
 
     //-----------------------------------------------------------------------------
-    bool get_position(FT_HANDLE md_handle, uint8_t id, int32_t& step)
+    bool get_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t& step)
     {
         bool status = true;
         dynamixel_packet mtr_packet(id, DYN_READ);
         mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
 
-        tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, read_sp_size, rx);
+        tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, read_sp_size, rx);
         //uint8_t mtr_error = rx.data[SP_ERROR_POS];
 
         if ((status == true) && (rx.data[SP_ERROR_POS] == 0))
@@ -280,15 +286,38 @@ public:
     }   // end of get_position
 
     //-----------------------------------------------------------------------------
-    bool reset_motor(FT_HANDLE md_handle, uint8_t id)
+    bool motor_moving(FT_HANDLE ctrl_handle, uint8_t id)
+    {
+        bool status = true;
+        
+        dynamixel_packet mtr_packet(id, DYN_READ);
+        mtr_packet.add_params((uint16_t)ADD_MOVING, (uint16_t)1);
+
+        tx = data_packet(MOTOR_CTRL_RD1, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, 14, rx);
+        status &= (rx.data[SP_ERROR_POS] == 0);
+
+        if (status == false)
+        {
+            std::cout << "Error getting move status for motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
+
+        return status;
+
+    }   // end of motor_moving
+
+    //-----------------------------------------------------------------------------
+    bool reset_motor(FT_HANDLE ctrl_handle, uint8_t id)
     {
         bool status = true;
 
         dynamixel_packet mtr_packet(id, DYN_REBOOT);
-        tx = data_packet(MOTOR_CTRL_RD, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, write_sp_size, rx);
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, read_sp_size, rx);
         status &= (rx.data[SP_ERROR_POS] == 0);
 
         if(status == false)
@@ -300,32 +329,54 @@ public:
 
     }   // end of reset_motor
 
-/*
-    bool step_zoom_motor(FT_HANDLE md_handle, int32_t& zoom_step, uint8_t mode)
+    //-----------------------------------------------------------------------------
+    bool config_channel(FT_HANDLE ctrl_handle,
+        uint8_t channel,
+        std::string input
+    )
     {
-        bool status = true;
-        dynamixel_packet dyn_packet(ZOOM_MOTOR_ID, (uint16_t)4, DYN_WRITE, ADD_TORQUE_ENABLE, { 1 });
+        bool status = false;
+        std::vector<uint8_t> data(5);
+        std::vector<std::string> params;
 
+        try
+        {
+            parse_csv_line(input, params);
 
-        tx = data_packet(MOTOR_CTRL, 1, { ENABLE_MOTOR });
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 3, rx);
+            data[0] = std::stoi(params[0]) & 0x01;
 
-        tx = data_packet(MOTOR_CTRL, zoom_step);
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 6, rx);
+            uint16_t offset = min((uint16_t)(std::stoi(params[1]) & 0xFFFF), max_offset);
+            data[1] = (offset >> 8) & 0xFF;
+            data[2] = offset & 0xFF;
 
-        zoom_step = (rx.data[0] << 24) | (rx.data[1] << 16) | (rx.data[2] << 8) | (rx.data[3]);
+            uint16_t length = min((uint16_t)(std::stoi(params[2]) & 0xFFFF), max_length) + offset;
+            data[3] = (length >> 8) & 0xFF;
+            data[4] = length & 0xFF;
 
-        tx = data_packet(MOTOR_CTRL, 1, { DISABLE_MOTOR });
-        send_packet(md_handle, tx);
-        status &= receive_packet(md_handle, 3, rx);
+            tx = data_packet(channel, (uint8_t)data.size(), data);
+            send_packet(ctrl_handle, tx);
+            status = receive_packet(ctrl_handle, 3, rx);
+        }
+        catch (std::exception e)
+        {
+            std::cout << "Error getting configuration information: " << e.what() << std::endl;
+        }
 
         return status;
 
-    }   // end of step_focus_motor
-*/
+    }   // end of config_channel
 
+    //-----------------------------------------------------------------------------
+    bool trigger(FT_HANDLE ctrl_handle, uint8_t channel)
+    {
+        bool status = true;
+
+        tx = data_packet(channel);
+        send_packet(ctrl_handle, tx);
+        status = receive_packet(ctrl_handle, 3, rx);
+        
+        return status;
+    }   // end of trigger
 
 
 };   // end of class
@@ -334,13 +385,13 @@ public:
 
 inline std::ostream& operator<< (
     std::ostream& out,
-    const motor_driver& item
+    const controller& item
     )
 {
     using std::endl;
     out << "Motor Controller Information: " << std::endl;
-    out << "  Serial Number:    " << (uint32_t)item.md_info.serial_number << std::endl;
-    out << "  Firmware Version: " << (uint32_t)item.md_info.firmware[0] << "." << std::setfill('0') << std::setw(2) << (uint32_t)item.md_info.firmware[1] << std::endl;
+    out << "  Serial Number:    " << (uint32_t)item.ctrl_info.serial_number << std::endl;
+    out << "  Firmware Version: " << (uint32_t)item.ctrl_info.firmware[0] << "." << std::setfill('0') << std::setw(2) << (uint32_t)item.ctrl_info.firmware[1] << std::endl;
     return out;
 }
 

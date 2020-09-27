@@ -133,10 +133,13 @@ int main(int argc, char** argv)
     unsigned char STEP_FM[]        = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x09, 0x00, 0x03, 0x74, 0x00, 0xB8, 0x0B, 0x00, 0x00, 0xDD, 0xC9};
     unsigned char TORQUE_DISABLE[] = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x06, 0x00, 0x03, 0x40, 0x00, 0x00, 0x6D, 0x6D};
     
-    //data_packet motor_packet = initialize_packet();
+    // SN-01
+    // set the motor ID 10 position I gain to 8
+    unsigned char SET_10_POSITION_I[] = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x07, 0x00, 0x03, 0x52, 0x00, 0x08, 0x00, 0x78, 0x35};
+    // set the motor ID 20 position I gain to 2
+    unsigned char SET_20_POSITION_I[] = {0xFF, 0xFF, 0xFD, 0x00, 0x14, 0x07, 0x00, 0x03, 0x52, 0x00, 0x02, 0x00, 0x39, 0x69};
     
-    unsigned char p2[PKT_SIZE] = {0x74,0x00,0x00,0x02,0x00,0x00};
-    
+        
     if(RCON & 0x18)             // The WDT caused a wake from Sleep
     {
         asm volatile("eret");   // return from interrupt
@@ -237,8 +240,8 @@ int main(int argc, char** argv)
                     length = 1;
 
                     t1_polarity = rx_data[2] & 0x01;
-                    t1_offset = rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6];
-                    t1_length = rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10];
+                    t1_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6])*10;
+                    t1_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10])*10;
                     TRIG1_PIN = 0 ^ t1_polarity;
                     
                     packet_data[0] = t1_polarity;
@@ -249,8 +252,8 @@ int main(int argc, char** argv)
                     length = 1;
 
                     t2_polarity = rx_data[2] & 0x01;
-                    t2_offset = rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6];
-                    t2_length = rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10];
+                    t2_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6])*10;
+                    t2_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10])*10;
                     TRIG2_PIN = 0 ^ t2_polarity;
                     
                     packet_data[0] = t2_polarity;
@@ -316,21 +319,6 @@ int main(int argc, char** argv)
 
                     break;
                    
-               case MOTOR_CTRL_RD:
-                    length = READ_PACKET_LENGTH;
-                    mU1RXClearIntFlag();
-                    
-                    DIR_485_PIN = 1;
-                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
-
-                    receive_motor_packet(U1, length, packet_data);
-                    
-                    send_packet(U2, MOTOR_CTRL_RD, length, packet_data);                    
-                                        
-                    break;
-
                case MOTOR_CTRL_WR:
                     length = WRITE_PACKET_LENGTH;
                     mU1RXClearIntFlag();
@@ -345,6 +333,52 @@ int main(int argc, char** argv)
                     send_packet(U2, MOTOR_CTRL_WR, length, packet_data);  
                    
                     break;
+
+               case MOTOR_CTRL_RD1:
+                    length = READ1_PACKET_LENGTH;
+                    mU1RXClearIntFlag();
+                    
+                    DIR_485_PIN = 1;
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
+
+                    receive_motor_packet(U1, length, packet_data);
+                    
+                    send_packet(U2, MOTOR_CTRL_RD1, length, packet_data);                    
+                                        
+                    break;
+
+               case MOTOR_CTRL_RD2:
+                    length = READ2_PACKET_LENGTH;
+                    mU1RXClearIntFlag();
+                    
+                    DIR_485_PIN = 1;
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
+
+                    receive_motor_packet(U1, length, packet_data);
+                    
+                    send_packet(U2, MOTOR_CTRL_RD2, length, packet_data);                    
+                                        
+                    break;
+                    
+               case MOTOR_CTRL_RD4:
+                    length = READ4_PACKET_LENGTH;
+                    mU1RXClearIntFlag();
+                    
+                    DIR_485_PIN = 1;
+                    send_motor_packet(U1, rx_data[1], &rx_data[2]);
+                    while(U1STAbits.TRMT == 0);
+                    DIR_485_PIN = 0;
+
+                    receive_motor_packet(U1, length, packet_data);
+                    
+                    send_packet(U2, MOTOR_CTRL_RD4, length, packet_data);                    
+                                        
+                    break;
+                    
 // ----------------------------------------------------------------------------
 //                        Engineering Operations
 // ----------------------------------------------------------------------------

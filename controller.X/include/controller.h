@@ -38,24 +38,12 @@
 
 // focus motor control
 #define MOTOR_CTRL_PING 0x30
-#define MOTOR_CTRL_RD	0x31				  /* send read command to motor */
-#define MOTOR_CTRL_WR	0x32				  /* send write command to motor */
+#define MOTOR_CTRL_WR	0x31				  /* send write command to motor */
+#define MOTOR_CTRL_RD1	0x32				  /* send read command to motor */
+#define MOTOR_CTRL_RD2	0x33				  /* send read command to motor */
+#define MOTOR_CTRL_RD4	0x34				  /* send read command to motor */
 
-//#define FOCUS_CTRL       0x21                 /* Focus motor control */
-//#define ABS_FOCUS_CTRL   0x22                 /* Absolute focus motor control */
-//#define GET_FOC_MOT_STEP 0x23                 /* get the focus motor step count */  
-//#define SET_FOC_MOT_SPD  0x24				  /* set focus motor speed */
-//#define GET_FOC_MOT_SPD  0x25				  /* get focus motor speed */
-//
-//// zoom motor control
-//#define ZERO_ZOOM		 0x30				  /* zero the zoom motor */
-//#define ZOOM_CTRL        0x31                 /* Zoom motor control */
-//#define ABS_ZOOM_CTRL    0x32                 /* Absolute zoom motor control */
-//#define GET_ZM_MOT_STEP  0x33                 /* get the zoom motor step count */
-//#define SET_ZM_MOT_SPD   0x34				  /* set zoom motor speed */
-//#define GET_ZM_MOT_SPD   0x35				  /* get zoom motor speed */
-
-
+// engineering functions
 #define FIRM_READ       0x51                  /* Read firmware version return command */
 #define SER_NUM_READ    0x52                  /* Read serial number return command */
 #define CONNECT         0x53                  /* Check for data connection to motor controller */
@@ -64,8 +52,10 @@
 #define U2              2
 
 #define PING_PACKET_LENGTH  14
-#define READ_PACKET_LENGTH  15
 #define WRITE_PACKET_LENGTH 11
+#define READ1_PACKET_LENGTH  12
+#define READ2_PACKET_LENGTH  13
+#define READ4_PACKET_LENGTH  15
 
 // ----------------------------------------------------------------------------
 // Function Definitions
