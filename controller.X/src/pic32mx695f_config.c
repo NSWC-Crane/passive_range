@@ -54,29 +54,21 @@ void init_TMR1(void)
 }
 
 // ----------------------------------------------------------------------------
-void init_TMR2(void)
+void init_TMR23(void)
 {
     // Configure Timer 2 
-    T2CONbits.SIDL = 0;         // Do not Discontinue operation in Idle mode
+    T2CONbits.SIDL = 1;         // Do not Discontinue operation in Idle mode
     T2CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T2CONbits.TCKPS = 0;        // 1:1 prescale value, TPBclk = 80MHz -> T2 period ~= 0.0125 us
-    T2CONbits.T32 = 0;          // TMR2 and TMR3 form separate 16-bit timer
-    PR2 = 1000;                 // Period Register (0.1 us)*PR2 = ~100 us => 10kHz
+    T2CONbits.TCKPS = 3;        // 1:8 prescale value, TPBclk = 80MHz -> T23 period ~= 0.1 us
+    T2CONbits.T32 = 1;          // TMR2 and TMR3 form a combined 32-bit timer
+    PR2 = 0xFFFFFFFF;           // Period Register (0.1 us)*PR2
 
-    T2CONbits.ON = 0;           // Turn Timer2 on
-    TMR2 = 0;                   // set Timer2 counter = 0    
-}
-
-// ----------------------------------------------------------------------------
-void init_TMR3(void)
-{
     // Configure Timer 3
     T3CONbits.SIDL = 1;         // Discontinue operation in Idle mode
     T3CONbits.TGATE = 0;        // Gated time accumulation is disabled
-    T3CONbits.TCKPS = 7;        // 1:256 prescale value -> T3 period = 3.2us;
-    PR3 = 65535;                  // Period Register: T3per = (0.1us)*PR3 = ~20us => 50kHz
-    T3CONbits.ON = 1;           // Turn Timer3 on
-    TMR3 = 0;                   // set Timer3 counter = 0
+
+    T2CONbits.ON = 1;           // Turn Timer2 on
+    TMR2 = 0;                   // set Timer2 counter = 0 
 }
 
 // ----------------------------------------------------------------------------

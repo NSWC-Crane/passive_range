@@ -14,33 +14,34 @@
 //#define MAX_PACKET_LENGTH	(MAX_DATA_LENGTH+2)
 
 // configure the trigger parameters
-constexpr uint8_t CONFIG_T1 = 0x11;           /* Configure Trigger 1 parameters */
-constexpr uint8_t CONFIG_T2 = 0x12;           /* Configure Trigger 2 parameters */
+constexpr uint8_t CONFIG_T1 = (uint8_t)0x11;            /* Configure Trigger 1 parameters */
+constexpr uint8_t CONFIG_T2 = (uint8_t)0x12;            /* Configure Trigger 2 parameters */
+constexpr uint8_t TRIG_CONFIG = (uint8_t)0x15;          /* Get the trigger config for each channel */
 
 // initiate triggers
-constexpr uint8_t TRIG_ALL = 0x20;            /* initiate trigger sequence */
-constexpr uint8_t TRIG_CH1 = 0x21;            /* pulse channel 1 */
-constexpr uint8_t TRIG_CH2 = 0x22;            /* pulse channel 2 */
+constexpr uint8_t TRIG_ALL = (uint8_t)0x20;             /* initiate trigger sequence */
+constexpr uint8_t TRIG_CH1 = (uint8_t)0x21;             /* pulse channel 1 */
+constexpr uint8_t TRIG_CH2 = (uint8_t)0x22;             /* pulse channel 2 */
 
 // motor control commands
-constexpr uint8_t MOTOR_CTRL_PING = (uint8_t)0x30;
-constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x31;        /* Initiate motor control */
-constexpr uint8_t MOTOR_CTRL_RD1 = (uint8_t)0x32;        /* Initiate motor control */
-constexpr uint8_t MOTOR_CTRL_RD2 = (uint8_t)0x33;        /* Initiate motor control */
-constexpr uint8_t MOTOR_CTRL_RD4 = (uint8_t)0x34;        /* Initiate motor control */
+constexpr uint8_t MOTOR_CTRL_PING = (uint8_t)0x30;      /* Ping the motors to get their info */
+constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x31;        /* Initiate motor write command */
+constexpr uint8_t MOTOR_CTRL_RD1 = (uint8_t)0x32;       /* Initiate motor read 1 byte command */
+constexpr uint8_t MOTOR_CTRL_RD2 = (uint8_t)0x33;       /* Initiate motor read 2 byte command */
+constexpr uint8_t MOTOR_CTRL_RD4 = (uint8_t)0x34;       /* Initiate motor read 4 byte command */
 
 // firmware read info
-constexpr uint8_t MD_FIRM_READ = (uint8_t)0x51;           /* Read firmware version return command */
-constexpr uint8_t MD_SER_NUM_READ = (uint8_t)0x52;        /* Read serial number return command */
-constexpr uint8_t MD_CONNECT = (uint8_t)0x53;             /* Check for data connection to motor controller */
+constexpr uint8_t MD_FIRM_READ = (uint8_t)0x51;         /* Read firmware version return command */
+constexpr uint8_t MD_SER_NUM_READ = (uint8_t)0x52;      /* Read serial number return command */
+constexpr uint8_t MD_CONNECT = (uint8_t)0x53;           /* Check for data connection to motor controller */
 
 // motor specific parameters
 constexpr uint8_t FOCUS_MOTOR_ID = (uint8_t)10;         /* The ID for the focus motor */
 constexpr uint8_t ZOOM_MOTOR_ID = (uint8_t)20;          /* The ID for the zoom motor */
 constexpr uint8_t BROADCAST_ID = (uint8_t)254;
 
-constexpr auto ENABLE_MOTOR = 1;                 /* Enable the motors */
-constexpr auto DISABLE_MOTOR = 0;                /* Disable the motors */
+constexpr auto ENABLE_MOTOR = 1;                        /* Enable the motors */
+constexpr auto DISABLE_MOTOR = 0;                       /* Disable the motors */
 
 const uint8_t packet_size = (uint8_t)2;
 const uint8_t read_sp_size = (uint8_t)(15 + packet_size);

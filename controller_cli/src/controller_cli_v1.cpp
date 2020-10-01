@@ -44,7 +44,7 @@ void help_menu(void)
 	std::cout << "  e <0/1> - enable (1)/disable (0) motors" << std::endl;
 	std::cout << "  f <step> - move the focus motor to the given step" << std::endl;
 	std::cout << "  z <step> - move the zoom motor to the given step" << std::endl;
-    std::cout << "  d - step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
+    //std::cout << "  d - step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
     std::cout << "  t <channel> - trigger channel: (a) all, (1) channel 1, (2) channel 2" << std::endl;
     std::cout << "  c <channel,polarity,offset,length> - Configure channel timing parameters" << std::endl;
     //std::cout << "  af <step> - set the absolute focus motor step value [0 - " << max_focus_steps << "]" << std::endl;

@@ -53,9 +53,9 @@
 
 #define PING_PACKET_LENGTH  14
 #define WRITE_PACKET_LENGTH 11
-#define READ1_PACKET_LENGTH  12
-#define READ2_PACKET_LENGTH  13
-#define READ4_PACKET_LENGTH  15
+#define READ1_PACKET_LENGTH 12
+#define READ2_PACKET_LENGTH 13
+#define READ4_PACKET_LENGTH 15
 
 // ----------------------------------------------------------------------------
 // Function Definitions

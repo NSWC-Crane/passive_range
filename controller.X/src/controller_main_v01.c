@@ -39,7 +39,7 @@
 // ----------------------------------------------------------------------------
 unsigned char rx_data[PKT_SIZE] = {0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {0,90};
+const unsigned char firmware[2] = {1, 0};
 const unsigned char serial_num[1] = {1};
 
 // motor parameters
@@ -53,12 +53,12 @@ const int min_step = 0;
 // trigger parameters
 unsigned char t1_polarity = 0;
 unsigned int t1_offset = 0;
-unsigned int t1_length = 500000;
+unsigned int t1_length = 250000;
 unsigned char t1_out = 0;
 
 unsigned char t2_polarity = 0;
 unsigned int t2_offset = 0;
-unsigned int t2_length = 500000;
+unsigned int t2_length = 250000;
 unsigned char t2_out = 0;
     
 const unsigned int trigger_interval = 500000;
@@ -125,6 +125,7 @@ int main(int argc, char** argv)
 {
     int idx;
     int length = 0;
+    unsigned int tmr_count = 0;
 
     unsigned char temp;
     unsigned char packet_data[PKT_SIZE] = {0};
@@ -150,23 +151,19 @@ int main(int argc, char** argv)
     init_PRECACHE();            // setup wait states
     init_CLOCK();               // Setup and Initialize Main and Secondary Clock
     init_ADC();                 // Setup and initialize ADC Module
-    //init_RTCC();                // Setup and Initialize RTCC
-    //init_ETH();                 // Setup Ethernet module
-    init_TMR1();              // Setup and Initialize Timer Modules
-    init_TMR3();              // Setup and Initialize Timer Modules
-    //init_Comparator();          // Setup Comparator Module
+    init_TMR1();                // Setup and Initialize Timer Modules
+    init_TMR23();               // Setup and Initialize Timer Modules
     
-    init_UART1();                // Setup and Initialize UART
-    init_UART2();                // Setup and Initialize UART
-    //init_SPI3();                // Setup and Initialize SPI3 Module
+    init_UART1();               // Setup and Initialize UART
+    init_UART2();               // Setup and Initialize UART
 
     // TRIS Configurations
-    TRISB = 0x00FFBF;               // RB6 => outputs
-    TRISC = 0x009FFF;               // RC13 & RC14 => outputs
-    TRISD = 0x00FFF4;               // RD0, RD1 & RD3 => outputs
-    TRISE = 0x00FFDF;               // RE5 => outputs
-    TRISF = 0x00FFDF;               // RF5 => output
-    TRISG = 0x00FFFF;               // All Inputs
+    TRISB = 0x00FFBF;           // RB6 => outputs
+    TRISC = 0x009FFF;           // RC13 & RC14 => outputs
+    TRISD = 0x00FFF4;           // RD0, RD1 & RD3 => outputs
+    TRISE = 0x00FFDF;           // RE5 => outputs
+    TRISF = 0x00FFDF;           // RF5 => output
+    TRISG = 0x00FFFF;           // All Inputs
     
     // make sure that the motor is disabled on startup
     //MOT_EN_PIN = 1;
@@ -180,8 +177,6 @@ int main(int argc, char** argv)
 	
     mU2RXClearIntFlag();
     mU1RXClearIntFlag();
-    //mT3ClearIntFlag();
-    //mT2ClearIntFlag();
     
     INTEnableSystemMultiVectoredInt();
 
@@ -192,8 +187,7 @@ int main(int argc, char** argv)
     DIR_485_PIN  = 0;
 
     for(idx=10; idx>0; --idx)              	// wait 250ms to begin
-    {
-        
+    {        
         RED_LED = 1;
         delay_ms(20*idx);
         RED_LED = 0;
@@ -204,10 +198,21 @@ int main(int argc, char** argv)
         
         BLUE_LED = 1;
         delay_ms(20*idx);        
-        BLUE_LED = 0;     
-        
+        BLUE_LED = 0;            
     }
+    RED_LED = 1;
+    GREEN_LED = 1;
+    BLUE_LED = 1;
     
+    delay_ms(100);     
+
+    RED_LED = 0;
+    GREEN_LED = 0;
+    BLUE_LED = 0;    
+    
+    // set the trigger pins to their initial configuration
+    TRIG1_PIN = 0 ^ t1_polarity;
+    TRIG2_PIN = 0 ^ t2_polarity;
     
     // clear out the UART2 interrupts and enable
     temp = U2RXREG;
@@ -273,14 +278,15 @@ int main(int argc, char** argv)
                     length = 1;
                     
                     TRIG1_PIN = 0 ^ t1_polarity;
-                    TMR1 = 0;
-                    while(TMR1 < trigger_interval)
-                    {
-                        t1_out = ((TMR1 >= t1_offset) && (TMR1 <= t1_length));
-                        TRIG1_PIN =  t1_out ^ t1_polarity;
+                    
+                    TMR2 = 0;
+                    while(TMR2 < trigger_interval)
+                    {                        
+                        t1_out = ((TMR2 >= t1_offset) && (TMR2 <= t1_length));
+                        TRIG1_PIN =  t1_out ^ t1_polarity;   
                     }                   
                     TRIG1_PIN = 0 ^ t1_polarity;
-                    
+                            
                     packet_data[0] = 1;
                     send_packet(U2, TRIG_CH1, length, packet_data);                    
                     break;
@@ -289,10 +295,10 @@ int main(int argc, char** argv)
                     length = 1;
                                         
                     TRIG2_PIN = 0 ^ t2_polarity;
-                    TMR1 = 0;
-                    while(TMR1 < trigger_interval)
+                    TMR2 = 0;
+                    while(TMR2 < trigger_interval)
                     {
-                        t2_out = ((TMR1 >= t2_offset) && (TMR1 <= t2_length));
+                        t2_out = ((TMR2 >= t2_offset) && (TMR2 <= t2_length));
                         TRIG2_PIN =  t2_out ^ t2_polarity;
                     }                   
                     TRIG2_PIN = 0 ^ t2_polarity;                    
@@ -468,11 +474,11 @@ void receive_motor_packet(unsigned char uart, unsigned short length, unsigned ch
 {
     unsigned short idx;
     
-    TMR3 = 0;
+    TMR2 = 0;
 
     while(IFS0bits.U1RXIF == 0)
     {
-        if(TMR3 > 62500)                        // wait ~200ms before kicking out of waiting for the interrupt
+        if(TMR2 > 2000000)                        // wait ~200ms before kicking out of waiting for the interrupt
         {
             for(idx=0; idx<length; ++idx)       // fill in 1's for the data
             {
@@ -501,14 +507,14 @@ void initiate_trigger(void)
     TRIG2_PIN = 0 ^ t2_polarity;
     
     // reset the counter
-    TMR1 = 0;  
+    TMR2 = 0;  
     
-    while(TMR1 < trigger_interval)
+    while(TMR2 < trigger_interval)
     {
-        t1_out = ((TMR1 >= t1_offset) && (TMR1 <= t1_length));
-        TRIG1_PIN = t1_out ^ t1_polarity;
+        t1_out = ((TMR2 >= t1_offset) && (TMR2 <= t1_length));
+        t2_out = ((TMR2 >= t2_offset) && (TMR2 <= t2_length));
         
-        t2_out = ((TMR1 >= t2_offset) && (TMR1 <= t2_length));
+        TRIG1_PIN = t1_out ^ t1_polarity;
         TRIG2_PIN = t2_out ^ t2_polarity;     
     }
     
