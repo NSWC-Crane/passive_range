@@ -133,10 +133,10 @@ typedef struct trigger_info
         )
     {
         //out << "Trigger Information: " << std::endl;
-        out << "  ID:               " << (uint32_t)item.num << std::endl;
-        out << "  Polarity:         " << (uint32_t)item.polarity << std::endl;
-        out << "  Offset:           " << (uint32_t)item.offset << std::endl;
-        out << "  Length:           " << (uint32_t)item.length << std::endl;
+        out << "  Number:         " << (uint32_t)item.num << std::endl;
+        out << "  Polarity:       " << (uint32_t)item.polarity << std::endl;
+        out << "  Offset (us):    " << (uint32_t)item.offset << std::endl;
+        out << "  Length (us):    " << (uint32_t)item.length << std::endl;
         return out;
     }
 
@@ -358,7 +358,7 @@ public:
             data[4] = offset & 0xFF;
 
             // get the trigger length
-            uint32_t length = min((uint32_t)(std::stoi(params[2]) & 0x0000FFFF), max_length) + offset;
+            uint32_t length = min((uint32_t)(std::stoi(params[2]) & 0x0000FFFF), max_length);// +offset;
             data[5] = (length >> 24) & 0xFF;
             data[6] = (length >> 16) & 0xFF;
             data[7] = (length >> 8) & 0xFF;
@@ -405,7 +405,7 @@ public:
         if (status == true)
         {
             t1_info = trigger_info(1, rx.data.data());
-            t2_info = trigger_info(1, rx.data.data() + 9);
+            t2_info = trigger_info(2, rx.data.data() + 9);
         }
 
         return status;

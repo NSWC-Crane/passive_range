@@ -70,6 +70,9 @@ unsigned int t2_length = 25000;
 unsigned int t2_int_length = 250000;
     
 const unsigned int trigger_interval = 500000;
+const unsigned int max_trigger_offset = 500000;
+const unsigned int max_trigger_length = 500000;
+
 
 // ----------------------------------------------------------------------------
 // Interrupt Definitions
@@ -197,15 +200,15 @@ int main(int argc, char** argv)
     for(idx=10; idx>0; --idx)              	// wait 250ms to begin
     {        
         RED_LED = 1;
-        delay_ms(20*idx);
+        delay_ms(10*idx);
         RED_LED = 0;
         
         GREEN_LED = 1;
-        delay_ms(20*idx);
+        delay_ms(10*idx);
         GREEN_LED = 0;
         
         BLUE_LED = 1;
-        delay_ms(20*idx);        
+        delay_ms(10*idx);        
         BLUE_LED = 0;            
     }
     RED_LED = 1;
@@ -256,14 +259,14 @@ int main(int argc, char** argv)
                     t1_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6]);
                     t1_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10]);
                     
-                    t1_int_offset = t1_offset * 10;
-                    t1_int_length = t1_length * 10;
+                    t1_int_offset = min(max(t1_offset * 10, 0), max_trigger_offset);
+                    t1_int_length = min(max(t1_length * 10 + t1_int_offset, 0), max_trigger_length);
                             
                     TRIG1_PIN = 0 ^ t1_polarity;
                     
                     packet_data[0] = t1_polarity;
                     send_packet(U2, CONFIG_T1, length, packet_data);
-                    break;                
+                    break;
                 
                 case CONFIG_T2:
                     length = 1;
@@ -272,14 +275,14 @@ int main(int argc, char** argv)
                     t2_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6])*10;
                     t2_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10])*10;
                     
-                    t2_int_offset = t2_offset * 10;
-                    t2_int_length = t2_length * 10;
+                    t2_int_offset = min(max(t2_offset * 10, 0), max_trigger_offset);
+                    t2_int_length = min(max(t2_length * 10 + t2_int_offset, 0), max_trigger_length);
                     
                     TRIG2_PIN = 0 ^ t2_polarity;
                     
                     packet_data[0] = t2_polarity;
                     send_packet(U2, CONFIG_T2, length, packet_data);
-                    break;  
+                    break;
                     
                 case TRIG_CONFIG:
                     length = 18;

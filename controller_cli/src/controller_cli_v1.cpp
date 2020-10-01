@@ -36,24 +36,31 @@
 //-----------------------------------------------------------------------------
 void help_menu(void)
 {
-    std::cout << std::endl;
-    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << "Controller CLI Commands:" << std::endl;
 	std::cout << "  ? - print this menu" << std::endl;
 	std::cout << "  q - quit" << std::endl;
-	std::cout << "  e <0/1> - enable (1)/disable (0) motors" << std::endl;
-	std::cout << "  f <step> - move the focus motor to the given step" << std::endl;
+    std::cout << "  e <0/1> - enable (1)/disable (0) motors" << std::endl;
+    std::cout << "  example: e 1" << std::endl;
+    std::cout << "  f <step> - move the focus motor to the given step" << std::endl;
+    std::cout << "  example: f 1000" << std::endl;
+
 	std::cout << "  z <step> - move the zoom motor to the given step" << std::endl;
+    std::cout << "  example: z 200" << std::endl;
+
     //std::cout << "  d - step the motors using the arrow keys (a,d - focus motor; w,s - zoom motor)" << std::endl;
     std::cout << "  t <channel> - trigger channel: (a) all, (1) channel 1, (2) channel 2" << std::endl;
+    std::cout << "  example: t a" << std::endl;
+
     std::cout << "  c <channel,polarity,offset,length> - Configure channel timing parameters" << std::endl;
+    std::cout << "  example: c 1,0,10000,25000" << std::endl;
+
     //std::cout << "  af <step> - set the absolute focus motor step value [0 - " << max_focus_steps << "]" << std::endl;
     //std::cout << "  az <step> - set the absolute zoom motor step value [0 - " << max_zoom_steps << "]" << std::endl;
-    //std::cout << "  sf <step> - set the focus motor step speed [" << min_pw << " - " << max_pw << "]" << std::endl;
-    //std::cout << "  sz <step> - set the zoom motor step speed [" << min_pw << " - " << max_pw << "]" << std::endl;
+    //std::cout << "  im - get information about the motors" << std::endl;
+    std::cout << "  it - get the current trigger configuration parameters" << std::endl;
 
-    std::cout << "----------------------------------------------------------------" << std::endl;
-    std::cout << std::endl;
+    std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -197,7 +204,17 @@ int main(int argc, char** argv)
 
         std::cout << "-----------------------------------------------------------------------------" << std::endl;
         std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        // get the current trigger configurations
+        status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
+
         std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Trigger Information: " << std::endl;
+        std::cout << t1_info << std::endl;
+        std::cout << t2_info;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
 
         //-----------------------------------------------------------------------------
 		// print out a short menu of commands for the CLI
@@ -229,24 +246,27 @@ int main(int argc, char** argv)
                 status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
                 break;
 
-            // experimental - not listed in help
+            // information about the various components
             case 'i':
 
                 switch (console_input[1])
                 {
+                //motor info
                 case 'm':
 
 
                     break;
 
+                // trigger info
                 case 't':
 
                     status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
 
-                    std::cout << "Trigger Information : " << std::endl;
-                    std::cout << t1_info;
+                    std::cout << "-----------------------------------------------------------------------------" << std::endl;
+                    std::cout << "Trigger Information: " << std::endl;
+                    std::cout << t1_info << std::endl;
                     std::cout << t2_info;
-                    std::cout << std::endl;
+                    std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
                     break;
 
@@ -373,6 +393,7 @@ int main(int argc, char** argv)
 
                 if (console_input.length() < 8)
                 {
+                    std::cout << "Not enough parameters..." << std::endl;
                     break;
                 }
 
