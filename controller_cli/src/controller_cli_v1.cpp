@@ -85,12 +85,16 @@ int main(int argc, char** argv)
     int32_t steps;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
-    uint8_t mtr_error;
+    //uint8_t mtr_error;
     motor_info focus_motor;
     motor_info zoom_motor;
     uint32_t step_delta = 3;
     bool motor_enabled = false;
     bool mtr_moving = false;
+
+    // trigger variables
+    trigger_info t1_info;
+    trigger_info t2_info;
 
     //uint32_t pw;
     //int32_t focus_pw = 0;
@@ -136,7 +140,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        ctrl.tx = data_packet(MD_CONNECT);
+        ctrl.tx = data_packet(DRIVER_CONNECT);
 
         // send connection request packet and get response back
         ctrl.send_packet(ctrl_handle, ctrl.tx);
@@ -217,8 +221,6 @@ int main(int argc, char** argv)
                 help_menu();
                 break;
 
-
-
             // experimental - not listed in help
             case 'x':
 
@@ -230,12 +232,31 @@ int main(int argc, char** argv)
             // experimental - not listed in help
             case 'i':
 
-                status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
+                switch (console_input[1])
+                {
+                case 'm':
 
-                if (status)
-                    std::cout << focus_motor << std::endl;
-                else
-                    std::cout << "Error getting focus motor info" << std::endl;
+
+                    break;
+
+                case 't':
+
+                    status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
+
+                    std::cout << "Trigger Information : " << std::endl;
+                    std::cout << t1_info;
+                    std::cout << t2_info;
+                    std::cout << std::endl;
+
+                    break;
+
+                }
+                //status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
+
+                //if (status)
+                //    std::cout << focus_motor << std::endl;
+                //else
+                //    std::cout << "Error getting focus motor info" << std::endl;
 
                 break;
 

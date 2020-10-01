@@ -26,14 +26,14 @@ constexpr uint8_t TRIG_CH2 = (uint8_t)0x22;             /* pulse channel 2 */
 // motor control commands
 constexpr uint8_t MOTOR_CTRL_PING = (uint8_t)0x30;      /* Ping the motors to get their info */
 constexpr uint8_t MOTOR_CTRL_WR = (uint8_t)0x31;        /* Initiate motor write command */
-constexpr uint8_t MOTOR_CTRL_RD1 = (uint8_t)0x32;       /* Initiate motor read 1 byte command */
-constexpr uint8_t MOTOR_CTRL_RD2 = (uint8_t)0x33;       /* Initiate motor read 2 byte command */
-constexpr uint8_t MOTOR_CTRL_RD4 = (uint8_t)0x34;       /* Initiate motor read 4 byte command */
+constexpr uint8_t MOTOR_CTRL_RD1 = (uint8_t)0x32;       /* Send read 1 byte command to motor */
+constexpr uint8_t MOTOR_CTRL_RD2 = (uint8_t)0x33;       /* Send read 2 byte command to motor */
+constexpr uint8_t MOTOR_CTRL_RD4 = (uint8_t)0x34;       /* Send read 4 byte command to motor */
 
 // firmware read info
-constexpr uint8_t MD_FIRM_READ = (uint8_t)0x51;         /* Read firmware version return command */
-constexpr uint8_t MD_SER_NUM_READ = (uint8_t)0x52;      /* Read serial number return command */
-constexpr uint8_t MD_CONNECT = (uint8_t)0x53;           /* Check for data connection to motor controller */
+constexpr uint8_t DRIVER_FIRM_READ = (uint8_t)0x51;         /* Read firmware version return command */
+constexpr uint8_t DRIVER_SER_NUM_READ = (uint8_t)0x52;      /* Read serial number return command */
+constexpr uint8_t DRIVER_CONNECT = (uint8_t)0x53;           /* Check for data connection to motor controller */
 
 // motor specific parameters
 constexpr uint8_t FOCUS_MOTOR_ID = (uint8_t)10;         /* The ID for the focus motor */
@@ -51,8 +51,8 @@ const uint8_t write_sp_size = (uint8_t)(11 + packet_size);
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;
 
-const uint16_t max_offset = 25000;
-const uint16_t max_length = 25000;
+const uint16_t max_offset = 50000;
+const uint16_t max_length = 50000;
 
 
 //extern const int min_pw = 1000;
@@ -119,9 +119,12 @@ typedef struct trigger_info
 
     trigger_info(uint8_t n_, uint8_t p_, uint32_t o_, uint32_t l_) : num(n_), polarity(p_), offset(o_), length(l_) {}
 
-    trigger_info(uint8_t n_, std::vector<uint8_t> data) : num(n_)
+    trigger_info(uint8_t n_, uint8_t *data) : num(n_)
     {
         polarity = data[0];
+
+        offset = (data[1] << 24) | (data[2] << 16) | (data[3] << 8) | data[4];
+        length = (data[5] << 24) | (data[6] << 16) | (data[7] << 8) | data[8];
     }
 
     inline friend std::ostream& operator<< (
@@ -129,7 +132,7 @@ typedef struct trigger_info
         const trigger_info& item
         )
     {
-        out << "Trigger Information: " << std::endl;
+        //out << "Trigger Information: " << std::endl;
         out << "  ID:               " << (uint32_t)item.num << std::endl;
         out << "  Polarity:         " << (uint32_t)item.polarity << std::endl;
         out << "  Offset:           " << (uint32_t)item.offset << std::endl;
@@ -337,22 +340,29 @@ public:
     )
     {
         bool status = false;
-        std::vector<uint8_t> data(5);
+        std::vector<uint8_t> data(9);
         std::vector<std::string> params;
 
         try
         {
             parse_csv_line(input, params);
 
+            // get the trigger line polarity
             data[0] = std::stoi(params[0]) & 0x01;
 
-            uint16_t offset = min((uint16_t)(std::stoi(params[1]) & 0xFFFF), max_offset);
-            data[1] = (offset >> 8) & 0xFF;
-            data[2] = offset & 0xFF;
+            // get the trigger offset
+            uint32_t offset = min((uint32_t)(std::stoi(params[1]) & 0x0000FFFF), max_offset);
+            data[1] = (offset >> 24) & 0xFF;
+            data[2] = (offset >> 16) & 0xFF;
+            data[3] = (offset >> 8) & 0xFF;
+            data[4] = offset & 0xFF;
 
-            uint16_t length = min((uint16_t)(std::stoi(params[2]) & 0xFFFF), max_length) + offset;
-            data[3] = (length >> 8) & 0xFF;
-            data[4] = length & 0xFF;
+            // get the trigger length
+            uint32_t length = min((uint32_t)(std::stoi(params[2]) & 0x0000FFFF), max_length) + offset;
+            data[5] = (length >> 24) & 0xFF;
+            data[6] = (length >> 16) & 0xFF;
+            data[7] = (length >> 8) & 0xFF;
+            data[8] = length & 0xFF;
 
             tx = data_packet(channel, (uint8_t)data.size(), data);
             send_packet(ctrl_handle, tx);
@@ -378,6 +388,28 @@ public:
         
         return status;
     }   // end of trigger
+
+
+    bool get_trigger_info(FT_HANDLE ctrl_handle, trigger_info &t1_info, trigger_info &t2_info)
+    {
+        bool status = true;
+        //trigger_info t1_info;
+        //trigger_info t2_info;
+
+        tx = data_packet(TRIG_CONFIG);
+
+        // send the request packet and get response back
+        send_packet(ctrl_handle, tx);
+        status = receive_packet(ctrl_handle, 20, rx);
+
+        if (status == true)
+        {
+            t1_info = trigger_info(1, rx.data.data());
+            t2_info = trigger_info(1, rx.data.data() + 9);
+        }
+
+        return status;
+    }
 
 
 };   // end of class

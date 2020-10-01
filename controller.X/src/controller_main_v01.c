@@ -51,15 +51,23 @@ const int max_zoom_step = 4628;
 const int min_step = 0;
 
 // trigger parameters
-unsigned char t1_polarity = 0;
-unsigned int t1_offset = 0;
-unsigned int t1_length = 250000;
 unsigned char t1_out = 0;
+unsigned char t1_polarity = 0;
 
-unsigned char t2_polarity = 0;
-unsigned int t2_offset = 0;
-unsigned int t2_length = 250000;
+unsigned int t1_offset = 0;
+unsigned int t1_int_offset = 0;
+
+unsigned int t1_length = 25000;
+unsigned int t1_int_length = 250000;
+
 unsigned char t2_out = 0;
+unsigned char t2_polarity = 0;
+
+unsigned int t2_offset = 0;
+unsigned int t2_int_offset = 0;
+
+unsigned int t2_length = 25000;
+unsigned int t2_int_length = 250000;
     
 const unsigned int trigger_interval = 500000;
 
@@ -245,8 +253,12 @@ int main(int argc, char** argv)
                     length = 1;
 
                     t1_polarity = rx_data[2] & 0x01;
-                    t1_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6])*10;
-                    t1_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10])*10;
+                    t1_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6]);
+                    t1_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10]);
+                    
+                    t1_int_offset = t1_offset * 10;
+                    t1_int_length = t1_length * 10;
+                            
                     TRIG1_PIN = 0 ^ t1_polarity;
                     
                     packet_data[0] = t1_polarity;
@@ -259,11 +271,41 @@ int main(int argc, char** argv)
                     t2_polarity = rx_data[2] & 0x01;
                     t2_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6])*10;
                     t2_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10])*10;
+                    
+                    t2_int_offset = t2_offset * 10;
+                    t2_int_length = t2_length * 10;
+                    
                     TRIG2_PIN = 0 ^ t2_polarity;
                     
                     packet_data[0] = t2_polarity;
                     send_packet(U2, CONFIG_T2, length, packet_data);
                     break;  
+                    
+                case TRIG_CONFIG:
+                    length = 18;
+                    
+                    packet_data[0] = t1_polarity;
+                    packet_data[1] = (t1_offset >> 24) & 0xFF;
+                    packet_data[2] = (t1_offset >> 16) & 0xFF;
+                    packet_data[3] = (t1_offset >> 8) & 0xFF;
+                    packet_data[4] = (t1_offset) & 0xFF;
+                    packet_data[5] = (t1_length >> 24) & 0xFF;
+                    packet_data[6] = (t1_length >> 16) & 0xFF;
+                    packet_data[7] = (t1_length >> 8) & 0xFF;
+                    packet_data[8] = (t1_length) & 0xFF;
+                            
+                    packet_data[9] = t2_polarity;
+                    packet_data[10] = (t2_offset >> 24) & 0xFF;
+                    packet_data[11] = (t2_offset >> 16) & 0xFF;
+                    packet_data[12] = (t2_offset >> 8) & 0xFF;
+                    packet_data[13] = (t2_offset) & 0xFF;
+                    packet_data[14] = (t2_length >> 24) & 0xFF;
+                    packet_data[15] = (t2_length >> 16) & 0xFF;
+                    packet_data[16] = (t2_length >> 8) & 0xFF;
+                    packet_data[17] = (t2_length) & 0xFF;
+                            
+                    send_packet(U2, CONFIG_T2, length, packet_data);
+                    break;
                     
                 case TRIG_INIT:
                     length = 1;
@@ -282,7 +324,7 @@ int main(int argc, char** argv)
                     TMR2 = 0;
                     while(TMR2 < trigger_interval)
                     {                        
-                        t1_out = ((TMR2 >= t1_offset) && (TMR2 <= t1_length));
+                        t1_out = ((TMR2 >= t1_int_offset) && (TMR2 <= t1_int_length));
                         TRIG1_PIN =  t1_out ^ t1_polarity;   
                     }                   
                     TRIG1_PIN = 0 ^ t1_polarity;
@@ -298,7 +340,7 @@ int main(int argc, char** argv)
                     TMR2 = 0;
                     while(TMR2 < trigger_interval)
                     {
-                        t2_out = ((TMR2 >= t2_offset) && (TMR2 <= t2_length));
+                        t2_out = ((TMR2 >= t2_int_offset) && (TMR2 <= t2_int_length));
                         TRIG2_PIN =  t2_out ^ t2_polarity;
                     }                   
                     TRIG2_PIN = 0 ^ t2_polarity;                    
@@ -511,8 +553,8 @@ void initiate_trigger(void)
     
     while(TMR2 < trigger_interval)
     {
-        t1_out = ((TMR2 >= t1_offset) && (TMR2 <= t1_length));
-        t2_out = ((TMR2 >= t2_offset) && (TMR2 <= t2_length));
+        t1_out = ((TMR2 >= t1_int_offset) && (TMR2 <= t1_int_length));
+        t2_out = ((TMR2 >= t2_int_offset) && (TMR2 <= t2_int_length));
         
         TRIG1_PIN = t1_out ^ t1_polarity;
         TRIG2_PIN = t2_out ^ t2_polarity;     

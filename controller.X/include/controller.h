@@ -30,6 +30,7 @@
 // configure the trigger parameters
 #define CONFIG_T1       0x11                  /* Configure Trigger 1 parameters */
 #define CONFIG_T2       0x12                  /* Configure Trigger 2 parameters */
+#define TRIG_CONFIG     0x15                  /* Get the trigger config for each channel */
 
 // initiate triggers
 #define TRIG_INIT       0x20                  /* initiate trigger sequence */
@@ -37,11 +38,11 @@
 #define TRIG_CH2        0x22                  /* pulse channel 2 */
 
 // focus motor control
-#define MOTOR_CTRL_PING 0x30
+#define MOTOR_CTRL_PING 0x30                  /* Ping the motors to get their info */
 #define MOTOR_CTRL_WR	0x31				  /* send write command to motor */
-#define MOTOR_CTRL_RD1	0x32				  /* send read command to motor */
-#define MOTOR_CTRL_RD2	0x33				  /* send read command to motor */
-#define MOTOR_CTRL_RD4	0x34				  /* send read command to motor */
+#define MOTOR_CTRL_RD1	0x32				  /* send read 1 byte command to motor */
+#define MOTOR_CTRL_RD2	0x33				  /* send read 2 byte command to motor */
+#define MOTOR_CTRL_RD4	0x34				  /* send read 4 byte command to motor */
 
 // engineering functions
 #define FIRM_READ       0x51                  /* Read firmware version return command */
