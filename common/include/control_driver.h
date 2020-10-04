@@ -246,6 +246,9 @@ public:
     bool set_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t &step)
     {
         bool status = true;
+        bool mtr_moving = true;
+
+        //uint8_t mtr_error = 0;
 
         dynamixel_packet mtr_packet(id, DYN_WRITE);
 
@@ -256,6 +259,14 @@ public:
         send_packet(ctrl_handle, tx);
         status &= receive_packet(ctrl_handle, write_sp_size, rx);
         status &= (rx.data[SP_ERROR_POS] == 0);
+
+        while (mtr_moving == true)
+        {
+            sleep_ms(50);
+            status &= motor_moving(ctrl_handle, id);
+            //mtr_error = rx.data[SP_ERROR_POS];
+            mtr_moving = (rx.data[SP_PARAMS_POS] == 1);
+        }
 
         if (status == false)
         {
