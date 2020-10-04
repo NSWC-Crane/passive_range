@@ -333,6 +333,24 @@ public:
 
     }   // end of reset_motor
 
+
+    //-----------------------------------------------------------------------------
+    bool config_channel(FT_HANDLE ctrl_handle,
+        uint8_t channel,
+        std::vector<uint8_t> data
+    )
+    {
+        bool status = false;
+
+        tx = data_packet(channel, (uint8_t)data.size(), data);
+        send_packet(ctrl_handle, tx);
+        status = receive_packet(ctrl_handle, 3, rx);
+
+        return status;
+
+    }   // end of config_channel
+
+
     //-----------------------------------------------------------------------------
     bool config_channel(FT_HANDLE ctrl_handle,
         uint8_t channel,
