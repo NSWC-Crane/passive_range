@@ -204,32 +204,48 @@ int main(int argc, char** argv)
                 // parse the trigger settings
                 if (cfg_params[5].size() == 7)
                 {
+                    //tc_ch1[0] = std::stoi(cfg_params[5][1]) & 0x01;
+
+                    // get the trigger line polarity
                     tc_ch1[0] = std::stoi(cfg_params[5][1]) & 0x01;
 
-                    uint16_t offset = min((uint16_t)(std::stoi(cfg_params[5][2]) & 0xFFFF), max_offset);
-                    tc_ch1[1] = (offset >> 8) & 0xFF;
-                    tc_ch1[2] = offset & 0xFF;
+                    // get the trigger offset
+                    uint32_t offset = min((uint32_t)(std::stoi(cfg_params[5][2]) & 0x0000FFFF), max_offset);
+                    tc_ch1[1] = (offset >> 24) & 0xFF;
+                    tc_ch1[2] = (offset >> 16) & 0xFF;
+                    tc_ch1[3] = (offset >> 8) & 0xFF;
+                    tc_ch1[4] = offset & 0xFF;
 
-                    uint16_t length = min((uint16_t)(std::stoi(cfg_params[5][3]) & 0xFFFF), max_length) + offset;
-                    tc_ch1[3] = (length >> 8) & 0xFF;
-                    tc_ch1[4] = length & 0xFF;
+                    // get the trigger length
+                    uint32_t length = min((uint32_t)(std::stoi(cfg_params[5][3]) & 0x0000FFFF), max_length);// +offset;
+                    tc_ch1[5] = (length >> 24) & 0xFF;
+                    tc_ch1[6] = (length >> 16) & 0xFF;
+                    tc_ch1[7] = (length >> 8) & 0xFF;
+                    tc_ch1[8] = length & 0xFF;
 
+                    // get the trigger line polarity
                     tc_ch2[0] = std::stoi(cfg_params[5][4]) & 0x01;
 
-                    offset = min((uint16_t)(std::stoi(cfg_params[5][5]) & 0xFFFF), max_offset);
-                    tc_ch2[1] = (offset >> 8) & 0xFF;
-                    tc_ch2[2] = offset & 0xFF;
+                    // get the trigger offset
+                    uint32_t offset = min((uint32_t)(std::stoi(cfg_params[5][5]) & 0x0000FFFF), max_offset);
+                    tc_ch2[1] = (offset >> 24) & 0xFF;
+                    tc_ch2[2] = (offset >> 16) & 0xFF;
+                    tc_ch2[3] = (offset >> 8) & 0xFF;
+                    tc_ch2[4] = offset & 0xFF;
 
-                    length = min((uint16_t)(std::stoi(cfg_params[5][6]) & 0xFFFF), max_length) + offset;
-                    tc_ch2[3] = (length >> 8) & 0xFF;
-                    tc_ch2[4] = length & 0xFF;
+                    // get the trigger length
+                    uint32_t length = min((uint32_t)(std::stoi(cfg_params[5][6]) & 0x0000FFFF), max_length);// +offset;
+                    tc_ch2[5] = (length >> 24) & 0xFF;
+                    tc_ch2[6] = (length >> 16) & 0xFF;
+                    tc_ch2[7] = (length >> 8) & 0xFF;
+                    tc_ch2[8] = length & 0xFF;
                 }
                 else
                 {
                     tc_ch1.clear();
-                    tc_ch1 = { 0,0,0, 0x61, 0xA8 };
+                    tc_ch1 = { 0, 0,0,0,0, 0,0,0x61,0xA8 };
                     tc_ch2.clear();
-                    tc_ch2 = { 0,0,0, 0x61, 0xA8 };
+                    tc_ch2 = { 0, 0,0,0,0, 0,0,0x61,0xA8 };
                 }
             }
             else
@@ -473,27 +489,14 @@ int main(int argc, char** argv)
         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
-
         ctrl_connected = true;
-
 
         // configure the trigger according to the inputs
         // channel 1
-        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, console_input.substr(3, console_input.length()));
-
-        //tc.tx = data_packet(CONFIG_T1, (uint8_t)tc_ch1.size(), tc_ch1);
-        //tc.send_packet(tc_handle, tc.tx);
-        //status = tc.receive_packet(tc_handle, 3, tc.rx);
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, tc_ch1);
 
         // channel 2
-        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, console_input.substr(3, console_input.length()));
-
-        //tc.tx = data_packet(CONFIG_T2, (uint8_t)tc_ch2.size(), tc_ch2);
-        //tc.send_packet(tc_handle, tc.tx);
-        //status = tc.receive_packet(tc_handle, 3, tc.rx);
-
-        
-
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T2, tc_ch2);
 
 // ----------------------------------------------------------------------------------------
 // Scan the system and get the camera connected to the computer
@@ -632,7 +635,7 @@ int main(int argc, char** argv)
         {
         case 0:
             cam->BeginAcquisition();
-            status = trigger(tc_handle, TRIG_ALL, tc);
+            status = ctrl.trigger(ctrl_handle, TRIG_ALL);
             aquire_trigger_image(cam, image);
             cam->EndAcquisition();
             break;
@@ -653,7 +656,7 @@ int main(int argc, char** argv)
             {
             case 0:
                 cam->BeginAcquisition();
-                status = trigger(tc_handle, TRIG_ALL, tc);
+                status = ctrl.trigger(ctrl_handle, TRIG_ALL);
                 aquire_trigger_image(cam, image);
                 cam->EndAcquisition();
                 break;
@@ -688,13 +691,13 @@ int main(int argc, char** argv)
                 std::cout << "------------------------------------------------------------------" << std::endl;
 
                 // enable the motors
-                md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
-                md.send_packet(ctrl_handle, md.tx);
-                status = md.receive_packet(md_handle, 3, md.rx);
+                status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+                status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
 
                 sleep_ms(10);
                 
-                // set the focus step to zero
+                // set the focus and zoom steps to zero
+/*
                 focus_step = 0;
                 md.tx = data_packet(ABS_FOCUS_CTRL, focus_step);
                 md.send_packet(md_handle, md.tx);
@@ -704,7 +707,7 @@ int main(int argc, char** argv)
                 md.tx = data_packet(ABS_ZOOM_CTRL, zoom_step);
                 md.send_packet(md_handle, md.tx);
                 status = md.receive_packet(md_handle, 6, md.rx);
-
+*/
                 //steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
                 //std::cout << "steps: " << steps << std::endl;               
                 for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
@@ -755,7 +758,7 @@ int main(int argc, char** argv)
                                 {
                                 case 0:
                                     cam->BeginAcquisition();
-                                    status = trigger(tc_handle, TRIG_ALL, tc);
+                                    status = ctrl.trigger(ctrl_handle, TRIG_ALL);
                                     aquire_trigger_image(cam, image);
                                     cam->EndAcquisition();
                                     break;
@@ -806,9 +809,8 @@ int main(int argc, char** argv)
                 status = md.receive_packet(ctrl_handle, 6, md.rx);
 
                 // disable the motors
-                md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
-                md.send_packet(ctrl_handle, md.tx);
-                status = md.receive_packet(ctrl_handle, 3, md.rx);
+                status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+                status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
                 std::cout << "------------------------------------------------------------------" << std::endl;
                 data_log_stream << "#------------------------------------------------------------------" << std::endl;
@@ -817,28 +819,28 @@ int main(int argc, char** argv)
 
             case 'f':
                 focus_step = 160;
-                md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
+                //md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
                 std::cout << "focus step: " << focus_step << "   \r";
                 std::cout.flush();
                 break;
 
             case 'g':
                 focus_step = -160;
-                md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
+                //md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
                 std::cout << "focus step: " << focus_step << "   \r";
                 std::cout.flush();
                 break;
 
             case 'z':
                 zoom_step = 160;
-                md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
+                //md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
                 std::cout << "zoom step:  " << zoom_step << "   \r";
                 std::cout.flush();
                 break;
 
             case 'x':
                 zoom_step = -160;
-                md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
+                //md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
                 std::cout << "zoom step:  " << zoom_step << "   \r";
                 std::cout.flush();
                 break;

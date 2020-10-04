@@ -51,8 +51,8 @@ const uint8_t write_sp_size = (uint8_t)(11 + packet_size);
 extern const int max_focus_steps = 40575;
 extern const int max_zoom_steps = 4628;
 
-const uint16_t max_offset = 50000;
-const uint16_t max_length = 50000;
+const uint32_t max_offset = 50000;
+const uint32_t max_length = 50000;
 
 
 //extern const int min_pw = 1000;
