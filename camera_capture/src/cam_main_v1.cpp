@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     bool ctrl_connected = false;
 
     // motor variables
-    std::vector<uint32_t> focus_range, zoom_range;
+    std::vector<int32_t> focus_range, zoom_range;
     motor_info focus_motor;
     motor_info zoom_motor;
     int32_t focus_step = 0;
@@ -227,14 +227,14 @@ int main(int argc, char** argv)
                     tc_ch2[0] = std::stoi(cfg_params[5][4]) & 0x01;
 
                     // get the trigger offset
-                    uint32_t offset = min((uint32_t)(std::stoi(cfg_params[5][5]) & 0x0000FFFF), max_offset);
+                    offset = min((uint32_t)(std::stoi(cfg_params[5][5]) & 0x0000FFFF), max_offset);
                     tc_ch2[1] = (offset >> 24) & 0xFF;
                     tc_ch2[2] = (offset >> 16) & 0xFF;
                     tc_ch2[3] = (offset >> 8) & 0xFF;
                     tc_ch2[4] = offset & 0xFF;
 
                     // get the trigger length
-                    uint32_t length = min((uint32_t)(std::stoi(cfg_params[5][6]) & 0x0000FFFF), max_length);// +offset;
+                    length = min((uint32_t)(std::stoi(cfg_params[5][6]) & 0x0000FFFF), max_length);// +offset;
                     tc_ch2[5] = (length >> 24) & 0xFF;
                     tc_ch2[6] = (length >> 16) & 0xFF;
                     tc_ch2[7] = (length >> 8) & 0xFF;
@@ -695,38 +695,40 @@ int main(int argc, char** argv)
                 status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
 
                 sleep_ms(10);
+
+                focus_step = 0;
+                zoom_step = 0;
                 
                 // set the focus and zoom steps to zero
-/*
-                focus_step = 0;
-                md.tx = data_packet(ABS_FOCUS_CTRL, focus_step);
-                md.send_packet(md_handle, md.tx);
-                status = md.receive_packet(md_handle, 6, md.rx);
+                status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                zoom_step = 0;
-                md.tx = data_packet(ABS_ZOOM_CTRL, zoom_step);
-                md.send_packet(md_handle, md.tx);
-                status = md.receive_packet(md_handle, 6, md.rx);
-*/
-                //steps = (md.rx.data[0] << 24) | (md.rx.data[1] << 16) | (md.rx.data[2] << 8) | (md.rx.data[3]);
-                //std::cout << "steps: " << steps << std::endl;               
+                // get the actual focus and zoom position 
+                status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+            
                 for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
                 {
                     // set the focus motor value to each value in focus_range
-                    md.tx = data_packet(ABS_ZOOM_CTRL, zoom_range[zoom_idx]);
-                    md.send_packet(md_handle, md.tx);
-                    status = md.receive_packet(md_handle, 6, md.rx);
+                    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
+                    status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                    zoom_str = num2str(zoom_range[zoom_idx], "z%05d_");
+                    //md.tx = data_packet(ABS_ZOOM_CTRL, zoom_range[zoom_idx]);
+                    //md.send_packet(md_handle, md.tx);
+                    //status = md.receive_packet(md_handle, 6, md.rx);
+
+                    zoom_str = num2str(zoom_step, "z%05d_");
 
                     for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
                     {
                         // set the focus motor value to each value in focus_range
-                        md.tx = data_packet(ABS_FOCUS_CTRL, focus_range[focus_idx]);
-                        md.send_packet(md_handle, md.tx);
-                        status = md.receive_packet(md_handle, 6, md.rx);
+                        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[focus_idx]);
+                        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                        //md.tx = data_packet(ABS_FOCUS_CTRL, focus_range[focus_idx]);
+                        //md.send_packet(md_handle, md.tx);
+                        //status = md.receive_packet(md_handle, 6, md.rx);
 
-                        focus_str = num2str(focus_range[focus_idx], "f%05d_");
+                        focus_str = num2str(focus_step, "f%05d_");
                         sleep_ms(5);
 
                         // create the directory to save the images at various focus steps
@@ -798,15 +800,9 @@ int main(int argc, char** argv)
 
                 // set the focus step to the first focus_range setting
                 //focus_step = 0;
-                md.tx = data_packet(ABS_FOCUS_CTRL, focus_range[0]);
-                md.send_packet(ctrl_handle, md.tx);
-                status = md.receive_packet(ctrl_handle, 6, md.rx);
-
-                // set the focus step to zero
-                //focus_step = 0;
-                md.tx = data_packet(ABS_ZOOM_CTRL, zoom_range[0]);
-                md.send_packet(ctrl_handle, md.tx);
-                status = md.receive_packet(ctrl_handle, 6, md.rx);
+                                // set the focus and zoom steps to zero
+                status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
                 // disable the motors
                 status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
