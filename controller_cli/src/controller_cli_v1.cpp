@@ -316,16 +316,16 @@ int main(int argc, char** argv)
 
                     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, steps);
 
-                    while(mtr_moving == true)
-                    {
-                        sleep_ms(50);
-                        status &= ctrl.motor_moving(ctrl_handle, FOCUS_MOTOR_ID);
-                        mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
-                    }
+                    //while(mtr_moving == true)
+                    //{
+                    //    sleep_ms(50);
+                    //    status &= ctrl.motor_moving(ctrl_handle, FOCUS_MOTOR_ID);
+                    //    mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
+                    //}
 
                     if (status == true)
                     {
-                        sleep_ms(50);
+                        //sleep_ms(50);
                         status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
                         std::cout << "current focus position: " << focus_step << std::endl;
                     }
@@ -347,16 +347,16 @@ int main(int argc, char** argv)
                     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, steps);
                     status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                    while (mtr_moving == true)
-                    {
-                        sleep_ms(50);
-                        status &= ctrl.motor_moving(ctrl_handle, ZOOM_MOTOR_ID);
-                        mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
-                    }
+                    //while (mtr_moving == true)
+                    //{
+                    //    sleep_ms(50);
+                    //    status &= ctrl.motor_moving(ctrl_handle, ZOOM_MOTOR_ID);
+                    //    mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
+                    //}
 
                     if (status)
                     {
-                        sleep_ms(50);
+                        //sleep_ms(50);
                         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
                         std::cout << "current zoom position: " << zoom_step << std::endl;
                     }
