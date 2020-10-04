@@ -29,8 +29,9 @@
 #include "file_ops.h"
 
 // Project Includes
-#include "motor_driver.h"
-#include "trigger_ctrl.h"
+//#include "motor_driver.h"
+//#include "trigger_ctrl.h"
+#include "control_driver.h"
 
 // ----------------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -44,28 +45,32 @@ int main(int argc, char** argv)
 
     // FTDI variables
     uint32_t ftdi_device_count = 0;
-    ftdiDeviceDetails driver_details;
-
-    uint32_t driver_device_num = 0;
+    //ftdiDeviceDetails controller_details;
+    uint32_t controller_device_num = 0;
     uint32_t connect_count = 0;
     uint32_t read_timeout = 60000;
     uint32_t write_timeout = 1000;
     std::vector<ftdiDeviceDetails> ftdi_devices;
     bool status = false;
 
-    // Motor Driver Variables
-    FT_HANDLE md_handle = NULL;
-    motor_driver md;
+    // Controller Variables
+    FT_HANDLE ctrl_handle = NULL;
+    controller ctrl;
+    bool ctrl_connected = false;
+
+    // motor variables
     std::vector<uint32_t> focus_range, zoom_range;
+    motor_info focus_motor;
+    motor_info zoom_motor;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
-    bool md_connected = false;
+    bool mtr_moving = false;
 
-    //Trigger controller variables
-    FT_HANDLE tc_handle = NULL;
-    trigger_ctrl tc;
+    // trigger variables
     std::vector<uint8_t> tc_ch1(5);
     std::vector<uint8_t> tc_ch2(5);
+    trigger_info t1_info;
+    trigger_info t2_info;
 
     // camera variables
     uint32_t cam_index;
@@ -343,9 +348,9 @@ int main(int argc, char** argv)
 
         std::cout << "Select Motor Controller: ";
         std::getline(std::cin, console_input);
-        driver_device_num = stoi(console_input);
+        controller_device_num = stoi(console_input);
 
-        if ((driver_device_num < 0) || (driver_device_num > ftdi_devices.size() - 1))
+        if ((controller_device_num < 0) || (controller_device_num > ftdi_devices.size() - 1))
         {
             std::cout << "The device number specified is beyond the range of available FTDI devices!  Exiting..." << std::endl;
             data_log_stream << "The device number specified is beyond the range of available FTDI devices!" << std::endl;
@@ -354,14 +359,14 @@ int main(int argc, char** argv)
         }
 
         std::cout << std::endl << "Connecting to Motor Controller..." << std::endl;
-        ftdi_devices[driver_device_num].baud_rate = 250000;
-        while ((md_handle == NULL) && (connect_count < 10))
+        ftdi_devices[controller_device_num].baud_rate = 250000;
+        while ((ctrl_handle == NULL) && (connect_count < 10))
         {
-            md_handle = open_com_port(ftdi_devices[driver_device_num], read_timeout, write_timeout);
+            ctrl_handle = open_com_port(ftdi_devices[controller_device_num], read_timeout, write_timeout);
             ++connect_count;
         }
 
-        if (md_handle == NULL)
+        if (ctrl_handle == NULL)
         {
             std::cout << "No Motor Controller found... Press Enter to Exit!" << std::endl;
             data_log_stream << "No Motor Controller found... Exiting!" << std::endl;
@@ -369,11 +374,11 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        md.tx = data_packet(MD_CONNECT);
+        ctrl.tx = data_packet(DRIVER_CONNECT);
 
         // send connection request packet and get response back
-        md.send_packet(md_handle, md.tx);
-        status = md.receive_packet(md_handle, 6, md.rx);
+        ctrl.send_packet(ctrl_handle, ctrl.tx);
+        status = ctrl.receive_packet(ctrl_handle, 6, ctrl.rx);
 
         if (status == false)
         {
@@ -383,94 +388,111 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        md.set_driver_info(md.rx);
-        std::cout << md << std::endl;
-        data_log_stream << md << std::endl;
-        data_log_stream << "#------------------------------------------------------------------" << std::endl;
+        // get the controller information and display
+        ctrl.set_driver_info(ctrl.rx);
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << ctrl;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
-        // disable the motors
-        md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
-        md.send_packet(md_handle, md.tx);
-        status = md.receive_packet(md_handle, 3, md.rx);
-        
-        md_connected = true;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << ctrl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
+        //-----------------------------------------------------------------------------
+        // ping the motors to get the model number and firmware version
+        status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
 
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Focus Motor Information: " << std::endl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "Focus Motor Information: " << std::endl;
 
-// ----------------------------------------------------------------------------------------
-// Scan the system and get the trigger controller connected to the computer
-// ----------------------------------------------------------------------------------------
-        if (ts == 0)
+        if (status)
         {
-            ftdi_device_count = get_device_list(ftdi_devices);
-            if (ftdi_device_count == 0)
-            {
-                std::cout << "No ftdi devices found... Press Enter to Exit!" << std::endl;
-                data_log_stream << "No ftdi devices found... Exiting!" << std::endl;
-                std::cin.ignore();
-                return -1;
-            }
-
-            for (idx = 0; idx < ftdi_devices.size(); ++idx)
-            {
-                std::cout << ftdi_devices[idx];
-            }
-
-            std::cout << "Select Trigger Controller: ";
-            std::getline(std::cin, console_input);
-            driver_device_num = stoi(console_input);
-
-            if ((driver_device_num < 0) || (driver_device_num > ftdi_devices.size() - 1))
-            {
-                std::cout << "The device number specified is beyond the range of available FTDI devices!  Exiting..." << std::endl;
-                data_log_stream << "The device number specified is beyond the range of available FTDI devices!" << std::endl;
-                std::cin.ignore();
-                return -1;
-            }
-
-            std::cout << std::endl << "Connecting to Trigger Controller..." << std::endl;
-            ftdi_devices[driver_device_num].baud_rate = 250000;
-            while ((tc_handle == NULL) && (connect_count < 10))
-            {
-                tc_handle = open_com_port(ftdi_devices[driver_device_num], read_timeout, write_timeout);
-                ++connect_count;
-            }
-
-            if (tc_handle == NULL)
-            {
-                std::cout << "No Trigger Controller found... Exiting!" << std::endl;
-                std::cin.ignore();
-                return -1;
-            }
-
-            tc.tx = data_packet(TC_CONNECT);
-
-            // send connection request packet and get response back
-            status = tc.send_packet(tc_handle, tc.tx);
-            status |= tc.receive_packet(tc_handle, 6, tc.rx);
-
-            if (status == false)
-            {
-                std::cout << "Error communicating with Trigger Controller... Exiting!" << std::endl;
-                std::cin.ignore();
-                return -1;
-            }
-
-            tc.set_trigger_info(tc.rx);
-            std::cout << tc << std::endl;
-
-            // configure the trigger according to the inputs
-            // channel 1
-            tc.tx = data_packet(CONFIG_T1, (uint8_t)tc_ch1.size(), tc_ch1);
-            tc.send_packet(tc_handle, tc.tx);
-            status = tc.receive_packet(tc_handle, 3, tc.rx);
-
-            // channel 2
-            tc.tx = data_packet(CONFIG_T2, (uint8_t)tc_ch2.size(), tc_ch2);
-            tc.send_packet(tc_handle, tc.tx);
-            status = tc.receive_packet(tc_handle, 3, tc.rx);
-
+            std::cout << focus_motor;
+            data_log_stream << focus_motor;
         }
+        else
+        {
+            std::cout << "  Error getting focus motor info" << std::endl;
+            data_log_stream << "  Error getting focus motor info" << std::endl;
+        }
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+
+        status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
+
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Zoom Motor Information: " << std::endl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "Zoom Motor Information: " << std::endl;
+
+        if (status)
+        {
+            std::cout << zoom_motor;
+            data_log_stream << zoom_motor;
+        }
+        else
+        {
+            std::cout << "  Error getting zoom motor info" << std::endl;
+            data_log_stream << "  Error getting zoom motor info" << std::endl;
+        }
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        //-----------------------------------------------------------------------------
+        // get the current motor positions
+        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        // get the current trigger configurations and display the information
+        status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
+
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Trigger Information: " << std::endl;
+        std::cout << t1_info << std::endl;
+        std::cout << t2_info;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        data_log_stream << "#----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "Trigger Information: " << std::endl;
+        data_log_stream << t1_info << std::endl;
+        data_log_stream << t2_info;
+        data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        // start off with the motors disabled
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+
+
+        ctrl_connected = true;
+
+
+        // configure the trigger according to the inputs
+        // channel 1
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, console_input.substr(3, console_input.length()));
+
+        //tc.tx = data_packet(CONFIG_T1, (uint8_t)tc_ch1.size(), tc_ch1);
+        //tc.send_packet(tc_handle, tc.tx);
+        //status = tc.receive_packet(tc_handle, 3, tc.rx);
+
+        // channel 2
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, console_input.substr(3, console_input.length()));
+
+        //tc.tx = data_packet(CONFIG_T2, (uint8_t)tc_ch2.size(), tc_ch2);
+        //tc.send_packet(tc_handle, tc.tx);
+        //status = tc.receive_packet(tc_handle, 3, tc.rx);
+
+        
 
 
 // ----------------------------------------------------------------------------------------
@@ -667,7 +689,7 @@ int main(int argc, char** argv)
 
                 // enable the motors
                 md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { ENABLE_MOTOR });
-                md.send_packet(md_handle, md.tx);
+                md.send_packet(ctrl_handle, md.tx);
                 status = md.receive_packet(md_handle, 3, md.rx);
 
                 sleep_ms(10);
@@ -774,19 +796,19 @@ int main(int argc, char** argv)
                 // set the focus step to the first focus_range setting
                 //focus_step = 0;
                 md.tx = data_packet(ABS_FOCUS_CTRL, focus_range[0]);
-                md.send_packet(md_handle, md.tx);
-                status = md.receive_packet(md_handle, 6, md.rx);
+                md.send_packet(ctrl_handle, md.tx);
+                status = md.receive_packet(ctrl_handle, 6, md.rx);
 
                 // set the focus step to zero
                 //focus_step = 0;
                 md.tx = data_packet(ABS_ZOOM_CTRL, zoom_range[0]);
-                md.send_packet(md_handle, md.tx);
-                status = md.receive_packet(md_handle, 6, md.rx);
+                md.send_packet(ctrl_handle, md.tx);
+                status = md.receive_packet(ctrl_handle, 6, md.rx);
 
                 // disable the motors
                 md.tx = data_packet(CMD_MOTOR_ENABLE, 1, { DISABLE_MOTOR });
-                md.send_packet(md_handle, md.tx);
-                status = md.receive_packet(md_handle, 3, md.rx);
+                md.send_packet(ctrl_handle, md.tx);
+                status = md.receive_packet(ctrl_handle, 3, md.rx);
 
                 std::cout << "------------------------------------------------------------------" << std::endl;
                 data_log_stream << "#------------------------------------------------------------------" << std::endl;
@@ -795,28 +817,28 @@ int main(int argc, char** argv)
 
             case 'f':
                 focus_step = 160;
-                md.step_focus_motor(md_handle, focus_step, CMD_FOCUS_CTRL);
+                md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
                 std::cout << "focus step: " << focus_step << "   \r";
                 std::cout.flush();
                 break;
 
             case 'g':
                 focus_step = -160;
-                md.step_focus_motor(md_handle, focus_step, CMD_FOCUS_CTRL);
+                md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
                 std::cout << "focus step: " << focus_step << "   \r";
                 std::cout.flush();
                 break;
 
             case 'z':
                 zoom_step = 160;
-                md.step_zoom_motor(md_handle, zoom_step, CMD_ZOOM_CTRL);
+                md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
                 std::cout << "zoom step:  " << zoom_step << "   \r";
                 std::cout.flush();
                 break;
 
             case 'x':
                 zoom_step = -160;
-                md.step_zoom_motor(md_handle, zoom_step, CMD_ZOOM_CTRL);
+                md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
                 std::cout << "zoom step:  " << zoom_step << "   \r";
                 std::cout.flush();
                 break;
@@ -848,16 +870,9 @@ int main(int argc, char** argv)
     std::cout << std::endl;
     
     // close the motor driver port first
-    std::cout << "Closing Motor Controller port..." << std::endl;
-    close_com_port(md_handle);
-    md_connected = false;
-
-    // close the trigger controller port first
-    if (ts == 0)
-    {
-        std::cout << "Closing Trigger Controller port..." << std::endl;
-        close_com_port(tc_handle);
-    }
+    std::cout << "Closing the Controller port..." << std::endl;
+    close_com_port(ctrl_handle);
+    ctrl_connected = false;
 
     // close out the camera
     std::cout << "Closing Camera..." << std::endl;
