@@ -39,7 +39,7 @@
 // ----------------------------------------------------------------------------
 unsigned char rx_data[PKT_SIZE] = {0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {1, 0};
+const unsigned char firmware[2] = {1, 1};
 const unsigned char serial_num[1] = {1};
 
 // motor parameters
@@ -272,8 +272,8 @@ int main(int argc, char** argv)
                     length = 1;
 
                     t2_polarity = rx_data[2] & 0x01;
-                    t2_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6])*10;
-                    t2_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10])*10;
+                    t2_offset = (rx_data[3]<<24 | rx_data[4]<<16 | rx_data[5]<<8 | rx_data[6]);
+                    t2_length = (rx_data[7]<<24 | rx_data[8]<<16 | rx_data[9]<<8 | rx_data[10]);
                     
                     t2_int_offset = min(max(t2_offset * 10, 0), max_trigger_offset);
                     t2_int_length = min(max(t2_length * 10 + t2_int_offset, 0), max_trigger_length);
@@ -327,8 +327,8 @@ int main(int argc, char** argv)
                     TMR2 = 0;
                     while(TMR2 < trigger_interval)
                     {                        
-                        t1_out = ((TMR2 >= t1_int_offset) && (TMR2 <= t1_int_length));
-                        TRIG1_PIN =  t1_out ^ t1_polarity;   
+                        t1_out = ((TMR2 >= t1_int_offset) && (TMR2 <= t1_int_length)) ^ t1_polarity;
+                        TRIG1_PIN =  t1_out;   
                     }                   
                     TRIG1_PIN = 0 ^ t1_polarity;
                             
@@ -343,8 +343,8 @@ int main(int argc, char** argv)
                     TMR2 = 0;
                     while(TMR2 < trigger_interval)
                     {
-                        t2_out = ((TMR2 >= t2_int_offset) && (TMR2 <= t2_int_length));
-                        TRIG2_PIN =  t2_out ^ t2_polarity;
+                        t2_out = ((TMR2 >= t2_int_offset) && (TMR2 <= t2_int_length)) ^ t2_polarity;
+                        TRIG2_PIN =  t2_out;
                     }                   
                     TRIG2_PIN = 0 ^ t2_polarity;                    
                     
@@ -556,11 +556,11 @@ void initiate_trigger(void)
     
     while(TMR2 < trigger_interval)
     {
-        t1_out = ((TMR2 >= t1_int_offset) && (TMR2 <= t1_int_length));
-        t2_out = ((TMR2 >= t2_int_offset) && (TMR2 <= t2_int_length));
+        t1_out = ((TMR2 >= t1_int_offset) && (TMR2 <= t1_int_length))^ t1_polarity;
+        t2_out = ((TMR2 >= t2_int_offset) && (TMR2 <= t2_int_length))^ t2_polarity;
         
-        TRIG1_PIN = t1_out ^ t1_polarity;
-        TRIG2_PIN = t2_out ^ t2_polarity;     
+        TRIG1_PIN = t1_out;
+        TRIG2_PIN = t2_out;   
     }
     
     TRIG1_PIN = 0 ^ t1_polarity;
