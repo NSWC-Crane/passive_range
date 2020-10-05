@@ -13,9 +13,9 @@
 // ----------------------------------------------------------------------------
 #define PKT_SIZE        192                     /* maximum number of bytes in a packet */
 
-#define RED_LED         LATDbits.LATD0          /* define RED LED */
+#define BLUE_LED        LATDbits.LATD0          /* define RED LED */
 #define GREEN_LED       LATCbits.LATC13         /* define GREEN LED */
-#define BLUE_LED        LATCbits.LATC14         /* define BLUE LED */
+#define RED_LED         LATCbits.LATC14         /* define BLUE LED */
 
 #define DIR_485_PIN     LATDbits.LATD1          /* RS485 Direction pin */
 
