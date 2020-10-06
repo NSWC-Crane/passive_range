@@ -313,7 +313,11 @@ int main(int argc, char** argv)
                 case TRIG_INIT:
                     length = 1;
                     
+                    BLUE_LED = 1;
+                    GREEN_LED = 1;
                     initiate_trigger();
+                    BLUE_LED = 0;
+                    GREEN_LED = 0;
                     
                     packet_data[0] = 1;
                     send_packet(U2, TRIG_INIT, length, packet_data);
@@ -321,6 +325,7 @@ int main(int argc, char** argv)
                     
                 case TRIG_CH1:
                     length = 1;
+                    BLUE_LED = 1;
                     
                     TRIG1_PIN = 0 ^ t1_polarity;
                     
@@ -331,13 +336,15 @@ int main(int argc, char** argv)
                         TRIG1_PIN =  t1_out;   
                     }                   
                     TRIG1_PIN = 0 ^ t1_polarity;
-                            
+                    BLUE_LED = 0;
+                    
                     packet_data[0] = 1;
                     send_packet(U2, TRIG_CH1, length, packet_data);                    
                     break;
                     
                 case TRIG_CH2:
                     length = 1;
+                    GREEN_LED = 1;
                                         
                     TRIG2_PIN = 0 ^ t2_polarity;
                     TMR2 = 0;
@@ -347,6 +354,7 @@ int main(int argc, char** argv)
                         TRIG2_PIN =  t2_out;
                     }                   
                     TRIG2_PIN = 0 ^ t2_polarity;                    
+                    GREEN_LED = 0;
                     
                     packet_data[0] = 1;
                     send_packet(U2, TRIG_CH2, length, packet_data); 
