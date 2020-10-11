@@ -1,6 +1,8 @@
+#ifndef PIC_DYNAMIXEL_FUNCTIONS_H_
+#define	PIC_DYNAMIXEL_FUNCTIONS_H_
+
 
 #include "../include/dynamixel_protocol_v2.h"
-
 
 
 data_packet initialize_packet(void)
@@ -17,39 +19,42 @@ data_packet initialize_packet(void)
 }   // end of initialize_packet
 
 //-----------------------------------------------------------------------------
-void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, data_packet packet)
+void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, unsigned char *data)
 {
     unsigned short idx;
-    unsigned char length_lb = 0, length_ub = 0;
+    //unsigned char length_lb = 0, length_ub = 0;
     unsigned char crc_lb = 0, crc_ub = 0;
     unsigned short crc;
     
+    // fill in the header info
+    data[0] = 0xFF;
+    data[1] = 0xFF;
+    data[2] = 0xFD;
+    data[3] = 0x00;
     
     // fill in the id field
-    packet.data[ID] = id;
+    data[ID] = id;
     
     // get the total packet length
-    split_uint16((3+param_length), &length_lb, &length_ub);
-    packet.data[LENGTH] = length_lb;
-    packet.data[LENGTH+1] = length_ub;
+    split_uint16((3+param_length), data[LENGTH], data[LENGTH+1]);
+    //packet.data[LENGTH] = length_lb;
+    //packet.data[LENGTH+1] = length_ub;
 
     // fill in the instruction field
-    packet.data[INSTRUCTION] = instruction;
+    data[INSTRUCTION] = instruction;
 
     // fill in the params
     for(idx=0; idx<param_length; ++idx)
     {
-        packet.data[PARAMETER+idx] = params[idx];       
+        data[PARAMETER+idx] = params[idx];       
     }
     
-    
     //calculate the crc
-    crc = calculate_crc((3+param_length), packet.data);
+    crc = calculate_crc((3+param_length), data);
     split_uint16(crc, &crc_lb, &crc_ub);
-    packet.data[PARAMETER+idx++] = crc_lb;
-    packet.data[PARAMETER+idx] = crc_ub;
-    
-    
+    data[PARAMETER+idx++] = crc_lb;
+    data[PARAMETER+idx] = crc_ub;
+      
 }   // end of create_packet
 
 
@@ -116,3 +121,4 @@ unsigned short calculate_crc(unsigned short data_size, unsigned char *data)
     return crc_accum;
 }
 
+#endif  // PIC_DYNAMIXEL_FUNCTIONS_H_
