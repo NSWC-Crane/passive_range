@@ -73,15 +73,6 @@ void receive_motor_packet(unsigned char uart, unsigned short length, unsigned ch
 
 void initiate_trigger(void);
 
-extern unsigned short focus_position_pid[2][3] = {{0, 8, 800},
-                                                  {0, 20, 800}
-};
-
-extern unsigned short zoom_position_pid[2][3] = {{0, 2, 800},
-                                                 {0, 0, 800}
-};
-
-
 #ifdef	__cplusplus
 extern "C" {
 #endif

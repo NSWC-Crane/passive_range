@@ -73,6 +73,16 @@ const unsigned int trigger_interval = 500000;
 const unsigned int max_trigger_offset = 500000;
 const unsigned int max_trigger_length = 500000;
 
+unsigned short focus_position_pid[3][3] = { {0, 0, 0},      // empty
+                                            {0, 8, 800},    // sn-1
+                                            {0, 20, 800}    // sn-2
+};
+
+unsigned short zoom_position_pid[3][3] = {  {0, 0, 0},      // empty
+                                            {0, 2, 800},    // sn-1
+                                            {0, 0, 800}     // sn-2
+};
+
 
 // ----------------------------------------------------------------------------
 // Interrupt Definitions
@@ -141,7 +151,7 @@ int main(int argc, char** argv)
     unsigned char temp;
     unsigned char packet_data[PKT_SIZE] = {0};
     unsigned char params_data[16] = {0};
-    
+     
     //unsigned char TORQUE_ENABLE[]  = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x06, 0x00, 0x03, 0x40, 0x00, 0x01, 0x68, 0xED};
     //unsigned char STEP_FM[]        = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x09, 0x00, 0x03, 0x74, 0x00, 0xB8, 0x0B, 0x00, 0x00, 0xDD, 0xC9};
     //unsigned char TORQUE_DISABLE[] = {0xFF, 0xFF, 0xFD, 0x00, 0x0A, 0x06, 0x00, 0x03, 0x40, 0x00, 0x00, 0x6D, 0x6D};
@@ -232,12 +242,20 @@ int main(int argc, char** argv)
     mU2RXClearIntFlag();
     mU2RXIntEnable(1);          // enable UART Rx interrupt
 
-// ----------------------------------------------------------------------------
-// config the motor PID setting based on the values and serial number   
-    split_uint16(unsigned short data, params_data[0], params_data[1]);
-    build_packet(FOCUS_MOTOR_ID, 4, DYN_WRITE, unsigned char *params, unsigned char *data)
-
+    // ----------------------------------------------------------------------------
+    // config the motor PID setting based on the values and serial number   
+    length = WRITE_PACKET_LENGTH;
+    split_uint16(ADD_POSITION_I_GAIN, &params_data[0], &params_data[1]);
     
+    // build if position I gain packet for the focus motor
+    split_uint16(focus_position_pid[serial_num[0]][1], &params_data[2], &params_data[3]);    
+    build_packet(FOCUS_MOTOR_ID, 4, DYN_WRITE, params_data, packet_data);
+    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
+    
+    // build if position I gain packet for the zoom motor 
+    split_uint16(zoom_position_pid[serial_num[0]][1], &params_data[2], &params_data[3]);    
+    build_packet(ZOOM_MOTOR_ID, 4, DYN_WRITE, params_data, packet_data);
+    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
     
 // ----------------------------------------------------------------------------
 //                               MAIN LOOP 
