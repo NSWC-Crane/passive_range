@@ -92,12 +92,12 @@ int main(int argc, char** argv)
     std::string motor_type = "";
     dynamixel_packet mtr_packet;
     int32_t steps;
-    int32_t focus_step = 0;
-    int32_t zoom_step = 0;
+    int32_t focus_step = 0, focus_offset = 0;
+    int32_t zoom_step = 0, zoom_offset = 0;
     //uint8_t mtr_error;
     motor_info focus_motor;
     motor_info zoom_motor;
-    uint32_t step_delta = 3;
+    //uint32_t step_delta = 3;
     bool motor_enabled = false;
     bool mtr_moving = false;
 
@@ -201,6 +201,19 @@ int main(int argc, char** argv)
             std::cout << "  Error getting zoom motor info" << std::endl;
         }
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        //-----------------------------------------------------------------------------
+        // configure the homing offsets for the focus motor and the zoom motor
+        // set the offset to zero for both
+        status = ctrl.set_homing_offset(ctrl_handle, FOCUS_MOTOR_ID, 0);
+        status = ctrl.set_homing_offset(ctrl_handle, ZOOM_MOTOR_ID, 0);
+
+        // get the current motor positions without the offsets
+        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+
+        status = ctrl.set_homing_offset(ctrl_handle, FOCUS_MOTOR_ID, -focus_step);
+        status = ctrl.set_homing_offset(ctrl_handle, ZOOM_MOTOR_ID, -zoom_step);
 
         //-----------------------------------------------------------------------------
         // get the current motor positions

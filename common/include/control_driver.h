@@ -241,6 +241,85 @@ public:
     }   // end of enable_motor
 
     //-----------------------------------------------------------------------------
+    bool get_homing_offset(FT_HANDLE ctrl_handle, uint8_t id, int32_t& offset)
+    {
+        bool status = true;
+
+        dynamixel_packet mtr_packet(id, DYN_READ);
+
+        // completethe homing offset packet
+        mtr_packet.add_params((uint16_t)ADD_HOMING_OFFSET, (uint32_t)4);
+        
+        tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, read_sp_size, rx);
+        //uint8_t mtr_error = rx.data[SP_ERROR_POS];
+
+        if ((status == true) && (rx.data[SP_ERROR_POS] == 0))
+        {
+            offset = (int32_t)((rx.data[SP_PARAMS_POS + 3] << 24) | (rx.data[SP_PARAMS_POS + 2] << 16) | (rx.data[SP_PARAMS_POS + 1] << 8) | (rx.data[SP_PARAMS_POS]));
+        }
+        else
+        {
+            std::cout << "Error getting the homing offset for motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
+
+        return status;
+
+    }   // end of get_homing_offset
+
+    //-----------------------------------------------------------------------------
+    bool set_homing_offset(FT_HANDLE ctrl_handle, uint8_t id, int32_t offset)
+    {
+        bool status = true;
+        bool mtr_moving = true;
+
+        //uint8_t mtr_error = 0;
+
+        dynamixel_packet mtr_packet(id, DYN_WRITE);
+
+        // step the focus motor
+        mtr_packet.add_params((uint16_t)ADD_HOMING_OFFSET, (uint32_t)offset);
+
+        tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, write_sp_size, rx);
+        status &= (rx.data[SP_ERROR_POS] == 0);
+
+        if (status == false)
+        {
+            std::cout << "Error setting homing offset for motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
+
+        return status;
+
+    }   // end of set_homing_offset
+
+    //-----------------------------------------------------------------------------
+    bool get_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t& step)
+    {
+        bool status = true;
+        dynamixel_packet mtr_packet(id, DYN_READ);
+        mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
+
+        tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, read_sp_size, rx);
+        //uint8_t mtr_error = rx.data[SP_ERROR_POS];
+
+        if ((status == true) && (rx.data[SP_ERROR_POS] == 0))
+        {
+            step = (int32_t)((rx.data[SP_PARAMS_POS + 3] << 24) | (rx.data[SP_PARAMS_POS + 2] << 16) | (rx.data[SP_PARAMS_POS + 1] << 8) | (rx.data[SP_PARAMS_POS]));
+        }
+        else
+        {
+            std::cout << "Error getting position for motor id: " <<  (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
+
+        return status;
+    }   // end of get_position
+        
+    //-----------------------------------------------------------------------------
     bool set_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t &step)
     {
         bool status = true;
@@ -273,30 +352,9 @@ public:
 
         return status;
 
-    }   // end of step_motor
+    }   // end of set_position
 
-    //-----------------------------------------------------------------------------
-    bool get_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t& step)
-    {
-        bool status = true;
-        dynamixel_packet mtr_packet(id, DYN_READ);
-        mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
 
-        tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
-        send_packet(ctrl_handle, tx);
-        status &= receive_packet(ctrl_handle, read_sp_size, rx);
-        //uint8_t mtr_error = rx.data[SP_ERROR_POS];
-
-        if ((status == true) && (rx.data[SP_ERROR_POS] == 0))
-        {
-            step = (rx.data[SP_PARAMS_POS + 3] << 24) | (rx.data[SP_PARAMS_POS + 2] << 16) | (rx.data[SP_PARAMS_POS + 1] << 8) | (rx.data[SP_PARAMS_POS]);
-        }
-        else
-        {
-            std::cout << "Error getting position for motor id: " <<  (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
-        }
-        return status;
-    }   // end of get_position
 
     //-----------------------------------------------------------------------------
     bool motor_moving(FT_HANDLE ctrl_handle, uint8_t id)

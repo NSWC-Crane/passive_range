@@ -49,6 +49,7 @@ enum instruction {
 enum control_value {
     ADD_MODEL = 0,
     ADD_OPERATING_MODE = 11,
+    ADD_HOMING_OFFSET = 20,
     ADD_TORQUE_ENABLE = 64,
     ADD_LED = 65,
     ADD_GOAL_POSITION = 116,
