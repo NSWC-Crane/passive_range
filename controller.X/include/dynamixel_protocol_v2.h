@@ -8,9 +8,9 @@
 #define INSTRUCTION     7
 #define PARAMETER       8
 
-
 #define ERRBIT          4
 
+//-----------------------------------------------------------------------------
 enum instruction{ 
     DYN_PING = 0x01, 
     DYN_READ = 0x02, 
@@ -26,7 +26,19 @@ enum instruction{
     DYN_BULK_READ = 0x92, 
     DYN_BULK_WRITE = 0x93
     };
-                
+  
+//-----------------------------------------------------------------------------
+enum control_value {
+    ADD_MODEL = 0,
+    ADD_OPERATING_MODE = 11,
+    ADD_TORQUE_ENABLE = 64,
+    ADD_LED = 65,
+    ADD_GOAL_POSITION = 116,
+    ADD_MOVING = 122,
+    ADD_PRESENT_POSITION = 132
+    };
+    
+//-----------------------------------------------------------------------------
 enum error_bit{ 
     DYN_ERRBIT_VOLTAGE=1, 
     DYN_ERRBIT_ANGLE=2, 
@@ -37,7 +49,7 @@ enum error_bit{
     ERRBIT_INSTRUCTION=64
     };
 
-
+//-----------------------------------------------------------------------------
 enum results{ 
     DYN_TXSUCCESS=0, 
     DYN_RXSUCCESS=1, 
@@ -70,9 +82,7 @@ typedef struct data_packet
 
 data_packet initialize_packet(void);
 
-void build_packet(unsigned char id, unsigned short length, unsigned char instruction, unsigned char *params, data_packet packet );
-
-//int send_motor_packet(data_packet packet);
+void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, unsigned char *data);
 
 unsigned short make_uint16(unsigned char lower_byte, unsigned char upper_byte);
 
