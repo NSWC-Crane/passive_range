@@ -221,7 +221,8 @@ int main(int argc, char** argv)
         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
         std::cout << "-----------------------------------------------------------------------------" << std::endl;
-        std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
+        std::cout << "Current focus Step: " << focus_step << std::endl; 
+        std::cout << "Current zoom Step:  " << zoom_step << std::endl;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         // get the current trigger configurations
@@ -329,17 +330,11 @@ int main(int argc, char** argv)
             case 'f':
                 if (console_input.length() >= 3)
                 {
-                    mtr_moving = true;
+                    //mtr_moving = true;
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    steps = min(max(steps, min_focus_steps), max_focus_steps);
 
                     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, steps);
-
-                    //while(mtr_moving == true)
-                    //{
-                    //    sleep_ms(50);
-                    //    status &= ctrl.motor_moving(ctrl_handle, FOCUS_MOTOR_ID);
-                    //    mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
-                    //}
 
                     if (status == true)
                     {
@@ -359,18 +354,11 @@ int main(int argc, char** argv)
             case 'z':
                 if (console_input.length() >= 3)
                 {
-                    mtr_moving = true;
+                    //mtr_moving = true;
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    steps = min(max(steps, min_zoom_steps), max_zoom_steps);
 
                     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, steps);
-                    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-
-                    //while (mtr_moving == true)
-                    //{
-                    //    sleep_ms(50);
-                    //    status &= ctrl.motor_moving(ctrl_handle, ZOOM_MOTOR_ID);
-                    //    mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
-                    //}
 
                     if (status)
                     {
