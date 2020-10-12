@@ -59,9 +59,6 @@ void help_menu(void)
     std::cout << "  trigger all channels:     controller> t a" << std::endl;
     std::cout << "  config trigger channel 1: controller> c 1,0,10000,25000" << std::endl;
 
-
-
-
     std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 }
 
@@ -113,7 +110,6 @@ int main(int argc, char** argv)
     struct termios old_term, new_term;
 #endif
 
-
     try
     {
 
@@ -134,7 +130,7 @@ int main(int argc, char** argv)
         std::getline(std::cin, console_input);
         driver_device_num = stoi(console_input);
 
-        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete..." << std::endl;
+        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete...";
         std::cin.ignore();
 
         std::cout << std::endl << "Connecting to Controller..." << std::endl;
@@ -152,6 +148,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
+        flush_port(ctrl_handle);
         ctrl.tx = data_packet(DRIVER_CONNECT);
 
         // send connection request packet and get response back
@@ -185,11 +182,12 @@ int main(int argc, char** argv)
         {
             std::cout << "  Error getting focus motor info" << std::endl;
         }
-        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
 
-        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << std::endl;
         std::cout << "Zoom Motor Information: " << std::endl;
         
         if (status)
@@ -200,27 +198,21 @@ int main(int argc, char** argv)
         {
             std::cout << "  Error getting zoom motor info" << std::endl;
         }
-        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         //-----------------------------------------------------------------------------
         // configure the homing offsets for the focus motor and the zoom motor
         // set the offset to zero for both
-        status = ctrl.set_homing_offset(ctrl_handle, FOCUS_MOTOR_ID, 0);
-        status = ctrl.set_homing_offset(ctrl_handle, ZOOM_MOTOR_ID, 0);
-
-        // get the current motor positions without the offsets
-        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-
-        status = ctrl.set_homing_offset(ctrl_handle, FOCUS_MOTOR_ID, -focus_step);
-        status = ctrl.set_homing_offset(ctrl_handle, ZOOM_MOTOR_ID, -zoom_step);
+        status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
+        status = ctrl.set_offset(ctrl_handle, ZOOM_MOTOR_ID);
 
         //-----------------------------------------------------------------------------
         // get the current motor positions
         status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << std::endl;
         std::cout << "Current focus Step: " << focus_step << std::endl; 
         std::cout << "Current zoom Step:  " << zoom_step << std::endl;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
@@ -332,7 +324,7 @@ int main(int argc, char** argv)
                 {
                     //mtr_moving = true;
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
-                    steps = min(max(steps, min_focus_steps), max_focus_steps);
+                    //steps = min(max(steps, min_focus_steps), max_focus_steps);
 
                     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, steps);
 
@@ -356,7 +348,7 @@ int main(int argc, char** argv)
                 {
                     //mtr_moving = true;
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
-                    steps = min(max(steps, min_zoom_steps), max_zoom_steps);
+                    //steps = min(max(steps, min_zoom_steps), max_zoom_steps);
 
                     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, steps);
 
@@ -558,6 +550,9 @@ int main(int argc, char** argv)
             }
 		}	// end of while loop
 
+        // disable the motors before shutting down
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
 /*
         // send the motor enable command
