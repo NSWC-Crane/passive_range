@@ -19,7 +19,7 @@ data_packet initialize_packet(void)
 }   // end of initialize_packet
 
 //-----------------------------------------------------------------------------
-void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, unsigned char *data)
+void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char params[], unsigned char data[])
 {
     unsigned short idx;
     //unsigned char length_lb = 0, length_ub = 0;
@@ -36,7 +36,7 @@ void build_packet(unsigned char id, unsigned short param_length, unsigned char i
     data[ID] = id;
     
     // get the total packet length
-    split_uint16((3+param_length), data[LENGTH], data[LENGTH+1]);
+    split_uint16((3+param_length), &data[LENGTH], &data[LENGTH+1]);
     //packet.data[LENGTH] = length_lb;
     //packet.data[LENGTH+1] = length_ub;
 
@@ -50,7 +50,7 @@ void build_packet(unsigned char id, unsigned short param_length, unsigned char i
     }
     
     //calculate the crc
-    crc = calculate_crc((3+param_length), data);
+    crc = calculate_crc((8+param_length), data);
     split_uint16(crc, &crc_lb, &crc_ub);
     data[PARAMETER+idx++] = crc_lb;
     data[PARAMETER+idx] = crc_ub;

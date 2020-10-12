@@ -33,6 +33,9 @@ enum control_value {
     ADD_OPERATING_MODE = 11,
     ADD_TORQUE_ENABLE = 64,
     ADD_LED = 65,
+    ADD_POSITION_D_GAIN = 80,
+    ADD_POSITION_I_GAIN = 82,
+    ADD_POSITION_P_GAIN = 86,
     ADD_GOAL_POSITION = 116,
     ADD_MOVING = 122,
     ADD_PRESENT_POSITION = 132
@@ -82,7 +85,7 @@ typedef struct data_packet
 
 data_packet initialize_packet(void);
 
-void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char *params, unsigned char *data);
+void build_packet(unsigned char id, unsigned short param_length, unsigned char instruction, unsigned char params[], unsigned char data[]);
 
 unsigned short make_uint16(unsigned char lower_byte, unsigned char upper_byte);
 
