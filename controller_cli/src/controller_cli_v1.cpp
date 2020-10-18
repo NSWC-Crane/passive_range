@@ -134,7 +134,7 @@ int main(int argc, char** argv)
         std::getline(std::cin, console_input);
         driver_device_num = stoi(console_input);
 
-        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete..." << std::endl;
+        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete...";
         std::cin.ignore();
 
         std::cout << std::endl << "Connecting to Controller..." << std::endl;
