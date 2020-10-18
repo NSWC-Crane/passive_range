@@ -48,10 +48,10 @@ const uint8_t read_sp_size = (uint8_t)(15 + packet_size);
 const uint8_t ping_sp_size = (uint8_t)(14 + packet_size);
 const uint8_t write_sp_size = (uint8_t)(11 + packet_size);
 
-extern const int min_focus_steps = 0;
-extern const int max_focus_steps = 40575;
-extern const int min_zoom_steps = 0;
-extern const int max_zoom_steps = 4628;
+extern const int32_t min_focus_steps = 0;
+extern const int32_t max_focus_steps = 40575;
+extern const int32_t min_zoom_steps = 0;
+extern const int32_t max_zoom_steps = 4628;
 
 const uint32_t max_offset = 50000;
 const uint32_t max_length = 50000;
@@ -186,23 +186,21 @@ public:
         bool status = true;
         uint8_t mtr_error = 0;
 
+        flush_port(ctrl_handle);
+
         dynamixel_packet mtr_packet(id, DYN_PING);
         tx = data_packet(MOTOR_CTRL_PING, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(ctrl_handle, tx);
         status &= receive_packet(ctrl_handle, ping_sp_size, rx);
+        status &= (rx.data[SP_ERROR_POS] == 0);
 
-        if (status == true)
+        if (status == false)
         {
-            //mtr_error = rx.data[SP_ERROR_POS];
-
-            if (rx.data[SP_ERROR_POS] == 0)
-            {
-                mi = motor_info(rx.data);
-            }
-            else
-            {
-                status = false;
-            }
+            std::cout << "Error pinging motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
+        else
+        {
+            mi = motor_info(rx.data);
         }
 
         return status;
@@ -272,9 +270,6 @@ public:
     bool set_homing_offset(FT_HANDLE ctrl_handle, uint8_t id, int32_t offset)
     {
         bool status = true;
-        bool mtr_moving = true;
-
-        //uint8_t mtr_error = 0;
 
         dynamixel_packet mtr_packet(id, DYN_WRITE);
 
@@ -294,6 +289,27 @@ public:
         return status;
 
     }   // end of set_homing_offset
+
+    //-----------------------------------------------------------------------------
+    bool set_offset(FT_HANDLE ctrl_handle, uint8_t id)
+    {
+        bool status = true;
+        int32_t offset;
+
+        status = set_homing_offset(ctrl_handle, id, 0);
+
+        status &= get_position(ctrl_handle, id, offset);
+
+        if (id == FOCUS_MOTOR_ID)
+        {
+            offset = -offset;
+        }
+
+        status &= set_homing_offset(ctrl_handle, id, offset);
+
+        return status;
+    }
+
 
     //-----------------------------------------------------------------------------
     bool get_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t& step)
@@ -320,12 +336,21 @@ public:
     }   // end of get_position
         
     //-----------------------------------------------------------------------------
-    bool set_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t &step)
+    bool set_position(FT_HANDLE ctrl_handle, uint8_t id, int32_t step)
     {
         bool status = true;
         bool mtr_moving = true;
 
         //uint8_t mtr_error = 0;
+
+        if (id == FOCUS_MOTOR_ID)
+        {
+            step = min(max(step, min_zoom_steps), max_zoom_steps);
+        }
+        else if(id == ZOOM_MOTOR_ID)
+        {
+            step = min(max(step, min_zoom_steps), max_zoom_steps);
+        }
 
         dynamixel_packet mtr_packet(id, DYN_WRITE);
 

@@ -59,9 +59,6 @@ void help_menu(void)
     std::cout << "  trigger all channels:     controller> t a" << std::endl;
     std::cout << "  config trigger channel 1: controller> c 1,0,10000,25000" << std::endl;
 
-
-
-
     std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 }
 
@@ -113,7 +110,6 @@ int main(int argc, char** argv)
     struct termios old_term, new_term;
 #endif
 
-
     try
     {
 
@@ -152,6 +148,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
+        flush_port(ctrl_handle);
         ctrl.tx = data_packet(DRIVER_CONNECT);
 
         // send connection request packet and get response back
@@ -185,11 +182,12 @@ int main(int argc, char** argv)
         {
             std::cout << "  Error getting focus motor info" << std::endl;
         }
-        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
 
-        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << std::endl;
         std::cout << "Zoom Motor Information: " << std::endl;
         
         if (status)
@@ -200,7 +198,13 @@ int main(int argc, char** argv)
         {
             std::cout << "  Error getting zoom motor info" << std::endl;
         }
-        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        //-----------------------------------------------------------------------------
+        // configure the homing offsets for the focus motor and the zoom motor
+        // set the offset to zero for both
+        status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
+        status = ctrl.set_offset(ctrl_handle, ZOOM_MOTOR_ID);
 
         //-----------------------------------------------------------------------------
         // configure the homing offsets for the focus motor and the zoom motor
@@ -220,8 +224,10 @@ int main(int argc, char** argv)
         status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-        std::cout << "-----------------------------------------------------------------------------" << std::endl;
-        std::cout << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
+        //std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Current focus Step: " << focus_step << std::endl; 
+        std::cout << "Current zoom Step:  " << zoom_step << std::endl;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         // get the current trigger configurations
@@ -329,17 +335,11 @@ int main(int argc, char** argv)
             case 'f':
                 if (console_input.length() >= 3)
                 {
-                    mtr_moving = true;
+                    //mtr_moving = true;
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    //steps = min(max(steps, min_focus_steps), max_focus_steps);
 
                     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, steps);
-
-                    //while(mtr_moving == true)
-                    //{
-                    //    sleep_ms(50);
-                    //    status &= ctrl.motor_moving(ctrl_handle, FOCUS_MOTOR_ID);
-                    //    mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
-                    //}
 
                     if (status == true)
                     {
@@ -359,18 +359,11 @@ int main(int argc, char** argv)
             case 'z':
                 if (console_input.length() >= 3)
                 {
-                    mtr_moving = true;
+                    //mtr_moving = true;
                     steps = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    //steps = min(max(steps, min_zoom_steps), max_zoom_steps);
 
                     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, steps);
-                    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-
-                    //while (mtr_moving == true)
-                    //{
-                    //    sleep_ms(50);
-                    //    status &= ctrl.motor_moving(ctrl_handle, ZOOM_MOTOR_ID);
-                    //    mtr_moving = (ctrl.rx.data[SP_PARAMS_POS] == 1);
-                    //}
 
                     if (status)
                     {
@@ -570,6 +563,9 @@ int main(int argc, char** argv)
             }
 		}	// end of while loop
 
+        // disable the motors before shutting down
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
 /*
         // send the motor enable command
