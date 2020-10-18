@@ -353,6 +353,9 @@ int main(int argc, char** argv)
             return -1;
         }
 
+        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete...";
+        std::cin.ignore();
+
         std::cout << std::endl << "Connecting to Motor Controller..." << std::endl;
         ftdi_devices[driver_device_num].baud_rate = 250000;
         while ((md_handle == NULL) && (connect_count < 10))
