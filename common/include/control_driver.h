@@ -345,7 +345,7 @@ public:
 
         if (id == FOCUS_MOTOR_ID)
         {
-            step = min(max(step, min_zoom_steps), max_zoom_steps);
+            step = min(max(step, min_focus_steps), max_focus_steps);
         }
         else if(id == ZOOM_MOTOR_ID)
         {
