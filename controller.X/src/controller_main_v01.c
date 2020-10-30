@@ -39,8 +39,8 @@
 // ----------------------------------------------------------------------------
 unsigned char rx_data[PKT_SIZE] = {0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {1, 1};
-const unsigned char serial_num[1] = {1};
+const unsigned char firmware[2] = {1, 5};
+const unsigned char serial_num[1] = {2};
 
 // motor parameters
 int current_focus_step = 0;
@@ -244,19 +244,25 @@ int main(int argc, char** argv)
 
     // ----------------------------------------------------------------------------
     // config the motor PID setting based on the values and serial number   
-    length = WRITE_PACKET_LENGTH;
+    length = 14;
     split_uint16(ADD_POSITION_I_GAIN, &params_data[0], &params_data[1]);
     
     // build if position I gain packet for the focus motor
     split_uint16(focus_position_pid[serial_num[0]][1], &params_data[2], &params_data[3]);    
     build_packet(FOCUS_MOTOR_ID, 4, DYN_WRITE, params_data, packet_data);
-    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
+    //send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
+    send_motor_packet(U1, length, packet_data);
+    receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
     
     // build if position I gain packet for the zoom motor 
     split_uint16(zoom_position_pid[serial_num[0]][1], &params_data[2], &params_data[3]);    
     build_packet(ZOOM_MOTOR_ID, 4, DYN_WRITE, params_data, packet_data);
-    send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
-    
+    //send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
+    send_motor_packet(U1, length, packet_data);
+    receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
+
+    RED_LED = 1;
+             
 // ----------------------------------------------------------------------------
 //                               MAIN LOOP 
 // ----------------------------------------------------------------------------
@@ -394,10 +400,10 @@ int main(int argc, char** argv)
                     length = PING_PACKET_LENGTH;
                     mU1RXClearIntFlag();
 
-                    DIR_485_PIN = 1;
+                    //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
+                    //while(U1STAbits.TRMT == 0);
+                    //DIR_485_PIN = 0;
                    
                     receive_motor_packet(U1, length, packet_data);
                     
@@ -409,10 +415,10 @@ int main(int argc, char** argv)
                     length = WRITE_PACKET_LENGTH;
                     mU1RXClearIntFlag();
                     
-                    DIR_485_PIN = 1;
+                    //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
+                    //while(U1STAbits.TRMT == 0);
+                    //DIR_485_PIN = 0;
 
                     receive_motor_packet(U1, length, packet_data);
 
@@ -424,10 +430,10 @@ int main(int argc, char** argv)
                     length = READ1_PACKET_LENGTH;
                     mU1RXClearIntFlag();
                     
-                    DIR_485_PIN = 1;
+                    //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
+                    //while(U1STAbits.TRMT == 0);
+                    //DIR_485_PIN = 0;
 
                     receive_motor_packet(U1, length, packet_data);
                     
@@ -439,10 +445,10 @@ int main(int argc, char** argv)
                     length = READ2_PACKET_LENGTH;
                     mU1RXClearIntFlag();
                     
-                    DIR_485_PIN = 1;
+                    //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
+                    //while(U1STAbits.TRMT == 0);
+                    //DIR_485_PIN = 0;
 
                     receive_motor_packet(U1, length, packet_data);
                     
@@ -454,10 +460,10 @@ int main(int argc, char** argv)
                     length = READ4_PACKET_LENGTH;
                     mU1RXClearIntFlag();
                     
-                    DIR_485_PIN = 1;
+                    //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
-                    while(U1STAbits.TRMT == 0);
-                    DIR_485_PIN = 0;
+                    //while(U1STAbits.TRMT == 0);
+                    //DIR_485_PIN = 0;
 
                     receive_motor_packet(U1, length, packet_data);
                     
@@ -542,11 +548,16 @@ void send_motor_packet(unsigned char uart, unsigned short length, unsigned char*
 {
     unsigned short idx;
     
+    DIR_485_PIN = 1;
+    
     for(idx=0; idx<length; ++idx)                 // send data
     {
         send_char(data[idx], uart);
     }
-
+    
+    while(U1STAbits.TRMT == 0);
+    DIR_485_PIN = 0;
+    
 }   // end of send_motor_packet
 
 
