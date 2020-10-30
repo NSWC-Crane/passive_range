@@ -29,7 +29,7 @@ FF FF FD 00 0A 04 00 55 00 EA 8F
 
 
 //-----------------------------------------------------------------------------
-enum instruction {
+enum instruction : uint8_t {
     DYN_PING = 0x01, 
     DYN_READ = 0x02, 
     DYN_WRITE = 0x03, 
@@ -46,7 +46,7 @@ enum instruction {
     };
 
 //-----------------------------------------------------------------------------
-enum control_value {
+enum control_address : uint16_t {
     ADD_MODEL = 0,
     ADD_OPERATING_MODE = 11,
     ADD_HOMING_OFFSET = 20,

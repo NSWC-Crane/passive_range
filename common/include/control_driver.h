@@ -216,11 +216,11 @@ public:
 
         if (value)
         {
-            mtr_packet.add_params((uint16_t)ADD_TORQUE_ENABLE, (uint8_t)ENABLE_MOTOR);
+            mtr_packet.add_params(ADD_TORQUE_ENABLE, (uint8_t)ENABLE_MOTOR);
         }
         else
         {
-            mtr_packet.add_params((uint16_t)ADD_TORQUE_ENABLE, (uint8_t)DISABLE_MOTOR);
+            mtr_packet.add_params(ADD_TORQUE_ENABLE, (uint8_t)DISABLE_MOTOR);
         }
 
         // send the enable/disable motor packet
@@ -246,7 +246,7 @@ public:
         dynamixel_packet mtr_packet(id, DYN_READ);
 
         // completethe homing offset packet
-        mtr_packet.add_params((uint16_t)ADD_HOMING_OFFSET, (uint32_t)4);
+        mtr_packet.add_params(ADD_HOMING_OFFSET, (uint32_t)4);
         
         tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(ctrl_handle, tx);
@@ -274,7 +274,7 @@ public:
         dynamixel_packet mtr_packet(id, DYN_WRITE);
 
         // step the focus motor
-        mtr_packet.add_params((uint16_t)ADD_HOMING_OFFSET, (uint32_t)offset);
+        mtr_packet.add_params(ADD_HOMING_OFFSET, (uint32_t)offset);
 
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(ctrl_handle, tx);
@@ -316,7 +316,7 @@ public:
     {
         bool status = true;
         dynamixel_packet mtr_packet(id, DYN_READ);
-        mtr_packet.add_params((uint16_t)ADD_PRESENT_POSITION, (uint16_t)4);
+        mtr_packet.add_params(ADD_PRESENT_POSITION, (uint16_t)4);
 
         tx = data_packet(MOTOR_CTRL_RD4, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(ctrl_handle, tx);
@@ -355,7 +355,7 @@ public:
         dynamixel_packet mtr_packet(id, DYN_WRITE);
 
         // step the focus motor
-        mtr_packet.add_params((uint16_t)ADD_GOAL_POSITION, (uint32_t)step);
+        mtr_packet.add_params(ADD_GOAL_POSITION, (uint32_t)step);
         
         tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
         send_packet(ctrl_handle, tx);
@@ -387,7 +387,7 @@ public:
         bool status = true;
         
         dynamixel_packet mtr_packet(id, DYN_READ);
-        mtr_packet.add_params((uint16_t)ADD_MOVING, (uint16_t)1);
+        mtr_packet.add_params(ADD_MOVING, (uint16_t)1);
 
         tx = data_packet(MOTOR_CTRL_RD1, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
 
