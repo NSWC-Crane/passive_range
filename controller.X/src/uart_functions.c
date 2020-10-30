@@ -115,3 +115,34 @@ void send_packet(unsigned char uart, unsigned char command, unsigned short lengt
 }   // end of send_packet
 
 
+void flush_uart(unsigned char uart)
+{
+    
+    unsigned char temp = 0;
+    TMR1 = 0;
+    while(TMR1 < 10000);        		// wait 1ms   
+    
+    switch(uart)
+    {
+        case 1:
+            while(U1STAbits.URXDA == 1)        // wait for at least one byte in buffer
+            {
+                temp = U1RXREG;
+                TMR1 = 0;
+                while(TMR1 < 10000);        		// wait 1ms
+            }
+            break;
+            
+        case 2:
+            while(U2STAbits.URXDA == 1)        // wait for at least one byte in buffer
+            {
+                temp = U2RXREG;
+                TMR1 = 0;
+                while(TMR1 < 10000);        		// wait 1ms
+            }
+            break;
+            
+        default:
+            break;            
+    }
+}
