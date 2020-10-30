@@ -10,6 +10,6 @@ unsigned char get_char(unsigned char uart);
 
 void send_packet(unsigned char uart, unsigned char command, unsigned short length, unsigned char data[]);
 
-
+void flush_uart(unsigned char uart);
 
 #endif  // PIC32_UART_CTRL_H_

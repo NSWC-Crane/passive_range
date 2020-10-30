@@ -252,14 +252,16 @@ int main(int argc, char** argv)
     build_packet(FOCUS_MOTOR_ID, 4, DYN_WRITE, params_data, packet_data);
     //send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
     send_motor_packet(U1, length, packet_data);
-    receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
+    //receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
+    flush_uart(U1);
     
     // build if position I gain packet for the zoom motor 
     split_uint16(zoom_position_pid[serial_num[0]][1], &params_data[2], &params_data[3]);    
     build_packet(ZOOM_MOTOR_ID, 4, DYN_WRITE, params_data, packet_data);
     //send_packet(U2, MOTOR_CTRL_WR, length, packet_data);
     send_motor_packet(U1, length, packet_data);
-    receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
+    //receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
+    flush_uart(U1);
 
     RED_LED = 1;
              
@@ -399,7 +401,8 @@ int main(int argc, char** argv)
                case MOTOR_CTRL_PING:     
                     length = PING_PACKET_LENGTH;
                     mU1RXClearIntFlag();
-
+                    flush_uart(U1);
+                    
                     //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
                     //while(U1STAbits.TRMT == 0);
@@ -414,6 +417,7 @@ int main(int argc, char** argv)
                case MOTOR_CTRL_WR:
                     length = WRITE_PACKET_LENGTH;
                     mU1RXClearIntFlag();
+                    flush_uart(U1);
                     
                     //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
@@ -429,6 +433,7 @@ int main(int argc, char** argv)
                case MOTOR_CTRL_RD1:
                     length = READ1_PACKET_LENGTH;
                     mU1RXClearIntFlag();
+                    flush_uart(U1);
                     
                     //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
@@ -444,6 +449,7 @@ int main(int argc, char** argv)
                case MOTOR_CTRL_RD2:
                     length = READ2_PACKET_LENGTH;
                     mU1RXClearIntFlag();
+                    flush_uart(U1);
                     
                     //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
@@ -459,6 +465,7 @@ int main(int argc, char** argv)
                case MOTOR_CTRL_RD4:
                     length = READ4_PACKET_LENGTH;
                     mU1RXClearIntFlag();
+                    flush_uart(U1);
                     
                     //DIR_485_PIN = 1;
                     send_motor_packet(U1, rx_data[1], &rx_data[2]);
