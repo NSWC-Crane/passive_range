@@ -930,11 +930,13 @@ int main(int argc, char** argv)
     {
         std::cout << "Error: " << e.what() << std::endl;
         data_log_stream << "Error: " << e.what() << std::endl;
+        std::cin.ignore();
     }
     catch (std::exception e)
     {
         std::cout << "Error: " << e.what() << std::endl;
         data_log_stream << "Error: " << e.what() << std::endl;
+        std::cin.ignore();
     }
 
     std::cout << std::endl;
@@ -964,8 +966,7 @@ int main(int argc, char** argv)
 
     data_log_stream.close();
     
-    std::cout << std::endl << "Program Complete! Press Enter to close..." << std::endl;
-    std::cin.ignore();
+    std::cout << std::endl << "Program Complete!" << std::endl;
 
     return 0;
 

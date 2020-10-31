@@ -342,7 +342,7 @@ int main(int argc, char** argv)
                     packet_data[16] = (t2_length >> 8) & 0xFF;
                     packet_data[17] = (t2_length) & 0xFF;
                             
-                    send_packet(U2, CONFIG_T2, length, packet_data);
+                    send_packet(U2, TRIG_CONFIG, length, packet_data);
                     break;
                     
                 case TRIG_INIT:

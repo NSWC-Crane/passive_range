@@ -512,6 +512,8 @@ public:
         send_packet(ctrl_handle, tx);
         status = receive_packet(ctrl_handle, 20, rx);
 
+        //std::cout << rx << std::endl;
+        
         if (status == true)
         {
             t1_info = trigger_info(1, rx.data.data());

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <num2string.h>
 
 //-----------------------------------------------------------------------------
 typedef struct data_packet
@@ -72,6 +73,23 @@ typedef struct data_packet
         return std::move(packet_data);
     }
 
+    inline friend std::ostream& operator<< (
+        std::ostream& out,
+        const data_packet& item
+        )
+    {
+        out << "  start:      " << num2str(item.start, "0x%02X") << std::endl;
+        out << "  command:    " << num2str(item.command, "0x%02X") << std::endl;
+        out << "  byte_count: " << num2str(item.byte_count, "0x%02X") << std::endl;
+        out << "  data:       ";
+        for(int idx=0; idx<item.data.size()-1; ++idx)
+        {
+            out << num2str(item.data[idx], "0x%02X") << ", ";
+        }
+        out << num2str(item.data[item.data.size()-1], "0x%02X") << std::endl;
+        
+        return out;
+    }
 } data_packet;
 
 #endif  // DATA_PACKET_STRUCT_H
