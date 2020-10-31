@@ -362,7 +362,7 @@ int main(int argc, char** argv)
             std::cout << ftdi_devices[idx];
         }
 
-        std::cout << "Select Motor Controller: ";
+        std::cout << "Select Controller: ";
         std::getline(std::cin, console_input);
         controller_device_num = stoi(console_input);
 
@@ -377,7 +377,7 @@ int main(int argc, char** argv)
         std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete...";
         std::cin.ignore();
 
-        std::cout << std::endl << "Connecting to Motor Controller..." << std::endl;
+        std::cout << std::endl << "Connecting to Controller..." << std::endl;
         ftdi_devices[controller_device_num].baud_rate = 250000;
         while ((ctrl_handle == NULL) && (connect_count < 10))
         {
@@ -387,8 +387,8 @@ int main(int argc, char** argv)
 
         if (ctrl_handle == NULL)
         {
-            std::cout << "No Motor Controller found... Press Enter to Exit!" << std::endl;
-            data_log_stream << "No Motor Controller found... Exiting!" << std::endl;
+            std::cout << "No Controller found... Press Enter to Exit!" << std::endl;
+            data_log_stream << "No Controller found... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
         }
@@ -401,8 +401,8 @@ int main(int argc, char** argv)
 
         if (status == false)
         {
-            std::cout << "No Motor Controller found... Press Enter to Exit!" << std::endl;
-            data_log_stream << "No Motor Controller found... Exiting!" << std::endl;
+            std::cout << "No Controller found... Press Enter to Exit!" << std::endl;
+            data_log_stream << "No Controller found... Exiting!" << std::endl;
             std::cin.ignore();
             return -1;
         }
@@ -680,10 +680,10 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
         std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
-        std::cout << "  f - Step the focus motor by 160 steps" << std::endl;
-        std::cout << "  g - Step the focus motor by -160 steps" << std::endl;
-        std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
-        std::cout << "  x - Step the zoom motor by -160 steps" << std::endl;
+        //std::cout << "  f - Step the focus motor by 160 steps" << std::endl;
+        //std::cout << "  g - Step the focus motor by -160 steps" << std::endl;
+        //std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
+        //std::cout << "  x - Step the zoom motor by -160 steps" << std::endl;
 
         std::cout << "  s - Save an image" << std::endl;
         std::cout << "  q - Quit" << std::endl;
