@@ -417,6 +417,73 @@ int main(int argc, char** argv)
         data_log_stream << ctrl;
         data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
+
+
+        //-----------------------------------------------------------------------------
+// ping the motors to get the model number and firmware version
+        status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
+
+        std::cout << "-----------------------------------------------------------------------------" << std::endl;
+        std::cout << "Focus Motor Information: " << std::endl;
+
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "Focus Motor Information: " << std::endl;
+
+        if (status)
+        {
+            std::cout << focus_motor;
+            data_log_stream << focus_motor;
+        }
+        else
+        {
+            std::cout << "  Error getting focus motor info" << std::endl;
+            data_log_stream << "  Error getting focus motor info" << std::endl;
+        }
+
+        // configure the homing offsets for the focus motor
+        // set the offset to zero
+        status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
+
+        // get the current motor positions
+        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+
+        std::cout << "  Current Step:     " << focus_step << std::endl;
+        data_log_stream << "  Current Step:     " << focus_step << std::endl;
+
+
+        //-----------------------------------------------------------------------------
+        status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
+
+        std::cout << std::endl;
+        std::cout << "Zoom Motor Information: " << std::endl;
+        //data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "Zoom Motor Information: " << std::endl;
+        
+        if (status)
+        {
+            std::cout << zoom_motor;
+            data_log_stream << zoom_motor;
+        }
+        else
+        {
+            std::cout << "  Error getting zoom motor info" << std::endl;
+            data_log_stream << "  Error getting zoom motor info" << std::endl;
+        }
+
+        // configure the homing offsets for the zoom motor
+        // set the offset to zero
+        status = ctrl.set_offset(ctrl_handle, ZOOM_MOTOR_ID);
+
+        // get the current motor positions
+        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+
+        std::cout << "  Current Step:     " << zoom_step << std::endl;
+        std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        data_log_stream << "  Current Step:     " << zoom_step << std::endl;
+        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+
+        /*
         //-----------------------------------------------------------------------------
         // ping the motors to get the model number and firmware version
         status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
@@ -472,7 +539,9 @@ int main(int argc, char** argv)
         data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
         data_log_stream << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
         data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        */
 
+        //-----------------------------------------------------------------------------
         // get the current trigger configurations and display the information
         status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
 
