@@ -121,8 +121,8 @@ typedef struct trigger_info
     {
         polarity = data[0];
 
-        offset = (data[1] << 24) | (data[2] << 16) | (data[3] << 8) | data[4];
-        length = (data[5] << 24) | (data[6] << 16) | (data[7] << 8) | data[8];
+        offset = ((uint32_t)data[1] << 24) | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 8) | (uint32_t)data[4];
+        length = ((uint32_t)data[5] << 24) | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 8) | (uint32_t)data[8];
     }
 
     inline friend std::ostream& operator<< (
