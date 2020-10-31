@@ -182,11 +182,20 @@ int main(int argc, char** argv)
         {
             std::cout << "  Error getting focus motor info" << std::endl;
         }
-        //std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
+        // configure the homing offsets for the focus motor
+        // set the offset to zero
+        status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
+
+        // get the current motor positions
+        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+
+        std::cout << "  Current Step:     " << focus_step << std::endl;
+
+
+        //-----------------------------------------------------------------------------
         status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
 
-        //std::cout << "-----------------------------------------------------------------------------" << std::endl;
         std::cout << std::endl;
         std::cout << "Zoom Motor Information: " << std::endl;
         
@@ -198,23 +207,15 @@ int main(int argc, char** argv)
         {
             std::cout << "  Error getting zoom motor info" << std::endl;
         }
-        //std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
-        //-----------------------------------------------------------------------------
-        // configure the homing offsets for the focus motor and the zoom motor
-        // set the offset to zero for both
-        status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
+        // configure the homing offsets for the zoom motor
+        // set the offset to zero
         status = ctrl.set_offset(ctrl_handle, ZOOM_MOTOR_ID);
 
-        //-----------------------------------------------------------------------------
         // get the current motor positions
-        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-        //std::cout << "-----------------------------------------------------------------------------" << std::endl;
-        std::cout << std::endl;
-        std::cout << "Current focus Step: " << focus_step << std::endl; 
-        std::cout << "Current zoom Step:  " << zoom_step << std::endl;
+        std::cout << "  Current Step:     " << zoom_step << std::endl;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
         // get the current trigger configurations
