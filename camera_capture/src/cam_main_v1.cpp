@@ -69,8 +69,8 @@ int main(int argc, char** argv)
     std::vector<uint16_t> pid_values;
 
     // trigger variables
-    std::vector<uint8_t> tc_ch1(5);
-    std::vector<uint8_t> tc_ch2(5);
+    std::vector<uint8_t> tc_ch1(9);
+    std::vector<uint8_t> tc_ch2(9);
     trigger_info t1_info;
     trigger_info t2_info;
     uint8_t t1_polarity, t2_polarity;
