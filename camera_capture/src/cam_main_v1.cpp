@@ -73,6 +73,9 @@ int main(int argc, char** argv)
     std::vector<uint8_t> tc_ch2(5);
     trigger_info t1_info;
     trigger_info t2_info;
+    uint8_t t1_polarity, t2_polarity;
+    uint32_t t1_offset, t2_offset;
+    uint32_t t1_length, t2_length;
 
     // camera variables
     uint32_t cam_index;
@@ -89,7 +92,8 @@ int main(int argc, char** argv)
     Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
     double camera_gain;
     Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
-    Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
+    //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
+    Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
     double frame_rate;
     Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
@@ -209,38 +213,38 @@ int main(int argc, char** argv)
                     //tc_ch1[0] = std::stoi(cfg_params[5][1]) & 0x01;
 
                     // get the trigger line polarity
-                    tc_ch1[0] = std::stoi(cfg_params[5][1]) & 0x01;
+                    tc_ch1[0] = t1_polarity = std::stoi(cfg_params[5][1]) & 0x01;
 
                     // get the trigger offset
-                    uint32_t offset = min((uint32_t)(std::stoi(cfg_params[5][2]) & 0x0000FFFF), max_offset);
-                    tc_ch1[1] = (offset >> 24) & 0xFF;
-                    tc_ch1[2] = (offset >> 16) & 0xFF;
-                    tc_ch1[3] = (offset >> 8) & 0xFF;
-                    tc_ch1[4] = offset & 0xFF;
+                    t1_offset = min((uint32_t)(std::stoi(cfg_params[5][2]) & 0x0000FFFF), max_offset);
+                    tc_ch1[1] = (t1_offset >> 24) & 0xFF;
+                    tc_ch1[2] = (t1_offset >> 16) & 0xFF;
+                    tc_ch1[3] = (t1_offset >> 8) & 0xFF;
+                    tc_ch1[4] = t1_offset & 0xFF;
 
                     // get the trigger length
-                    uint32_t length = min((uint32_t)(std::stoi(cfg_params[5][3]) & 0x0000FFFF), max_length);// +offset;
-                    tc_ch1[5] = (length >> 24) & 0xFF;
-                    tc_ch1[6] = (length >> 16) & 0xFF;
-                    tc_ch1[7] = (length >> 8) & 0xFF;
-                    tc_ch1[8] = length & 0xFF;
+                    t1_length = min((uint32_t)(std::stoi(cfg_params[5][3]) & 0x0000FFFF), max_length);// +offset;
+                    tc_ch1[5] = (t1_length >> 24) & 0xFF;
+                    tc_ch1[6] = (t1_length >> 16) & 0xFF;
+                    tc_ch1[7] = (t1_length >> 8) & 0xFF;
+                    tc_ch1[8] = t1_length & 0xFF;
 
                     // get the trigger line polarity
-                    tc_ch2[0] = std::stoi(cfg_params[5][4]) & 0x01;
+                    tc_ch2[0] = t2_polarity = std::stoi(cfg_params[5][4]) & 0x01;
 
                     // get the trigger offset
-                    offset = min((uint32_t)(std::stoi(cfg_params[5][5]) & 0x0000FFFF), max_offset);
-                    tc_ch2[1] = (offset >> 24) & 0xFF;
-                    tc_ch2[2] = (offset >> 16) & 0xFF;
-                    tc_ch2[3] = (offset >> 8) & 0xFF;
-                    tc_ch2[4] = offset & 0xFF;
+                    t2_offset = min((uint32_t)(std::stoi(cfg_params[5][5]) & 0x0000FFFF), max_offset);
+                    tc_ch2[1] = (t2_offset >> 24) & 0xFF;
+                    tc_ch2[2] = (t2_offset >> 16) & 0xFF;
+                    tc_ch2[3] = (t2_offset >> 8) & 0xFF;
+                    tc_ch2[4] = t2_offset & 0xFF;
 
                     // get the trigger length
-                    length = min((uint32_t)(std::stoi(cfg_params[5][6]) & 0x0000FFFF), max_length);// +offset;
-                    tc_ch2[5] = (length >> 24) & 0xFF;
-                    tc_ch2[6] = (length >> 16) & 0xFF;
-                    tc_ch2[7] = (length >> 8) & 0xFF;
-                    tc_ch2[8] = length & 0xFF;
+                    t2_length = min((uint32_t)(std::stoi(cfg_params[5][6]) & 0x0000FFFF), max_length);// +offset;
+                    tc_ch2[5] = (t2_length >> 24) & 0xFF;
+                    tc_ch2[6] = (t2_length >> 16) & 0xFF;
+                    tc_ch2[7] = (t2_length >> 8) & 0xFF;
+                    tc_ch2[8] = t2_length & 0xFF;
                 }
                 else
                 {
@@ -298,6 +302,11 @@ int main(int argc, char** argv)
         else
             trigger_source = Spinnaker::TriggerSourceEnums::TriggerSource_Software;
 
+        tc_ch1.clear();
+        tc_ch1 = { 0, 0,0,0,0, 0,0,0x61,0xA8 };
+        tc_ch2.clear();
+        tc_ch2 = { 0, 0,0,0,0, 0,0,0x61,0xA8 };
+        
         // line 7: output save location
         output_save_location = parser.get<std::string>("output");
     }
@@ -329,7 +338,15 @@ int main(int argc, char** argv)
     std::cout << "Exposure Time Range: " << exposure_str << std::endl;
     std::cout << "Camera Gain:         " << camera_gain << std::endl;
     std::cout << "Number of Captures:  " << cap_num << std::endl;
-    std::cout << "Trigger Source:      " << ts << std::endl;
+    if(ts == 1)
+    {
+        std::cout << "Trigger Source:      " << ts << std::endl;
+    }
+    else
+    {
+        std::cout << "Trigger Source:      " << ts << ", " << (uint32_t)t1_polarity << "," << t1_offset << "," << t1_length;
+        std::cout << ", " << (uint32_t)t2_polarity << "," << t2_offset << "," << t2_length <<std::endl;
+    }
     std::cout <<  std::endl;
 
     data_log_stream << "Input Parameters:" << std::endl;
@@ -340,7 +357,15 @@ int main(int argc, char** argv)
     data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
     data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
     data_log_stream << "Number of Captures:  " << cap_num << std::endl;
-    data_log_stream << "Trigger Source:      " << ts << std::endl;
+    if(ts == 1)
+    {
+        data_log_stream << "Trigger Source:      " << ts << std::endl;
+    }
+    else
+    {
+        data_log_stream << "Trigger Source:      " << ts << ", " << (uint32_t)t1_polarity << "," << t1_offset << "," << t1_length;
+        data_log_stream << ", " << (uint32_t)t2_polarity << "," << t2_offset << "," << t2_length <<std::endl;
+    }
     data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
 
 
@@ -540,7 +565,14 @@ int main(int argc, char** argv)
         data_log_stream << "Focus Step: " << focus_step << ", Zoom Step: " << zoom_step << std::endl;
         data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
         */
+        
+        // configure the trigger according to the inputs
+        // channel 1
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, tc_ch1);
 
+        // channel 2
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T2, tc_ch2);
+        
         //-----------------------------------------------------------------------------
         // get the current trigger configurations and display the information
         status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
@@ -574,13 +606,6 @@ int main(int argc, char** argv)
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
         ctrl_connected = true;
-
-        // configure the trigger according to the inputs
-        // channel 1
-        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, tc_ch1);
-
-        // channel 2
-        status = ctrl.config_channel(ctrl_handle, CONFIG_T2, tc_ch2);
 
 // ----------------------------------------------------------------------------------------
 // Scan the system and get the camera connected to the computer
@@ -875,7 +900,6 @@ int main(int argc, char** argv)
                 }   // end of zoom_idx loop
 
                 // set the focus step to the first focus_range setting
-                // set the focus and zoom steps to zero
                 status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
                 status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
@@ -941,7 +965,19 @@ int main(int argc, char** argv)
         data_log_stream << "Error: " << e.what() << std::endl;
         std::cin.ignore();
     }
-
+    
+    // set the focus and zoom steps to zero
+    focus_step = 0;
+    zoom_step = 0;
+    
+    std::cout << std::endl << "Setting motors back to zero..." << std::endl;
+    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+    status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);    
+    status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+    status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+                                
     std::cout << std::endl;
     
     // close the motor driver port first
