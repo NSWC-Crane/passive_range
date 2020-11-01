@@ -52,6 +52,9 @@ enum control_address : uint16_t {
     ADD_HOMING_OFFSET = 20,
     ADD_TORQUE_ENABLE = 64,
     ADD_LED = 65,
+    ADD_POSITION_D = 80,
+    ADD_POSITION_I = 82,
+    ADD_POSITION_P = 84,
     ADD_GOAL_POSITION = 116,
     ADD_MOVING = 122,
     ADD_PRESENT_POSITION = 132

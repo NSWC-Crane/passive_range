@@ -80,7 +80,7 @@ unsigned short focus_position_pid[3][3] = { {0, 0, 0},      // empty
 
 unsigned short zoom_position_pid[3][3] = {  {0, 0, 0},      // empty
                                             {0, 2, 800},    // sn-1
-                                            {0, 0, 800}     // sn-2
+                                            {0, 10, 800}     // sn-2
 };
 
 
@@ -244,6 +244,7 @@ int main(int argc, char** argv)
 
     // ----------------------------------------------------------------------------
     // config the motor PID setting based on the values and serial number   
+    /*
     length = 14;
     split_uint16(ADD_POSITION_I_GAIN, &params_data[0], &params_data[1]);
     
@@ -262,7 +263,8 @@ int main(int argc, char** argv)
     send_motor_packet(U1, length, packet_data);
     //receive_motor_packet(U1, WRITE_PACKET_LENGTH, packet_data);
     flush_uart(U1);
-
+    */
+    
     RED_LED = 1;
              
 // ----------------------------------------------------------------------------

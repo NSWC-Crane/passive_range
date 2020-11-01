@@ -84,6 +84,7 @@ int main(int argc, char** argv)
     std::vector<ftdiDeviceDetails> ftdi_devices;
 
     // motor variables
+    std::string pid_config_filename = "pid_config.txt";
     std::string motor_type = "";
     dynamixel_packet mtr_packet;
     int32_t steps;
@@ -95,6 +96,7 @@ int main(int argc, char** argv)
     //uint32_t step_delta = 3;
     bool motor_enabled = false;
     bool mtr_moving = false;
+    std::vector<uint16_t> pid_values;
 
     // trigger variables
     trigger_info t1_info;
@@ -225,6 +227,16 @@ int main(int argc, char** argv)
         std::cout << t2_info;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
+        //-----------------------------------------------------------------------------
+        // read in the position PID config file and set the PID values for each motor 
+        read_pid_config(pid_config_filename, (uint32_t)(ctrl.ctrl_info.serial_number - 1), pid_values);
+
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_D, pid_values[0]);
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_I, pid_values[1]);
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_P, pid_values[2]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_D, pid_values[3]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_I, pid_values[4]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_P, pid_values[5]);
 
         //-----------------------------------------------------------------------------
 		// print out a short menu of commands for the CLI

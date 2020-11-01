@@ -94,6 +94,8 @@ endforeach()
 message("--------------------------------------------------------------------------------")
 message(" ")
 
+set(pid_file "pid_config.txt")
+file(COPY "${PR_ROOT}/common/${pid_file}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})

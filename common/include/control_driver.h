@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "ftd2xx_functions.h"
+#include "file_parser.h"
+
 #include "data_packet.h"
 #include "dynamixel_packet_v2.h"
 
@@ -139,6 +141,22 @@ typedef struct trigger_info
     }
 
 } trigger_info;
+
+//-----------------------------------------------------------------------------
+void read_pid_config(std::string filename, uint32_t index, std::vector<uint16_t> &pid_values)
+{
+    uint32_t idx;
+
+    pid_values.clear();
+
+    std::vector<std::vector<std::string>> params;
+    parse_csv_file(filename, params);
+
+    for (idx = 0; idx < params[index].size(); ++idx)
+    {
+        pid_values.push_back((uint16_t)std::stoi(params[index][idx]));
+    }
+}
 
 //-----------------------------------------------------------------------------
 class controller
@@ -379,7 +397,29 @@ public:
 
     }   // end of set_position
 
+    //-----------------------------------------------------------------------------
+    bool set_pid_value(FT_HANDLE ctrl_handle, uint8_t id, uint16_t address, uint16_t value)
+    {
+        bool status = true;
 
+        dynamixel_packet mtr_packet(id, DYN_WRITE);
+
+        // step the focus motor
+        mtr_packet.add_params(address, value);
+
+        tx = data_packet(MOTOR_CTRL_WR, (uint8_t)mtr_packet.get_size(), mtr_packet.get_packet_array());
+        send_packet(ctrl_handle, tx);
+        status &= receive_packet(ctrl_handle, write_sp_size, rx);
+        status &= (rx.data[SP_ERROR_POS] == 0);
+
+        if (status == false)
+        {
+            std::cout << "Error setting position for motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
+        }
+
+        return status;
+
+    }   // end of set_position
 
     //-----------------------------------------------------------------------------
     bool motor_moving(FT_HANDLE ctrl_handle, uint8_t id)

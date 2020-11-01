@@ -59,12 +59,14 @@ int main(int argc, char** argv)
     bool ctrl_connected = false;
 
     // motor variables
+    std::string pid_config_filename = "pid_config.txt";
     std::vector<int32_t> focus_range, zoom_range;
     motor_info focus_motor;
     motor_info zoom_motor;
     int32_t focus_step = 0;
     int32_t zoom_step = 0;
     bool mtr_moving = false;
+    std::vector<uint16_t> pid_values;
 
     // trigger variables
     std::vector<uint8_t> tc_ch1(5);
@@ -417,10 +419,8 @@ int main(int argc, char** argv)
         data_log_stream << ctrl;
         data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
-
-
         //-----------------------------------------------------------------------------
-// ping the motors to get the model number and firmware version
+        // ping the motors to get the model number and firmware version
         status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
 
         std::cout << "-----------------------------------------------------------------------------" << std::endl;
@@ -557,6 +557,18 @@ int main(int argc, char** argv)
         data_log_stream << t2_info;
         data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
 
+        //-----------------------------------------------------------------------------
+        // read in the position PID config file and set the PID values for each motor 
+        read_pid_config(pid_config_filename, (uint32_t)(ctrl.ctrl_info.serial_number - 1), pid_values);
+
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_D, pid_values[0]);
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_I, pid_values[1]);
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_P, pid_values[2]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_D, pid_values[3]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_I, pid_values[4]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_P, pid_values[5]);
+
+        //-----------------------------------------------------------------------------
         // start off with the motors disabled
         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
@@ -742,9 +754,8 @@ int main(int argc, char** argv)
 
             cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
             cv::imshow(image_window, cv_image);
-            //cv::resizeWindow(image_window, height / 2, width / 2);
-            key = cv::waitKey(1);
 
+            key = cv::waitKey(1);
 
             switch(key)
             {
@@ -785,10 +796,6 @@ int main(int argc, char** argv)
                     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
                     status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                    //md.tx = data_packet(ABS_ZOOM_CTRL, zoom_range[zoom_idx]);
-                    //md.send_packet(md_handle, md.tx);
-                    //status = md.receive_packet(md_handle, 6, md.rx);
-
                     zoom_str = num2str(zoom_step, "z%05d_");
 
                     for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
@@ -796,9 +803,6 @@ int main(int argc, char** argv)
                         // set the focus motor value to each value in focus_range
                         status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[focus_idx]);
                         status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                        //md.tx = data_packet(ABS_FOCUS_CTRL, focus_range[focus_idx]);
-                        //md.send_packet(md_handle, md.tx);
-                        //status = md.receive_packet(md_handle, 6, md.rx);
 
                         focus_str = num2str(focus_step, "f%05d_");
                         sleep_ms(5);
@@ -871,8 +875,7 @@ int main(int argc, char** argv)
                 }   // end of zoom_idx loop
 
                 // set the focus step to the first focus_range setting
-                //focus_step = 0;
-                                // set the focus and zoom steps to zero
+                // set the focus and zoom steps to zero
                 status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
                 status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
@@ -884,7 +887,7 @@ int main(int argc, char** argv)
                 data_log_stream << "#------------------------------------------------------------------" << std::endl;
                 break;
                 // end of key == 's'
-
+/*
             case 'f':
                 focus_step = 160;
                 //md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
@@ -912,7 +915,7 @@ int main(int argc, char** argv)
                 std::cout << "zoom step:  " << zoom_step << "   \r";
                 std::cout.flush();
                 break;
-
+*/
             default:
                 break;
             }   // end of switch case

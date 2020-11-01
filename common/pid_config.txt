@@ -1,0 +1,5 @@
+#motor Position PID values. Focus [D, I, P], Zoom [D, I, P]
+#SN-01
+0,8,800, 0,2,800
+#SN-02
+0,20,800, 0,10,800
