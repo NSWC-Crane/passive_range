@@ -152,6 +152,11 @@ void read_pid_config(std::string filename, uint32_t index, std::vector<uint16_t>
     std::vector<std::vector<std::string>> params;
     parse_csv_file(filename, params);
 
+    if (index >= params.size())
+    {
+        return;
+    }
+
     for (idx = 0; idx < params[index].size(); ++idx)
     {
         pid_values.push_back((uint16_t)std::stoi(params[index][idx]));
