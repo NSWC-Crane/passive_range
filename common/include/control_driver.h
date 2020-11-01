@@ -76,6 +76,7 @@ typedef struct controller_info
 
 } controller_info;
 
+//-----------------------------------------------------------------------------
 typedef struct motor_info
 {
     uint8_t id;
@@ -104,8 +105,7 @@ typedef struct motor_info
 
 } motor_info;
 
-
-
+//-----------------------------------------------------------------------------
 typedef struct trigger_info
 {
     uint8_t num;

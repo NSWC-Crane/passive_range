@@ -174,11 +174,11 @@ int main(int argc, char** argv)
         {
             // line 1: focus motor step values
             focus_str = cfg_params[0][0];
-            parse_input_range(cfg_params[0][0], focus_range);
+            validate_input_range(cfg_params[0][0], min_focus_steps, max_focus_steps, focus_range);
 
             // line 2: zoom motor step values
             zoom_str = cfg_params[1][0];
-            parse_input_range(cfg_params[1][0], zoom_range);
+            validate_input_range(cfg_params[1][0], min_zoom_steps, max_zoom_steps, zoom_range);
 
             // line 3: image size/location configuration
             x_offset = std::stoi(cfg_params[2][0]);
@@ -267,11 +267,11 @@ int main(int argc, char** argv)
     {
         // line 1: focus motor step values
         focus_str = parser.get<string>("focus_step");
-        parse_input_range(parser.get<string>("focus_step"), focus_range);
+        validate_input_range(parser.get<string>("focus_step"), min_focus_steps, max_focus_steps, focus_range);
 
         // line 2: zoom motor step values
         zoom_str = parser.get<string>("zoom_step");
-        parse_input_range(parser.get<string>("zoom_step"), zoom_range);
+        validate_input_range(parser.get<string>("zoom_step"), min_zoom_steps, max_zoom_steps, zoom_range);
 
         // line 3: image size/location configuration
         x_offset = parser.get<uint32_t>("x_off");		// 40

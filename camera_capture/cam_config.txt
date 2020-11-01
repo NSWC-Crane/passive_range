@@ -19,9 +19,9 @@
 #2000:320:40575
 #11200:320:32320
 #18000:320:21200
-#18000:320:40000
+18000:320:40000
 # mini camera rig
-0:48:1776
+#0:48:1776
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
 0:925:0
