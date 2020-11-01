@@ -39,15 +39,15 @@
 // ----------------------------------------------------------------------------
 unsigned char rx_data[PKT_SIZE] = {0};
 unsigned char data_ready = 0;
-const unsigned char firmware[2] = {1, 5};
+const unsigned char firmware[2] = {1, 6};
 const unsigned char serial_num[1] = {2};
 
 // motor parameters
 int current_focus_step = 0;
 int current_zoom_step = 0;
 
-const int max_focus_step = 40575;
-const int max_zoom_step = 4628;
+const int max_focus_step = 52175;
+const int max_zoom_step = 5955;
 const int min_step = 0;
 
 // trigger parameters
