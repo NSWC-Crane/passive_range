@@ -977,16 +977,14 @@ int main(int argc, char** argv)
     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
     status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
-                                
-    std::cout << std::endl;
     
     // close the motor driver port first
-    std::cout << "Closing the Controller port..." << std::endl;
+    std::cout << std::endl << "Closing the Controller port..." << std::endl;
     close_com_port(ctrl_handle);
     ctrl_connected = false;
 
     // close out the camera
-    std::cout << "Closing Camera..." << std::endl;
+    std::cout << std::endl << "Closing Camera..." << std::endl;
 
     // de-initialize the camera
     cam->DeInit();
