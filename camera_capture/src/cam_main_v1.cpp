@@ -809,17 +809,17 @@ int main(int argc, char** argv)
                 
                 // set the focus and zoom steps to zero
                 status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
                 // get the actual focus and zoom position 
                 status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                //status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
             
                 for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
                 {
                     // set the focus motor value to each value in focus_range
-                    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
-                    status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                    //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
+                    //status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
                     zoom_str = num2str(zoom_step, "z%05d_");
 
@@ -901,7 +901,7 @@ int main(int argc, char** argv)
 
                 // set the focus step to the first focus_range setting
                 status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
-                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+                //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
                 // disable the motors
                 status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
@@ -972,10 +972,11 @@ int main(int argc, char** argv)
     
     std::cout << std::endl << "Setting motors back to zero..." << std::endl;
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-    status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);    
     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+
+    status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);    
+    //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
     status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
     
     // close the motor driver port first
