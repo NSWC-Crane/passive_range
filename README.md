@@ -11,9 +11,8 @@ The code in this repository has the following dependecies
 2. [FTDI D2XX Drivers](https://www.ftdichip.com/Drivers/D2XX.htm)
 3. [OpenCV v4+](https://opencv.org/releases/)
 4. [Spinnaker SDK](https://www.flir.com/products/spinnaker-sdk/)
-5. [davemers0160 common code repository](https://github.com/davemers0160/Common)
-6. [MPLAB X IDE v4+](https://www.microchip.com/mplab/mplab-x-ide)
-7. [MPLAB XC32/32++ Compiler v2+](https://www.microchip.com/mplab/compilers)
+5. [MPLAB X IDE v4+](https://www.microchip.com/mplab/mplab-x-ide)
+6. [MPLAB XC32/32++ Compiler v2+](https://www.microchip.com/mplab/compilers)
 
 ## Repo Breakdown
 

@@ -11,7 +11,6 @@ The code in this project has the following dependecies:
 2. [FTDI D2XX Drivers](https://www.ftdichip.com/Drivers/D2XX.htm)
 3. [OpenCV v4+](https://opencv.org/releases/)
 4. [Spinnaker SDK](https://www.flir.com/products/spinnaker-sdk/)
-5. [davemers0160 common code repository](https://github.com/davemers0160/Common)
 
 Follow the instruction for each of the dependencies according to your operating system.  For the FTDI drivers on a Linux based system an additional script needs to be run to add a udev rule that allows users without elevated privaledges to access the USB device.  In a terminal window run the following script in the main repository:
 

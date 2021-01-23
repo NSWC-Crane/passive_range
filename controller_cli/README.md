@@ -1,6 +1,6 @@
-# Motor Command Line Interface (CLI) Project
+# Controller Command Line Interface (CLI) Project
 
-This project contains the project files for a simple command line interface to the motor controller to test the motors.
+This project contains the project files for a simple command line interface to the motor/trigger controller.
 
 
 ## Dependencies
@@ -9,7 +9,6 @@ The code in this repository has the following dependecies:
 
 1. [CMake 2.8.12+](https://cmake.org/download/)
 2. [FTDI D2XX Drivers](https://www.ftdichip.com/Drivers/D2XX.htm)
-3. [davemers0160 common code repository](https://github.com/davemers0160/Common)
 
 Follow the instruction for each of the dependencies according to your operating system.  For the FTDI drivers on a Linux based system an additional script needs to be run to add a udev rule that allows users without elevated privaledges to access the USB device.  In a terminla window run the following script in the main repository:
 
@@ -81,13 +80,13 @@ To run the code enter the following:
 ### Windows:
 
 ```
-motor_cli
+ctrl_cli
 ```
 
 ### Linux
 
 ```
-./motor_cli
+./ctrl_cli
 ```
 
 Once running and the motor controller has been selected a set of control commands will be provided.
@@ -99,6 +98,18 @@ Motor Driver CLI Commands:
   e <0/1> - enable (1)/disable (0) motors
   f <step> - step the focus motor, use '-' for CCW otherwise CW
   z <step> - step the zoom motor, use '-' for CCW otherwise CW
-  x - zero the motor counter
+  c <channel,polarity,offset,length> - Configure channel polarity and timing parameters
+  t <channel> - trigger channel: (a) all, (1) channel 1, (2) channel 2
+  it - get the current trigger configuration parameters
 ```
 
+Below are some examples of how to use the commands:
+
+```
+Examples:
+  enable motor:               controller> e 1
+  set focus motor position:   controller> f 1000
+  set zoom motor position:    controller> z 200
+  config trigger channel 1:   controller> c 1,0,10000,25000
+  trigger all channels:       controller> t a
+```

@@ -33,40 +33,16 @@ message("Platform: " ${PLATFORM})
 string(FIND ${PROJECT_SOURCE_DIR} "/" INDEX REVERSE)
 string(SUBSTRING ${PROJECT_SOURCE_DIR} 0 ${INDEX} PR_ROOT)
 
-if(WIN32)
-	if(${PLATFORM} STREQUAL "Laptop")
-		set(COMMON_ROOT "D:/Common")
-	elseif(${PLATFORM} STREQUAL "LaptopN")
-		set(COMMON_ROOT "C:/Projects/Common")
-    elseif(${PLATFORM} STREQUAL "BEAST")
-        set(COMMON_ROOT "D:/Common")
-    else()
-        set(COMMON_ROOT "D:/Common")
-    endif()      
-else()
-    if(${PLATFORM} STREQUAL "MainGear")
-        set(_ECLIPSE_VERSION "3.8")
-        set(COMMON_ROOT "~/Projects/Common")
-    elseif(${PLATFORM} STREQUAL "HPC")
-        set(COMMON_ROOT "~/Projects/Common")
-    else()
-        set(COMMON_ROOT "~/Projects/Common")
-    endif()    
-endif()
-
-
 include(${PR_ROOT}/common/cmake_utils/use_cpp_11.cmake)
 include(${PR_ROOT}/common/cmake_utils/use_sse_avx.cmake)
 
 # look for any *.c and *.cpp files
 file(GLOB SOURCES "src/*.c*"
-    #"${COMMON_ROOT}/src/*.cpp"
     )
 
 set(project_includes 
     "include" 
     "${PR_ROOT}/common/include"
-    #"${COMMON_ROOT}/include"
     )
     
 message(" ")
