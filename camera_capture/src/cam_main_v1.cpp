@@ -29,8 +29,6 @@
 #include "file_ops.h"
 
 // Project Includes
-//#include "motor_driver.h"
-//#include "trigger_ctrl.h"
 #include "control_driver.h"
 
 // ----------------------------------------------------------------------------

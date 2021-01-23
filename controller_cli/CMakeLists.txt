@@ -55,22 +55,22 @@ else()
 endif()
 
 
-include(${COMMON_ROOT}/cmake_utils/use_cpp_11.cmake)
-include(${COMMON_ROOT}/cmake_utils/use_sse_avx.cmake)
+include(${PR_ROOT}/common/cmake_utils/use_cpp_11.cmake)
+include(${PR_ROOT}/common/cmake_utils/use_sse_avx.cmake)
 
 # look for any *.c and *.cpp files
 file(GLOB SOURCES "src/*.c*"
-    "${COMMON_ROOT}/src/*.cpp"
+    #"${COMMON_ROOT}/src/*.cpp"
     )
 
 set(project_includes 
     "include" 
     "${PR_ROOT}/common/include"
-    "${COMMON_ROOT}/include"
+    #"${COMMON_ROOT}/include"
     )
     
 message(" ")
-include(${COMMON_ROOT}/cmake_utils/find_ftdi.cmake)
+include(${PR_ROOT}/common/cmake_utils/find_ftdi.cmake)
 if(FTDI_FOUND)
     set(project_includes ${project_includes} ${FTDI_INCLUDE_DIRS})
     set(project_libs ${project_libs} ${FTDI_LIBS})
