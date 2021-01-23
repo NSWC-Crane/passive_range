@@ -24,17 +24,19 @@ This folder contains the project code to capture images from the camera and adju
 
 This folder contains code that is common across multiple projects.
 
+### controller.X
+
+This folder contains the firmware code for the motor/trigger controller.
+
+### controller_cli
+
+This folder contains the code for a simple controller command line interface (cli).
+
 ### drawings
 
 This folder contains the design files for the mechanical interfaces between the optics and motors.
 
-### md.X
+### matlab
 
-This folder contains the firmware code for the motor driver.
-
-### motor_cli
-
-This folder contains the code for a simple motor controller command line interface (cli)
-
-
+This folder contains MATLAB code for various tools.
 

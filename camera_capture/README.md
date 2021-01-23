@@ -1,6 +1,6 @@
-# Camera  Project
+# Camera Capture Project
 
-This project contains the project files for the Passive Range Project.
+This project contains the project files for the controlling a camera and the motor/trigger controller.
 
 
 ## Dependencies
