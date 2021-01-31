@@ -143,7 +143,7 @@ typedef struct trigger_info
 } trigger_info;
 
 //-----------------------------------------------------------------------------
-void read_pid_config(std::string filename, uint32_t index, std::vector<uint16_t> &pid_values)
+bool read_pid_config(std::string filename, uint32_t index, std::vector<uint16_t> &pid_values)
 {
     uint32_t idx;
 
@@ -154,13 +154,14 @@ void read_pid_config(std::string filename, uint32_t index, std::vector<uint16_t>
 
     if (index >= params.size())
     {
-        return;
+        return false;
     }
 
     for (idx = 0; idx < params[index].size(); ++idx)
     {
         pid_values.push_back((uint16_t)std::stoi(params[index][idx]));
     }
+    return true;
 }
 
 //-----------------------------------------------------------------------------

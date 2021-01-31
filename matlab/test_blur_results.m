@@ -30,7 +30,7 @@ commandwindow;
 max_blur_radius = 180;
 
 sk = create_1D_gauss_kernel(3, 2.0);
-
+%sk = [1/3 1/3 1/3];
 mf = [1 1 1];
 
 dx = [-0.5 0 0.5];
@@ -63,7 +63,8 @@ for idx=1:numel(listing)
     
     % just use a single line to determine the blur amount
     img_line = conv(img_line, sk, 'same');
-    img_line = img_line(width_range);
+    %img_line = movmean(img_line, 2);
+    img_line = floor(img_line(width_range));
     
     % get the direction of the line high->low = -1 / low->high = 1
     [min_line, min_idx] = min(img_line);
@@ -182,18 +183,51 @@ for idx=1:numel(listing)
     
     [match, num, min_ex, max_ex] = find_match(img_line, low_limit, high_limit, mid_idx);
     %num = sum(match);
+        
+    mn2 = floor(mean(img_line(min_ex-30:min_ex-1)) + 0.5);
+    mx2 = floor(mean(img_line(max_ex+1:max_ex+30)) + 0.5);
     
-    fprintf('%03d: %s, \t%02d\n', (idx-1), listing(idx).name, num-2);
+    % find min_ex2
+    for jdx=min_ex:-1:min_ex-30
+        if(img_line(jdx) >= mn2)
+            break;
+        end
+    end
+    min_ex2 = jdx+1;
+    
+    % find max_ex2
+    for jdx=max_ex:1:max_ex+30
+        if(img_line(jdx) <= mx2)
+            break;
+        end
+    end
+    max_ex2 = jdx;
+    
+    %min_ex2 = find(img_line(min_ex-30:min_ex-1)<mn2,1,'last')+min_ex-31;
+    %max_ex2 = find(img_line(max_ex+1:max_ex+30)<mx2,1,'first')+max_ex-1;
+
+    num2 = max_ex2 - min_ex2;
+    
+    fprintf('%03d: %s, \t%03d,\t%03d\n', (idx-1), listing(idx).name, num, num2);
 
     figure(1)
-    plot(img_line, '.-b');
+%    plot(img_line, '.-b');
+    stairs(floor(img_line), '.-b');
     hold on;
-    plot(match*max(img_line(:)), 'r');
+%    plot(match*max(img_line(:)), 'r');
+    stem([min_ex max_ex], [1 1]*max(img_line(:)), 'r');
+    stem([min_ex2 max_ex2], [1 1]*max(img_line(:)), 'k');
     %plot(img_line2, 'g');
     plot(low_limit*ones(size(img_line)), 'g');
     plot(high_limit*ones(size(img_line)), 'g');
+    
+    plot(mn2*ones(size(img_line)), 'c');
+    plot(mx2*ones(size(img_line)), 'c');
     hold off;
 
+    figure(2)
+    mesh(img(:,width_range));
+    view(70, 40);
 end
 
 fprintf('-----------------------------------------------------\n')

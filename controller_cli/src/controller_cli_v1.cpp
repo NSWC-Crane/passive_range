@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 void help_menu(void)
 {
+    std::cout << std::endl;
     std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << "Controller CLI Commands:" << std::endl;
 	std::cout << "  ? - print this menu" << std::endl;
@@ -229,8 +230,22 @@ int main(int argc, char** argv)
 
         //-----------------------------------------------------------------------------
         // read in the position PID config file and set the PID values for each motor 
-        read_pid_config(pid_config_filename, (uint32_t)(ctrl.ctrl_info.serial_number - 1), pid_values);
+        status = read_pid_config(pid_config_filename, (uint32_t)(ctrl.ctrl_info.serial_number - 1), pid_values);
 
+        if (status == false)
+        {
+            std::cout << "pid_config.txt file does not have enough entries based on supplied serial number.  Using default values." << std::endl;
+
+            // fill in the pid_values with default values
+            pid_values.push_back(0);
+            pid_values.push_back(10);
+            pid_values.push_back(800);
+            pid_values.push_back(0);
+            pid_values.push_back(10);
+            pid_values.push_back(800);
+        }
+
+        // config the motors with the specified pid values
         ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_D, pid_values[0]);
         ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_I, pid_values[1]);
         ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_P, pid_values[2]);

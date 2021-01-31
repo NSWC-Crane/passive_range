@@ -40,7 +40,7 @@
 unsigned char rx_data[PKT_SIZE] = {0};
 unsigned char data_ready = 0;
 const unsigned char firmware[2] = {1, 6};
-const unsigned char serial_num[1] = {2};
+const unsigned char serial_num[1] = {3};
 
 // motor parameters
 int current_focus_step = 0;
