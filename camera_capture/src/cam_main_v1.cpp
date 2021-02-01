@@ -593,7 +593,7 @@ int main(int argc, char** argv)
 
         if (status == false)
         {
-            std::cout << "pid_config.txt file does not have enough entries based on supplied serial number.  Using default values." << std::endl;
+            std::cout << "The pid_config.txt file does not have enough entries based on supplied serial number.  Using default values." << std::endl;
 
             // fill in the pid_values with default values
             pid_values.push_back(0);
@@ -613,7 +613,23 @@ int main(int argc, char** argv)
         ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_P, pid_values[5]);
 
         //-----------------------------------------------------------------------------
-        // start off with the motors disabled
+        // start off at the fist supplied lens position for both focus and zoom motors
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+
+        std::cout << "Setting motors to intial position:" << std::endl;
+        std::cout << "focus motor: " << focus_range[0] << std::endl;
+        std::cout << "zoom motor: " << zoom_range[0] << std::endl;
+
+        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+        status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+
+        if (!status)
+        {
+            std::cout << "Error setting motor positions." << std::endl;
+        }
+
+        // disable the motors
         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
@@ -820,12 +836,12 @@ int main(int argc, char** argv)
                 zoom_step = 0;
                 
                 // set the focus and zoom steps to zero
-                status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                //status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
                 // get the actual focus and zoom position 
-                status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                //status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                //status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
             
                 for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
                 {

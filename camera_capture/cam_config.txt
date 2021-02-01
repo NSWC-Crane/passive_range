@@ -20,27 +20,25 @@
 #11200:320:32320
 #18000:320:21200
 30000:1000:40000
-# mini camera rig
-#0:48:1776
+
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
-0:100:100
+0:0:0
 
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera
 #full
-#0, 0, 2048, 1536
-# mini camera
-808, 638, 536, 268
+0, 0, 2048, 1536
+
 
 # Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
-56000:1000:57000, 0.1
+30000:0:30000, 0.1
 
 # Line 5: the number of images to capture per focus/zoom/exposure setting
 1
 
 # Line 6: trigger source (0 -> Line0, 1 -> Software)
 # for hardware trigger add trigger level, offset and length for each channel
-0, 0, 0, 25000, 0, 0, 25000
+1, 0, 0, 25000, 0, 0, 25000
 
 # Line 7: base directory where the results will be saved
 ../results/

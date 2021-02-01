@@ -234,7 +234,7 @@ int main(int argc, char** argv)
 
         if (status == false)
         {
-            std::cout << "pid_config.txt file does not have enough entries based on supplied serial number.  Using default values." << std::endl;
+            std::cout << "The pid_config.txt file does not have enough entries based on supplied serial number.  Using default values." << std::endl;
 
             // fill in the pid_values with default values
             pid_values.push_back(0);
