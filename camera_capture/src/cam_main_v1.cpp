@@ -135,6 +135,7 @@ int main(int argc, char** argv)
         "{y_off      | 0 | Y offset for camera }"
         "{width      | 2048 | Width of the captured image }"
         "{height     | 1536 | Height of the captured image }"
+        "{px_format  | 3 | Pixel Type }"
         //"{sharpness  | 3072 | Sharpness setting for the camera }"
         //"{fps        | 10.0 | Frames per second setting for the camera }"
         "{exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera }"
@@ -190,12 +191,50 @@ int main(int argc, char** argv)
             width = std::stoi(cfg_params[2][2]);
             height = std::stoi(cfg_params[2][3]);
 
+            uint32_t px_type = std::stoi(cfg_params[2][4]);
+
+            switch (px_type)
+            {
+            case 0:
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono8;
+                break;
+
+            case 1:
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono10;
+                break;
+
+            case 2:
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+                break;
+
+            case 3:
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono16;
+                break;
+
+            case 4:
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+                break;
+
+            default:
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+                break;
+            }
+
             // line 4: camera properties settings
             //sharpness = std::stoi(cfg_params[2][0]);
             //frame_rate = std::stod(cfg_params[2][1]);
             exposure_str = cfg_params[3][0];
             parse_input_range(cfg_params[3][0], exp_time);
             camera_gain = std::stod(cfg_params[3][1]);
+
+            if (camera_gain < 0)
+            {
+                gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
+            }
+            else
+            {
+                gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+            }
 
             // line 5: number of images to capture for each focus/zoom/exposure setting
             cap_num = std::stoi(cfg_params[4][0]);
@@ -283,12 +322,49 @@ int main(int argc, char** argv)
         width = parser.get<uint32_t>("width");		    // 1200;
         height = parser.get<uint32_t>("height");		// 720;
 
+        uint32_t px_type = parser.get<uint32_t>("px_format");
+
+        switch (px_type)
+        {
+        case 0:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono8;
+            break;
+
+        case 1:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono10;
+            break;
+
+        case 2:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+            break;
+
+        case 3:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono16;
+            break;
+
+        case 4:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+            break;
+
+        default:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+            break;
+        }
         // line 4: camera properties settings
         //sharpness = parser.get<uint32_t>("sharpness");
         //frame_rate = parser.get<double>("fps");
         exposure_str = parser.get<string>("exp_time");
         parse_input_range(parser.get<string>("exp_time"), exp_time);
         camera_gain = parser.get<double>("gain");
+
+        if (camera_gain < 0)
+        {
+            gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
+        }
+        else
+        {
+            gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+        }
 
         // line 5: number of images to capture for each focus/zoom/exposure settinge
         cap_num = parser.get<uint32_t>("cap_num");
@@ -691,6 +767,12 @@ int main(int argc, char** argv)
         set_exposure_mode(cam, exp_mode);
         //set_exposure_time(cam, exp_time[0]);
         set_acquisition_mode(cam, acq_mode); //acq_mode
+
+        // if the gain is 0 or greater then them is set to off and a value must be set
+        if (camera_gain >= 0)
+        {
+            set_gain_value(cam, camera_gain);
+        }
 
         // print out the camera configuration
         std::cout << "------------------------------------------------------------------" << std::endl;

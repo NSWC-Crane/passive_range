@@ -62,7 +62,7 @@ for idx=1:numel(listing)
     width_range = max(2,img_cw-max_blur_radius):1:min(img_w-1,img_cw+max_blur_radius);
     
     % just use a single line to determine the blur amount
-    img_line = conv(img_line, sk, 'same');
+    %img_line = conv(img_line, sk, 'same');
     %img_line = movmean(img_line, 2);
     img_line = floor(img_line(width_range));
     
@@ -227,7 +227,7 @@ for idx=1:numel(listing)
 
     figure(2)
     mesh(img(:,width_range));
-    view(70, 40);
+    view(10, 10);
 end
 
 fprintf('-----------------------------------------------------\n')

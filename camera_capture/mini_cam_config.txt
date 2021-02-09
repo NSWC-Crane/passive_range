@@ -2,11 +2,18 @@
 # 
 # Parameters should be supplied in the following order:
 # Line 1: colon separated values of the focus motor step range (start:inc:stop)
-#         current settings: 16 steps per 1.8 degrees (8.9 steps/degree), gear ratio 2.43, ~21.6 steps/degree on focus ring
+#         current settings: 
 # Line 2: colon separated values of the zoom motor step range (start:inc:stop)
-#         current settings: 16 steps per 1.8 degrees (8.9 steps/degree), gear ratio 2.43, ~21.6 steps/degree on zoom ring
-# Line 3: comma separated values for the x offset, y offset, width, height of the camera
-# Line 4: comma separated values for the camera properties: sharpness, fps, exposure time (ms) range, gain
+#         current settings: 
+# Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
+#		  0 -> PixelFormat_Mono8
+#		  1 -> PixelFormat_Mono10
+#		  2 -> PixelFormat_Mono12
+#		  3 -> PixelFormat_Mono16
+#		  4 -> PixelFormat_RGB8
+# Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
+#		  - negative gain will set the gain mode to GainAuto_Once
+#		  - non-negative values will set the gain mode to GainAuto_Off and apply the gain value
 # Line 5: single value for the number of images to capture to average
 # Line 6: trigger source (0 -> Line0, 1 -> Software)
 # Line 7: base directory where the results will be saved
@@ -16,16 +23,16 @@
 #------------------------------------------------------------------------------
 
 # Line 1: colon separated values of the focus motor: (start:inc:stop)
-0:50:2000
+600:10:1600
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
 0:0:0
 
-# Line 3: comma separated values for the x offset, y offset, width, height of the camera
-360, 384, 1280, 512
+# Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
+512, 512, 1024, 512, 0
 
 # Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
-45000:0:45000, 1.0
+54992:0:54992, 0.5
 
 # Line 5: the number of images to capture per focus/zoom/exposure setting
 1
@@ -35,5 +42,4 @@
 1, 0, 0, 25000, 0, 0, 25000
 
 # Line 7: base directory where the results will be saved
-../results/90_cm_2/
-
+../results/70_cm/
