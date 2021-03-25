@@ -55,18 +55,28 @@ for idx=1:numel(listing)
         img = double(img);
     end
 
-    % find the rough center points assuming that the knife edge is right to left
+    % find the rough center points assuming that the knife edge is vertical
+    % get the subset of the image at the center of the image - this can be
+    % shifted to anywhere
     img_s = img(floor(img_h/2-5:img_h/2+5),:);
+    
+    % find the average of each column in the subset
     img_line = mean(img_s, 1);
+    
+    % find the 'x' center of the image
     img_cw = floor(img_w/2);
+    
+    % crop out the edges and only concentrate on the knife edge, assuming
+    % the knife edge is in the center of the image
     width_range = max(2,img_cw-max_blur_radius):1:min(img_w-1,img_cw+max_blur_radius);
     
     % just use a single line to determine the blur amount
     %img_line = conv(img_line, sk, 'same');
     %img_line = movmean(img_line, 2);
+    % floor the average to help reduce noise
     img_line = floor(img_line(width_range));
     
-    % get the direction of the line high->low = -1 / low->high = 1
+    % get the orientation of the knife edge high->low = -1 / low->high = 1
     [min_line, min_idx] = min(img_line);
     [max_line, max_idx] = max(img_line);
     if(max_idx < min_idx)
@@ -181,12 +191,16 @@ for idx=1:numel(listing)
 %             
 %     end
     
+    % find the initial match
     [match, num, min_ex, max_ex] = find_match(img_line, low_limit, high_limit, mid_idx);
     %num = sum(match);
         
+    % find the mean of the lines 30 pixels from the match
     mn2 = floor(mean(img_line(min_ex-30:min_ex-1)) + 0.5);
     mx2 = floor(mean(img_line(max_ex+1:max_ex+30)) + 0.5);
     
+    % run through the matches a second time and try to refine the match 
+    % TODO: this might break if the knife edge is low->high!!!
     % find min_ex2
     for jdx=min_ex:-1:min_ex-30
         if(img_line(jdx) >= mn2)
@@ -211,18 +225,19 @@ for idx=1:numel(listing)
     fprintf('%03d: %s, \t%03d,\t%03d\n', (idx-1), listing(idx).name, num, num2);
 
     figure(1)
-%    plot(img_line, '.-b');
-    stairs(floor(img_line), '.-b');
+    plot(img_line, '.-b');
+    %stairs(floor(img_line), '.-b');
+    
     hold on;
 %    plot(match*max(img_line(:)), 'r');
-    stem([min_ex max_ex], [1 1]*max(img_line(:)), 'r');
-    stem([min_ex2 max_ex2], [1 1]*max(img_line(:)), 'k');
+    stem([min_ex max_ex], [1 1]*max(img_line(:)), 'Color', 'r', 'Marker', '.');
+    stem([min_ex2 max_ex2], [1 1]*max(img_line(:)), 'Color', 'g', 'Marker', '.');
     %plot(img_line2, 'g');
-    plot(low_limit*ones(size(img_line)), 'g');
-    plot(high_limit*ones(size(img_line)), 'g');
+    plot(low_limit*ones(size(img_line)), '--r');
+    plot(high_limit*ones(size(img_line)), '--r');
     
-    plot(mn2*ones(size(img_line)), 'c');
-    plot(mx2*ones(size(img_line)), 'c');
+    plot(mn2*ones(size(img_line)), '--g');
+    plot(mx2*ones(size(img_line)), '--g');
     hold off;
 
     figure(2)
@@ -232,29 +247,3 @@ end
 
 fprintf('-----------------------------------------------------\n')
 
-
-%% matching function
-
-function [match, num, min_ex, max_ex] = find_match(data, low_limit, high_limit, mid_idx)
-
-    match = (data > low_limit) == (data < high_limit);
-    
-    % this is where we find the group of matches that contains mid_idx
-    measurements = regionprops(logical(match), 'Extrema');
-    
-    for jdx=1:numel(measurements)
-        
-        min_ex = floor(min(measurements(jdx).Extrema(:,1)));
-        max_ex = ceil(max(measurements(jdx).Extrema(:,1)));
-        
-        if((mid_idx >= min_ex) && (mid_idx <= max_ex))
-            num = max_ex - min_ex;
-            break;
-        end
-            
-    end
-    
-    match = zeros(size(match));
-    match(min_ex:max_ex) = 1;
-
-end

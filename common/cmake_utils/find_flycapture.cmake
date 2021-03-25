@@ -16,7 +16,7 @@ mark_as_advanced(FC2_LIBS FC2_INCLUDE_DIRS)
 
 if (FC2_LIBS AND FC2_INCLUDE_DIRS)
     set(FC2_FOUND TRUE)
-    add_compile_definitions(USE_FC2)
+    add_definitions(USE_FC2)
 else()
     message("--- FlyCapture Drivers not found! ---")
     set(FC2_FOUND FALSE)
