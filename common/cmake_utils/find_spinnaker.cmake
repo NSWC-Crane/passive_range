@@ -25,7 +25,7 @@ mark_as_advanced(SPIN_LIBS SPIN_INCLUDE_DIRS)
 
 if (SPIN_LIBS AND SPIN_INCLUDE_DIRS)
     set(SPIN_FOUND TRUE)
-    add_definitions(USE_SPINNAKER)
+    #add_definitions(USE_SPINNAKER)
 	message(STATUS "Found Spinnaker Library: " ${SPIN_LIBS})
 else()
     message("--- Spinnaker drivers not found! ---")

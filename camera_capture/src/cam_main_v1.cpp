@@ -765,7 +765,7 @@ int main(int argc, char** argv)
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
         set_exposure_mode(cam, exp_mode);
-        //set_exposure_time(cam, exp_time[0]);
+        set_exposure_time(cam, exp_time[0]);
         set_acquisition_mode(cam, acq_mode); //acq_mode
 
         // if the gain is 0 or greater then them is set to off and a value must be set

@@ -16,7 +16,7 @@ mark_as_advanced(FTDI_LIBS FTDI_INCLUDE_DIRS)
 
 if (FTDI_LIBS AND FTDI_INCLUDE_DIRS)
     set(FTDI_FOUND TRUE)
-    add_definitions(USE_FTDI)
+    #add_definitions(USE_FTDI)
     message(STATUS "Found FTDI Library: " ${FTDI_LIBS})
 else()
     message("--- FTDI drivers were not found! ---")
