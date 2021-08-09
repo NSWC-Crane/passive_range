@@ -34,7 +34,7 @@ typedef struct ftdiDeviceDetails
 
 
 //-----------------------------------------------------------------------------
-uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
+inline uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 {
     FT_HANDLE ftHandleTemp; 
     FT_DEVICE_LIST_INFO_NODE dev_info[32];
@@ -81,7 +81,7 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 
 
 // ----------------------------------------------------------------------------------------
-FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, uint32_t write_timeout=1000)
+inline FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, uint32_t write_timeout=1000)
 {
     FT_HANDLE ftHandle = NULL;
     LONG comm_port_num;
@@ -147,7 +147,7 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
 
 
 //-----------------------------------------------------------------------------
-FT_STATUS close_com_port(FT_HANDLE ftHandle)
+inline FT_STATUS close_com_port(FT_HANDLE ftHandle)
 {
     FT_STATUS status = FT_Close(ftHandle);
     return status;
@@ -155,7 +155,7 @@ FT_STATUS close_com_port(FT_HANDLE ftHandle)
 
 
 //-----------------------------------------------------------------------------
-bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
+inline bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 {
     bool status = true;
     DWORD bytes_written;
@@ -172,7 +172,7 @@ bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 }	// end of send_packet
 
 //-----------------------------------------------------------------------------
-bool receive_data(FT_HANDLE driver, uint8_t& rx_data)
+inline bool receive_data(FT_HANDLE driver, uint8_t& rx_data)
 {
     bool status = true;
     DWORD read_count = 0;
@@ -191,7 +191,7 @@ bool receive_data(FT_HANDLE driver, uint8_t& rx_data)
 }   // end of receive_data
 
 //-----------------------------------------------------------------------------
-bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_data)
+inline bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_data)
 {
     bool status = true;
     DWORD read_count = 0;
@@ -213,7 +213,7 @@ bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_dat
 }   // end of receive_data
 
 // ----------------------------------------------------------------------------------------
-bool flush_port(FT_HANDLE driver)
+inline bool flush_port(FT_HANDLE driver)
 {
     bool status = true;
     unsigned long ft_status;

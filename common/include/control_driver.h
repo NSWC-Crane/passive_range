@@ -388,7 +388,7 @@ public:
 
         while (mtr_moving == true)
         {
-            sleep_ms(50);
+            //sleep_ms(50);
             status &= motor_moving(ctrl_handle, id);
             //mtr_error = rx.data[SP_ERROR_POS];
             mtr_moving = (rx.data[SP_PARAMS_POS] == 1);
