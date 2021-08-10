@@ -37,13 +37,18 @@ private slots:
 
     void on_cam_connect_btn_clicked();
 
-    void on_z_stop_valueChanged(int arg1);
 
     void on_px_format_currentIndexChanged(int index);
 
     void on_toolButton_clicked();
 
-    void on_z_start_valueChanged(int arg1);
+    void z_start_edit_complete();
+    void z_step_edit_complete();
+    void z_stop_edit_complete();
+
+    void f_start_edit_complete();
+    void f_step_edit_complete();
+    void f_stop_edit_complete();
 
 private:
     Ui::capture_gui *ui;

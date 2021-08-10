@@ -89,6 +89,29 @@ capture_gui::capture_gui(QWidget *parent)
     //connect(ui->ftdi_connect_btn, SIGNAL(clicked()), this, SLOT(on_ftdi_connect_btn_clicked()));
 
 
+    // returnPressed()
+    QIntValidator zoom_val(min_zoom_steps, max_zoom_steps, this);
+    ui->z_start->setValidator(&zoom_val);
+    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(z_start_edit_complete()));
+
+    ui->z_step->setValidator(&zoom_val);
+    connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(z_step_edit_complete()));
+
+    ui->z_stop->setValidator(&zoom_val);
+    connect(ui->z_stop, SIGNAL(editingFinished()), this, SLOT(z_stop_edit_complete()));
+
+
+    QIntValidator focus_val(min_focus_steps, max_focus_steps, this);
+    ui->f_start->setValidator(&focus_val);
+    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(f_start_edit_complete()));
+
+    ui->f_step->setValidator(&focus_val);
+    connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(f_step_edit_complete()));
+
+    ui->f_stop->setValidator(&focus_val);
+    connect(ui->f_stop, SIGNAL(editingFinished()), this, SLOT(f_stop_edit_complete()));
+
+
     // ----------------------------------------------------------------------------
     // FTDI section for finding attached devices and filling in the combo box
     ui->ftdi_cb->clear();
@@ -111,8 +134,6 @@ capture_gui::capture_gui(QWidget *parent)
 
     // ----------------------------------------------------------------------------
     cam_list = system->GetCameras();
-
-    //num_cams = get_camera_selection(cam_list, cam_index, cam_sn);
 
     cam_sn.clear();
 
@@ -514,10 +535,7 @@ void capture_gui::on_cam_connect_btn_clicked()
 
 }
 
-void capture_gui::on_z_stop_valueChanged(int arg1)
-{
 
-}
 
 void capture_gui::on_px_format_currentIndexChanged(int index)
 {
@@ -557,6 +575,15 @@ void capture_gui::update_zoom_position()
 
 }
 
+void capture_gui::update_focus_position()
+{
+    // set the current step to the minimum
+    bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+    status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+    status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+
+}
+
 template <typename T>
 void capture_gui::generate_range(T start, T stop, T step, std::vector<T>& range)
 {
@@ -586,15 +613,75 @@ void capture_gui::generate_range(T start, T stop, T step, std::vector<T>& range)
 
 }   // end of generate_range
 
-void capture_gui::on_z_start_valueChanged(int arg1)
+void capture_gui::z_start_edit_complete()
 {
-    int32_t start = (int32_t)ui->z_start->value();
-    int32_t step = (int32_t)ui->z_step->value();
-    int32_t stop = (int32_t)ui->z_stop->value();
+    int32_t start = (int32_t)ui->z_start->text().toInt();
+    int32_t step = (int32_t)ui->z_step->text().toInt();
+    int32_t stop = (int32_t)ui->z_stop->text().toInt();
 
     // generate the step ranges
     generate_range(start, stop, step, zoom_range);
 
-    update_zoom_position();
+    if(ctrl_connected == true)
+        update_zoom_position();
+
+}
+
+void capture_gui::z_step_edit_complete()
+{
+    int32_t start = (int32_t)ui->z_start->text().toInt();
+    int32_t step = (int32_t)ui->z_step->text().toInt();
+    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+    // generate the step ranges
+    generate_range(start, stop, step, zoom_range);
+
+}
+
+void capture_gui::z_stop_edit_complete()
+{
+    int32_t start = (int32_t)ui->z_start->text().toInt();
+    int32_t step = (int32_t)ui->z_step->text().toInt();
+    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+    // generate the step ranges
+    generate_range(start, stop, step, zoom_range);
+
+}
+
+
+//void capture_gui::on_f_start_valueChanged(int arg1)
+void capture_gui::f_start_edit_complete()
+{
+    int32_t start = (int32_t)ui->f_start->text().toInt();
+    int32_t step = (int32_t)ui->f_step->text().toInt();
+    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+    // generate the step ranges
+    generate_range(start, stop, step, focus_range);
+
+    if(ctrl_connected == true)
+        update_focus_position();
+}
+
+void capture_gui::f_step_edit_complete()
+{
+    int32_t start = (int32_t)ui->f_start->text().toInt();
+    int32_t step = (int32_t)ui->f_step->text().toInt();
+    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+    // generate the step ranges
+    generate_range(start, stop, step, focus_range);
+
+}
+
+void capture_gui::f_stop_edit_complete()
+{
+    int32_t start = (int32_t)ui->f_start->text().toInt();
+    int32_t step = (int32_t)ui->f_step->text().toInt();
+    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+    // generate the step ranges
+    generate_range(start, stop, step, focus_range);
 
 }
