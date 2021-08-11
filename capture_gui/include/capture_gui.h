@@ -50,6 +50,13 @@ private slots:
     void f_step_edit_complete();
     void f_stop_edit_complete();
 
+    void x_offset_edit_complete();
+    void y_offset_edit_complete();
+    void height_edit_complete();
+    void width_edit_complete();
+    void gain_edit_complete();
+    void exposure_edit_complete();
+
 private:
     Ui::capture_gui *ui;
 

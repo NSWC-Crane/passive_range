@@ -43,6 +43,8 @@ trigger_info t1_info;
 trigger_info t2_info;
 
 // camera variables
+uint32_t cam_index;
+std::vector<std::string> cam_sn;
 Spinnaker::CameraPtr cam;
 Spinnaker::CameraList cam_list;
 Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
@@ -55,6 +57,13 @@ Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth
 Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
 Spinnaker::TriggerSourceEnums trigger_source;
 Spinnaker::TriggerActivationEnums trigger_activation = Spinnaker::TriggerActivation_RisingEdge;
+
+// OpenCV
+cv::Mat cv_image;
+cv::Size img_size;
+std::string image_window = "Image";
+std::vector<int> compression_params;
+
 
 // ----------------------------------------------------------------------------
 capture_gui::capture_gui(QWidget *parent)
@@ -69,48 +78,72 @@ capture_gui::capture_gui(QWidget *parent)
     Spinnaker::SystemPtr system = Spinnaker::System::GetInstance();
 
     // camera variables
-    uint32_t cam_index;
     uint32_t num_cams;
-    std::vector<std::string> cam_sn;
 
-
-//    ui->statusbar->hide();
+    // ui->statusbar->hide();
 
     // connect the focus slider and focus spinner
     // connect(ui->focus_slider, SIGNAL(valueChanged(int)), this, SLOT(on_focus_slider_change()));
-    // connect(ui->focus_spinner, SIGNAL(valueChanged(int)), this, SLOT(on_focus_spinner_change()));
 
-    // connect(ui->zoom_slider, SIGNAL(valueChanged(int)), this, SLOT(on_zoom_slider_change()));
-    // connect(ui->zoom_spinner, SIGNAL(valueChanged(int)), this, SLOT(on_zoom_spinner_change()));
-
-    // connect(ui->iris_slider, SIGNAL(valueChanged(int)), this, SLOT(on_iris_slider_change()));
-    // connect(ui->iris_spinner, SIGNAL(valueChanged(int)), this, SLOT(on_iris_spinner_change()));
-
-    //connect(ui->ftdi_connect_btn, SIGNAL(clicked()), this, SLOT(on_ftdi_connect_btn_clicked()));
-
-
+    // zoom slots
     // returnPressed()
     QIntValidator zoom_val(min_zoom_steps, max_zoom_steps, this);
     ui->z_start->setValidator(&zoom_val);
     connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(z_start_edit_complete()));
-
     ui->z_step->setValidator(&zoom_val);
     connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(z_step_edit_complete()));
-
     ui->z_stop->setValidator(&zoom_val);
     connect(ui->z_stop, SIGNAL(editingFinished()), this, SLOT(z_stop_edit_complete()));
 
-
+    // focus slots
     QIntValidator focus_val(min_focus_steps, max_focus_steps, this);
     ui->f_start->setValidator(&focus_val);
     connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(f_start_edit_complete()));
-
     ui->f_step->setValidator(&focus_val);
     connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(f_step_edit_complete()));
-
     ui->f_stop->setValidator(&focus_val);
     connect(ui->f_stop, SIGNAL(editingFinished()), this, SLOT(f_stop_edit_complete()));
 
+    // camera slots
+    QIntValidator x_off(0, 2048, this);
+    ui->x_offset->setValidator(&x_off);
+    connect(ui->x_offset, SIGNAL(returnPressed()), this, SLOT(x_offset_edit_complete()));
+    ui->width->setValidator(&x_off);
+    connect(ui->width, SIGNAL(returnPressed()), this, SLOT(width_edit_complete()));
+
+    QIntValidator y_off(0, 1536, this);
+    ui->y_offset->setValidator(&y_off);
+    connect(ui->y_offset, SIGNAL(returnPressed()), this, SLOT(y_offset_edit_complete()));
+    ui->height->setValidator(&y_off);
+    connect(ui->height, SIGNAL(returnPressed()), this, SLOT(height_edit_complete()));
+
+    ui->gain->setValidator( new QDoubleValidator(0, 8, 4, this) );
+    connect(ui->gain, SIGNAL(returnPressed()), this, SLOT(gain_edit_complete()));
+
+    ui->exposure->setValidator( new QDoubleValidator(0, 50000, 1, this) );
+    connect(ui->exposure, SIGNAL(returnPressed()), this, SLOT(exposure_edit_complete()));
+
+    x_offset = (uint64_t)ui->x_offset->text().toInt();
+    y_offset = (uint64_t)ui->y_offset->text().toInt();
+    height = (uint64_t)ui->height->text().toInt();
+    width = (uint64_t)ui->width->text().toInt();
+
+    camera_gain = ui->gain->text().toDouble();
+    exp_time = ui->exposure->text().toDouble();
+
+    switch(ui->px_format->currentIndex())
+    {
+    case 0:
+        pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+        break;
+    case 1:
+        pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+        break;
+    }
+
+
+    compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(4);
 
     // ----------------------------------------------------------------------------
     // FTDI section for finding attached devices and filling in the combo box
@@ -169,8 +202,6 @@ capture_gui::capture_gui(QWidget *parent)
 //    ui->px_format->addItem("BGR8");
 //    ui->px_format->addItem("Mono8");
 
-    ui->gain->setValidator( new QDoubleValidator(0, 8, 4, this) );
-    ui->exposure->setValidator( new QDoubleValidator(0, 8, 4, this) );
 
     on_toolButton_clicked();
 }
@@ -445,17 +476,19 @@ void capture_gui::on_cam_connect_btn_clicked()
     data_log_stream << "#------------------------------------------------------------------" << std::endl;
     data_log_stream << "Camera Configuration:" << std::endl;
 
-    get_image_size(cam, height, width, y_offset, x_offset);
+    //get_image_size(cam, height, width, y_offset, x_offset);
 
     // pixel format
-    get_pixel_format(cam, pixel_format);
-    get_gain_value(cam, camera_gain);
+    //get_pixel_format(cam, pixel_format);
+    //get_gain_value(cam, camera_gain);
+
+    //set_gain_mode(cam, gain_mode);
 
     // exposure
     double tmp_exp_time;
-    get_exposure_mode(cam, exp_mode);
+    //get_exposure_mode(cam, exp_mode);
     get_exposure_time(cam, tmp_exp_time);
-    get_acquisition_mode(cam, acq_mode);
+    //get_acquisition_mode(cam, acq_mode);
 
     /*
     std::cout << "Image Size (h x w):       " << height << " x " << width << std::endl;
@@ -507,7 +540,7 @@ void capture_gui::on_cam_connect_btn_clicked()
     if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
         cam->BeginAcquisition();
 
-    //image_window = image_window + "_" + cam_sn[cam_index];
+    image_window = image_window + "_" + cam_sn[cam_index];
 
     // set trigger mode and enable
     set_trigger_source(cam, trigger_source, trigger_activation);
@@ -685,3 +718,53 @@ void capture_gui::f_stop_edit_complete()
     generate_range(start, stop, step, focus_range);
 
 }
+
+void capture_gui::x_offset_edit_complete()
+{
+    x_offset = (uint64_t)ui->x_offset->text().toInt();
+
+    if(cam_connected == true)
+        set_image_size(cam, height, width, y_offset, x_offset);
+}
+
+void capture_gui::y_offset_edit_complete()
+{
+    y_offset = (uint64_t)ui->y_offset->text().toInt();
+
+    if(cam_connected == true)
+        set_image_size(cam, height, width, y_offset, x_offset);
+}
+
+void capture_gui::height_edit_complete()
+{
+    height = (uint64_t)ui->height->text().toInt();
+
+    if(cam_connected == true)
+        set_image_size(cam, height, width, y_offset, x_offset);
+}
+
+void capture_gui::width_edit_complete()
+{
+    width = (uint64_t)ui->width->text().toInt();
+
+    if(cam_connected == true)
+        set_image_size(cam, height, width, y_offset, x_offset);
+}
+
+void capture_gui::gain_edit_complete()
+{
+    camera_gain = ui->gain->text().toDouble();
+
+
+}
+
+void capture_gui::exposure_edit_complete()
+{
+    exp_time = ui->exposure->text().toDouble();
+
+
+}
+
+
+
+

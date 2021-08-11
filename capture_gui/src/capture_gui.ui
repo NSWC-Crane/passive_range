@@ -460,21 +460,24 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="width">
+       <widget class="QLineEdit" name="width">
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>70</width>
           <height>0</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>2048</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-        <property name="maximum">
-         <number>4096</number>
-        </property>
-        <property name="value">
-         <number>2048</number>
         </property>
        </widget>
       </item>
@@ -518,7 +521,7 @@
        <widget class="QLineEdit" name="exposure">
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>0</height>
          </size>
         </property>
@@ -573,21 +576,24 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="height">
+       <widget class="QLineEdit" name="height">
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>70</width>
           <height>0</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>1536</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-        <property name="maximum">
-         <number>4096</number>
-        </property>
-        <property name="value">
-         <number>1536</number>
         </property>
        </widget>
       </item>
@@ -628,18 +634,24 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="x_offset">
+       <widget class="QLineEdit" name="x_offset">
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>70</width>
           <height>0</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-        <property name="maximum">
-         <number>4096</number>
         </property>
        </widget>
       </item>
@@ -742,18 +754,24 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="y_offset">
+       <widget class="QLineEdit" name="y_offset">
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>70</width>
           <height>0</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-        <property name="maximum">
-         <number>4096</number>
         </property>
        </widget>
       </item>
@@ -797,7 +815,7 @@
        <widget class="QLineEdit" name="gain">
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>0</height>
          </size>
         </property>
