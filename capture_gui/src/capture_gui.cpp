@@ -45,6 +45,7 @@ trigger_info t2_info;
 // camera variables
 uint32_t cam_index;
 std::vector<std::string> cam_sn;
+Spinnaker::ImagePtr image;
 Spinnaker::CameraPtr cam;
 Spinnaker::CameraList cam_list;
 Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
@@ -123,6 +124,8 @@ capture_gui::capture_gui(QWidget *parent)
     ui->exposure->setValidator( new QDoubleValidator(0, 50000, 1, this) );
     connect(ui->exposure, SIGNAL(returnPressed()), this, SLOT(exposure_edit_complete()));
 
+    ui->num_caps->setValidator(new QIntValidator(1,1000, this));
+
     x_offset = (uint64_t)ui->x_offset->text().toInt();
     y_offset = (uint64_t)ui->y_offset->text().toInt();
     height = (uint64_t)ui->height->text().toInt();
@@ -140,6 +143,13 @@ capture_gui::capture_gui(QWidget *parent)
         pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
         break;
     }
+
+
+//    timer = new QTimer(this);
+//    connect(timer, SIGNAL(timeout()), this, SLOT(update_image()));
+//    timer->start(20);
+
+//    cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
 
 
     compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
@@ -566,6 +576,12 @@ void capture_gui::on_cam_connect_btn_clicked()
 //    x_padding = (uint32_t)image->GetXPadding();
 //    y_padding = (uint32_t)image->GetYPadding();
 
+    image_timer = new QTimer(this);
+    connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
+    image_timer->start(20);
+
+    cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+
 }
 
 
@@ -755,6 +771,8 @@ void capture_gui::gain_edit_complete()
 {
     camera_gain = ui->gain->text().toDouble();
 
+    if(cam_connected == true)
+        set_gain_value(cam, camera_gain);
 
 }
 
@@ -762,9 +780,178 @@ void capture_gui::exposure_edit_complete()
 {
     exp_time = ui->exposure->text().toDouble();
 
+    if(cam_connected == true)
+        set_exposure_time(cam, exp_time);
 
 }
 
 
+void capture_gui::update_image()
+{
+    cv::RNG rng(time(NULL));
+    cv_image = cv::Mat(200,200, CV_8UC3, cv::Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256)));
+
+    cv::imshow(image_window, cv_image);
+    cv::waitKey(1);
+
+}
+
+void capture_gui::on_start_capture_clicked()
+{
+    uint32_t focus_idx, zoom_idx, img_idx;
+    bool status;
+    std::string focus_str, zoom_str, exposure_str;
+    std::string image_str;
+    std::string image_header = "image_";
+    std::string image_capture_name = "image_";
+    std::string img_save_folder;
+    std::string sdate, stime;
+
+    double tmp_exp_time;
 
 
+    if(ctrl_connected == false || cam_connected == false)
+        return;
+
+    uint32_t cap_num = (uint32_t)ui->num_caps->text().toInt();
+    // start the data logging by creating the file
+    get_current_time(sdate, stime);
+    img_save_folder = output_save_location + sdate + "_" + stime + "/";
+
+    int32_t stat = mkdir(img_save_folder);
+    if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
+    {
+        std::cout << "Error creating directory: " << stat << std::endl;
+    }
+
+    data_log_stream << "Save location: " << img_save_folder << std::endl;
+    std::cout << "------------------------------------------------------------------" << std::endl;
+
+    // enable the motors
+    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+
+    sleep_ms(10);
+
+    focus_step = 0;
+    zoom_step = 0;
+
+
+    // get all of the camera settings
+
+
+    //
+
+
+
+    // disconnect the timer for displaying the camera images
+    disconnect(image_timer, SIGNAL(timeout()), 0, 0);
+
+
+    // set the trigger
+
+
+    // loop through the zoom and focus settings
+    for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
+    {
+        // set the zoom motor value to each value in focus_range
+        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
+        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+
+        zoom_str = num2str(zoom_step, "z%05d_");
+
+        for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
+        {
+            // set the focus motor value to each value in focus_range
+            status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[focus_idx]);
+            status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+
+            focus_str = num2str(focus_step, "f%05d_");
+            sleep_ms(5);
+
+            // create the directory to save the images at various focus steps
+            /*
+            std::string combined_save_location = "";
+            std::string sub_dir = "focus_" + num2str(focus_range[focus_idx], "%05d");
+            int32_t stat = make_dir(output_save_location, sub_dir);
+            if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
+            {
+                std::cout << "Error creating directory: " << stat << std::endl;
+                data_log_stream << "Error creating directory: " << stat << std::endl;
+                combined_save_location = output_save_location;
+            }
+            else
+            {
+                combined_save_location = output_save_location + sub_dir + "/";
+            }
+            */
+
+
+            for (img_idx = 0; img_idx < cap_num; ++img_idx)
+            {
+
+                // grab an image: either from the continuous, single or triggered
+//                switch (ts)
+//                {
+//                case 0:
+//                    cam->BeginAcquisition();
+//                    status = ctrl.trigger(ctrl_handle, TRIG_ALL);
+//                    aquire_trigger_image(cam, image);
+//                    cam->EndAcquisition();
+//                    break;
+//                case 1:
+                    aquire_software_trigger_image(cam, image);
+//                    break;
+//                }
+
+                get_exposure_time(cam, tmp_exp_time);
+                exposure_str = num2str(tmp_exp_time, "e%05.0f_");
+
+                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+
+                cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
+
+                cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+                cv::imshow(image_window, cv_image);
+                cv::waitKey(1);
+
+                // save the image
+                std::cout << "saving: " << img_save_folder << image_capture_name << std::endl;
+                data_log_stream << image_capture_name << std::endl;
+
+                cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
+                //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
+                //sleep_ms(100);
+
+            }   // end of img_idx loop
+
+
+
+            //set_exposure_time(cam, exp_time);
+
+        }   // end of focus_idx loop
+
+    }   // end of zoom_idx loop
+
+    // set the focus step to the first focus_range setting
+    status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+
+    // disable the motors
+    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+
+    std::cout << "------------------------------------------------------------------" << std::endl;
+    data_log_stream << "#------------------------------------------------------------------" << std::endl;
+
+
+
+
+    // reconnect the timer for displaying camera images
+    connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
+
+
+
+
+
+}

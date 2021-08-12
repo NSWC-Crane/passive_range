@@ -2,6 +2,8 @@
 #define _CAPTURE_GUI_H_
 
 #include <cstdio>
+#include <cstdint>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 
@@ -14,6 +16,7 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class capture_gui; }
@@ -57,6 +60,10 @@ private slots:
     void gain_edit_complete();
     void exposure_edit_complete();
 
+    void update_image();
+
+    void on_start_capture_clicked();
+
 private:
     Ui::capture_gui *ui;
 
@@ -94,7 +101,9 @@ private:
     bool cam_connected = false;
 
     QString save_location;
+    std::string output_save_location;
 
+    QTimer *image_timer;
     template <typename T>
     void generate_range(T start, T stop, T step, std::vector<T>& range);
 

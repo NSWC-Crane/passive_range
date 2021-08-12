@@ -419,7 +419,7 @@
       <x>340</x>
       <y>10</y>
       <width>321</width>
-      <height>191</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="title">
@@ -445,7 +445,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -463,13 +463,13 @@
        <widget class="QLineEdit" name="width">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>16777215</height>
          </size>
         </property>
@@ -561,7 +561,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -579,13 +579,13 @@
        <widget class="QLineEdit" name="height">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>16777215</height>
          </size>
         </property>
@@ -619,7 +619,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -637,13 +637,13 @@
        <widget class="QLineEdit" name="x_offset">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>16777215</height>
          </size>
         </property>
@@ -739,7 +739,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -757,13 +757,13 @@
        <widget class="QLineEdit" name="y_offset">
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>55</width>
           <height>16777215</height>
          </size>
         </property>
@@ -894,12 +894,70 @@
       </item>
      </layout>
     </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_14">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>180</y>
+       <width>131</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_14">
+      <item>
+       <widget class="QLabel" name="label_17">
+        <property name="minimumSize">
+         <size>
+          <width>20</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Captures:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="num_caps">
+        <property name="minimumSize">
+         <size>
+          <width>55</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>55</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
    <widget class="QPushButton" name="start_capture">
     <property name="geometry">
      <rect>
       <x>580</x>
-      <y>210</y>
+      <y>260</y>
       <width>75</width>
       <height>23</height>
      </rect>
