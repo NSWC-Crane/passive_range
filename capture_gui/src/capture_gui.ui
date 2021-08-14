@@ -86,7 +86,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QGroupBox" name="groupBox">
+   <widget class="QGroupBox" name="controller_gb">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -413,7 +413,7 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBox_2">
+   <widget class="QGroupBox" name="camera_gb">
     <property name="geometry">
      <rect>
       <x>340</x>

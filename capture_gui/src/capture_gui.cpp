@@ -2,7 +2,6 @@
 #include "./ui_capture_gui.h"
 
 
-//#include <capture_gui.h>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -49,7 +48,7 @@ Spinnaker::ImagePtr image;
 Spinnaker::CameraPtr cam;
 Spinnaker::CameraList cam_list;
 Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
-Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
+Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
 //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
 Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
 Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
@@ -58,6 +57,7 @@ Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth
 Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
 Spinnaker::TriggerSourceEnums trigger_source;
 Spinnaker::TriggerActivationEnums trigger_activation = Spinnaker::TriggerActivation_RisingEdge;
+Spinnaker::SystemPtr cam_system;
 
 // OpenCV
 cv::Mat cv_image;
@@ -76,7 +76,7 @@ capture_gui::capture_gui(QWidget *parent)
     uint32_t idx;
     uint32_t ftdi_device_count = 0;
 
-    Spinnaker::SystemPtr system = Spinnaker::System::GetInstance();
+    cam_system = Spinnaker::System::GetInstance();
 
     // camera variables
     uint32_t num_cams;
@@ -161,7 +161,7 @@ capture_gui::capture_gui(QWidget *parent)
 
     ftdi_device_count = get_device_list(ftdi_devices);
 
-    for (idx = 0; idx < ftdi_devices.size(); ++idx)
+    for (idx = 0; idx < ftdi_device_count; ++idx)
     {
         //std::cout << ftdi_devices[idx];
         ui->ftdi_cb->addItem(QString::fromStdString(ftdi_devices[idx].description + " " + ftdi_devices[idx].serial_number));
@@ -176,7 +176,7 @@ capture_gui::capture_gui(QWidget *parent)
     zoom_range.push_back(min_zoom_steps);
 
     // ----------------------------------------------------------------------------
-    cam_list = system->GetCameras();
+    cam_list = cam_system->GetCameras();
 
     cam_sn.clear();
 
@@ -201,17 +201,14 @@ capture_gui::capture_gui(QWidget *parent)
         cam_list.Clear();
 
         // Release system
-        system->ReleaseInstance();
+        cam_system->ReleaseInstance();
 
         ui->console_te->append("No Camera found...");
-        data_log_stream << "No Camera found... Exiting!" << std::endl;
+        ui->console_te->show();
+//        data_log_stream << "No Camera found... Exiting!" << std::endl;
         //std::cin.ignore();
         //return -1;
     }
-
-//    ui->px_format->addItem("BGR8");
-//    ui->px_format->addItem("Mono8");
-
 
     on_toolButton_clicked();
 }
@@ -252,7 +249,7 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     {
         ui->console_te->append("No Controller found...");
         ui->console_te->show();
-        data_log_stream << "No Controller found... Exiting!" << std::endl;
+//        data_log_stream << "No Controller found... Exiting!" << std::endl;
         //std::cin.ignore();
         //return -1;
     }
@@ -267,7 +264,7 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     {
         ui->console_te->append("No Controller found...");
         ui->console_te->show();
-        data_log_stream << "No Controller found... Exiting!" << std::endl;
+//        data_log_stream << "No Controller found... Exiting!" << std::endl;
         //std::cin.ignore();
         //return -1;
     }
@@ -280,9 +277,9 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     ui->console_te->show();
     //ui->console_te->append("-----------------------------------------------------------------------------");
 
-    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-    data_log_stream << ctrl;
-    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+//    data_log_stream << ctrl;
+//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
     //-----------------------------------------------------------------------------
     // ping the motors to get the model number and firmware version
@@ -291,19 +288,19 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     ui->console_te->append("-----------------------------------------------------------------------------");
     ui->console_te->append("Focus Motor Information: ");
 
-    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-    data_log_stream << "Focus Motor Information: " << std::endl;
+//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+//    data_log_stream << "Focus Motor Information: " << std::endl;
 
     if (status)
     {
         ss << focus_motor;
         ui->console_te->append(QString::fromStdString(ss.str()));
-        data_log_stream << focus_motor;
+//        data_log_stream << focus_motor;
     }
     else
     {
         ui->console_te->append("  Error getting focus motor info");
-        data_log_stream << "  Error getting focus motor info" << std::endl;
+//        data_log_stream << "  Error getting focus motor info" << std::endl;
     }
 
     // configure the homing offsets for the focus motor
@@ -314,7 +311,7 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
     ui->console_te->append("  Current Step:     " + QString::number(focus_step));
-    data_log_stream << "  Current Step:     " << focus_step << std::endl;
+//    data_log_stream << "  Current Step:     " << focus_step << std::endl;
 
 
     //-----------------------------------------------------------------------------
@@ -322,21 +319,21 @@ void capture_gui::on_ftdi_connect_btn_clicked()
 
     std::cout << std::endl;
     ui->console_te->append("\nZoom Motor Information: ");
-    //ui->console_te->show();
+    ui->console_te->show();
 
-    //data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-    data_log_stream << "Zoom Motor Information: " << std::endl;
+//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+//    data_log_stream << "Zoom Motor Information: " << std::endl;
 
     if (status)
     {
         ss << zoom_motor;
         ui->console_te->append(QString::fromStdString(ss.str()));
-        data_log_stream << zoom_motor;
+//        data_log_stream << zoom_motor;
     }
     else
     {
         ui->console_te->append("  Error getting zoom motor info");
-        data_log_stream << "  Error getting zoom motor info" << std::endl;
+//        data_log_stream << "  Error getting zoom motor info" << std::endl;
     }
 
     // configure the homing offsets for the zoom motor
@@ -350,8 +347,8 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     ui->console_te->append("-----------------------------------------------------------------------------\n");
     ui->console_te->show();
 
-    data_log_stream << "  Current Step:     " << zoom_step << std::endl;
-    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+//    data_log_stream << "  Current Step:     " << zoom_step << std::endl;
+//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
     // configure the trigger according to the inputs
     // channel 1
@@ -374,11 +371,11 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     ui->console_te->append("-----------------------------------------------------------------------------\n");
     ui->console_te->show();
 
-    data_log_stream << "#----------------------------------------------------------------------------" << std::endl;
-    data_log_stream << "Trigger Information: " << std::endl;
-    data_log_stream << t1_info << std::endl;
-    data_log_stream << t2_info;
-    data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
+//    data_log_stream << "#----------------------------------------------------------------------------" << std::endl;
+//    data_log_stream << "Trigger Information: " << std::endl;
+//    data_log_stream << t1_info << std::endl;
+//    data_log_stream << t2_info;
+//    data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
 
     //-----------------------------------------------------------------------------
     // read in the position PID config file and set the PID values for each motor
@@ -464,27 +461,40 @@ void capture_gui::on_cam_connect_btn_clicked()
     //get_image_size(cam, height, width, y_offset, x_offset);
     //std::cout << "Image Size (h x w): " << height << " x " << width << ", [" << x_offset << ", " << y_offset << "]" << std::endl;
 
+    width = (uint64_t)ui->width->text().toInt();
+    height = (uint64_t)ui->height->text().toInt();
+    x_offset = (uint64_t)ui->x_offset->text().toInt();
+    y_offset = (uint64_t)ui->y_offset->text().toInt();
+
+    camera_gain = ui->gain->text().toDouble();
+
+    switch(ui->px_format->currentIndex())
+    {
+    case 0:
+        pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+        break;
+
+    case 1:
+        pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+        break;
+    }
+
     // configure the camera
     set_image_size(cam, height, width, y_offset, x_offset);
     set_pixel_format(cam, pixel_format);
     set_gain_mode(cam, gain_mode);
+    set_gain_value(cam, camera_gain);
     set_exposure_mode(cam, exp_mode);
     set_exposure_time(cam, exp_time);
     set_acquisition_mode(cam, acq_mode); //acq_mode
-
-    // if the gain is 0 or greater then them is set to off and a value must be set
-    if (camera_gain >= 0)
-    {
-        set_gain_value(cam, camera_gain);
-    }
 
     // print out the camera configuration
     ui->console_te->append("------------------------------------------------------------------");
     ui->console_te->append("Camera Configuration:");
     ui->console_te->show();
 
-    data_log_stream << "#------------------------------------------------------------------" << std::endl;
-    data_log_stream << "Camera Configuration:" << std::endl;
+//    data_log_stream << "#------------------------------------------------------------------" << std::endl;
+//    data_log_stream << "Camera Configuration:" << std::endl;
 
     //get_image_size(cam, height, width, y_offset, x_offset);
 
@@ -495,56 +505,8 @@ void capture_gui::on_cam_connect_btn_clicked()
     //set_gain_mode(cam, gain_mode);
 
     // exposure
-    double tmp_exp_time;
-    //get_exposure_mode(cam, exp_mode);
-    get_exposure_time(cam, tmp_exp_time);
-    //get_acquisition_mode(cam, acq_mode);
-
-    /*
-    std::cout << "Image Size (h x w):       " << height << " x " << width << std::endl;
-    std::cout << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
-    std::cout << "Pixel Format:             " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
-    std::cout << "ADC Bit Depth:            " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
-    std::cout << "Gain Mode/Value:          " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
-    std::cout << "Exposure Mode/Value (ms): " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time/1000.0 << std::endl;
-//        std::cout << "Acq mode/frame rate: " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
-    std::cout << "Acquistion Mode:          " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
-    std::cout << "Number of Captures:       " << cap_num << std::endl;
-    std::cout << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
-    std::cout << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
-    std::cout << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;
-    std::cout << std::endl;
-
-    data_log_stream << "Image Size (h x w):       " << height << " x " << width << std::endl;
-    data_log_stream << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
-    data_log_stream << "Pixel Format:             " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
-    data_log_stream << "ADC Bit Depth:            " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
-    data_log_stream << "Gain Mode/Value:          " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
-    data_log_stream << "Exposure Mode/Value (ms): " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << tmp_exp_time/1000.0 << std::endl;
-//        data_log_stream << "Acq mode/value:      " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << " / " << frame_rate << std::endl;
-    data_log_stream << "Acquistion Mode:          " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
-    data_log_stream << "Number of Captures:       " << cap_num << std::endl;
-    data_log_stream << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
-    data_log_stream << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
-    data_log_stream << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;
-    data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
-
-    std::cout << "------------------------------------------------------------------" << std::endl;
-    std::cout << "Save location: " << output_save_location << std::endl << std::endl;
-    //data_log_stream << "Save location: " << output_save_location << std::endl;
-*/
-
-//    std::cout << "------------------------------------------------------------------" << std::endl;
-//    std::cout << "Beginning Acquisition:" << std::endl;
-//    std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
-//    //std::cout << "  f - Step the focus motor by 160 steps" << std::endl;
-//    //std::cout << "  g - Step the focus motor by -160 steps" << std::endl;
-//    //std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
-//    //std::cout << "  x - Step the zoom motor by -160 steps" << std::endl;
-
-//    std::cout << "  s - Save an image" << std::endl;
-//    std::cout << "  q - Quit" << std::endl;
-//    std::cout << std::endl;
+//    double tmp_exp_time;
+//    get_exposure_time(cam, tmp_exp_time);
 
     // start the acquistion if the mode is set to continuous
     if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
@@ -607,11 +569,11 @@ void capture_gui::on_toolButton_clicked()
 
     dialog.setFileMode(QFileDialog::Directory);
 
-    save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), QDir::currentPath());
+    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), QDir::currentPath());
 
     ui->save_location->setText(save_location);
-    //ui->save_location->show();
 
+    output_save_location = path_check(save_location.toStdString());
 
 }
 
@@ -814,6 +776,15 @@ void capture_gui::on_start_capture_clicked()
         return;
 
     uint32_t cap_num = (uint32_t)ui->num_caps->text().toInt();
+
+    // disable the gui items
+    ui->controller_gb->setEnabled(false);
+    ui->camera_gb->setEnabled(false);
+
+    int32_t dir_status = mkdir(output_save_location);
+    if (dir_status != 0)
+        std::cout << "Error creating folder: " << dir_status << std::endl;
+
     // start the data logging by creating the file
     get_current_time(sdate, stime);
     img_save_folder = output_save_location + sdate + "_" + stime + "/";
@@ -821,11 +792,33 @@ void capture_gui::on_start_capture_clicked()
     int32_t stat = mkdir(img_save_folder);
     if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
     {
-        std::cout << "Error creating directory: " << stat << std::endl;
+         ui->console_te->append("Error creating directory:");
     }
 
+    get_current_time(sdate, stime);
+    std::string log_filename = "camera_capture_log_" + sdate + "_" + stime + ".txt";
+
+    ui->console_te->append("Log File: " + QString::fromStdString(output_save_location + log_filename)  + "\n");
+    data_log_stream.open((output_save_location + log_filename), ios::out | ios::app);
+
+    // Add the date and time to the start of the log file
+    data_log_stream << "#------------------------------------------------------------------" << std::endl;
+    data_log_stream << "Version: 1.0    Date: " << sdate << "    Time: " << stime << std::endl << std::endl;
+    data_log_stream << "#------------------------------------------------------------------" << std::endl;
+
+//    data_log_stream << "Input Parameters:" << std::endl;
+//    data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
+//    data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
+//    data_log_stream << "Focus Step Range:    " << focus_str << std::endl;
+//    data_log_stream << "Zoom Step Range:     " << zoom_str << std::endl;
+//    data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
+//    data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
+//    data_log_stream << "Number of Captures:  " << cap_num << std::endl;
+
+
+
     data_log_stream << "Save location: " << img_save_folder << std::endl;
-    std::cout << "------------------------------------------------------------------" << std::endl;
+    ui->console_te->append("------------------------------------------------------------------");
 
     // enable the motors
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
@@ -836,13 +829,75 @@ void capture_gui::on_start_capture_clicked()
     focus_step = 0;
     zoom_step = 0;
 
+    // set the camera settings
+    set_image_size(cam, height, width, y_offset, x_offset);
+    set_pixel_format(cam, pixel_format);
+    //set_gain_mode(cam, gain_mode);
+    set_gain_value(cam, camera_gain);
+    //set_exposure_mode(cam, exp_mode);
+    set_exposure_time(cam, exp_time);
+    //set_acquisition_mode(cam, acq_mode); //acq_mode
 
     // get all of the camera settings
+    get_image_size(cam, height, width, y_offset, x_offset);
+
+    // pixel format
+    get_pixel_format(cam, pixel_format);
+    get_gain_value(cam, camera_gain);
+
+    // exposure
+    get_exposure_mode(cam, exp_mode);
+    get_exposure_time(cam, exp_time);
+    get_acquisition_mode(cam, acq_mode);
+
+    // dispaly the capture parameters
+    ui->console_te->append("Image Size (h x w):       " + QString::number(height) + " x " + QString::number(width));
+    ui->console_te->append("Image Offset (x, y):      " + QString::number(x_offset) + ", " + QString::number(y_offset));
+    ui->console_te->append("Pixel Format:             " + QString::fromStdString(cam->PixelFormat.GetCurrentEntry()->GetSymbolic().c_str()));
+    ui->console_te->append("ADC Bit Depth:            " + QString::fromStdString(cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic().c_str()));
+    ui->console_te->append("Gain Mode/Value:          " + QString::fromStdString(cam->GainAuto.GetCurrentEntry()->GetSymbolic().c_str()) + " / " + QString::number(camera_gain));
+    ui->console_te->append("Exposure Mode/Value (ms): " + QString::fromStdString(cam->ExposureAuto.GetCurrentEntry()->GetSymbolic().c_str()) +  " / " + QString::number(exp_time/1000.0));
+    ui->console_te->append("Acquistion Mode:          " + QString::fromStdString(cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic().c_str()));
+    ui->console_te->append("Number of Captures:       " + QString::number(cap_num));
+    ui->console_te->append("Trigger Source:           " + QString::fromStdString(cam->TriggerSource.GetCurrentEntry()->GetSymbolic().c_str()));
+    ui->console_te->append("Min/Max Gain:             " + QString::number(cam->Gain.GetMin()) + " / " + QString::number(cam->Gain.GetMax()));
+    ui->console_te->append("Min/Max Exposure (ms):    " + QString::number(cam->ExposureTime.GetMin()/1000.0) + " / " + QString::number((uint64_t)cam->ExposureTime.GetMax()/1000.0) + "\n");
+    ui->console_te->show();
+
+    // save the capture parameters to a file
+    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+    data_log_stream << ctrl << std::endl;
+
+    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+    data_log_stream << "Focus Motor Information: " << std::endl;
+    data_log_stream << focus_motor;
+    data_log_stream << "  Current Step:     " << focus_step << std::endl;
+
+    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+    data_log_stream << "Zoom Motor Information: " << std::endl;
+    data_log_stream << zoom_motor;
+    data_log_stream << "  Current Step:     " << zoom_step << std::endl;
+
+    data_log_stream << "#----------------------------------------------------------------------------" << std::endl;
+    data_log_stream << "Trigger Information: " << std::endl;
+    data_log_stream << t1_info << std::endl;
+    data_log_stream << t2_info;
+    data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
 
 
-    //
-
-
+    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+    data_log_stream << "Image Size (h x w):       " << height << " x " << width << std::endl;
+    data_log_stream << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
+    data_log_stream << "Pixel Format:             " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
+    data_log_stream << "ADC Bit Depth:            " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
+    data_log_stream << "Gain Mode/Value:          " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
+    data_log_stream << "Exposure Mode/Value (ms): " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << exp_time/1000.0 << std::endl;
+    data_log_stream << "Acquistion Mode:          " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
+    data_log_stream << "Number of Captures:       " << cap_num << std::endl;
+    data_log_stream << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
+    data_log_stream << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
+    data_log_stream << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;
+    data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
 
     // disconnect the timer for displaying the camera images
     disconnect(image_timer, SIGNAL(timeout()), 0, 0);
@@ -868,24 +923,6 @@ void capture_gui::on_start_capture_clicked()
 
             focus_str = num2str(focus_step, "f%05d_");
             sleep_ms(5);
-
-            // create the directory to save the images at various focus steps
-            /*
-            std::string combined_save_location = "";
-            std::string sub_dir = "focus_" + num2str(focus_range[focus_idx], "%05d");
-            int32_t stat = make_dir(output_save_location, sub_dir);
-            if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
-            {
-                std::cout << "Error creating directory: " << stat << std::endl;
-                data_log_stream << "Error creating directory: " << stat << std::endl;
-                combined_save_location = output_save_location;
-            }
-            else
-            {
-                combined_save_location = output_save_location + sub_dir + "/";
-            }
-            */
-
 
             for (img_idx = 0; img_idx < cap_num; ++img_idx)
             {
@@ -916,7 +953,7 @@ void capture_gui::on_start_capture_clicked()
                 cv::waitKey(1);
 
                 // save the image
-                std::cout << "saving: " << img_save_folder << image_capture_name << std::endl;
+                ui->console_te->append("saving: " + QString::fromStdString(img_save_folder) + QString::fromStdString(image_capture_name));
                 data_log_stream << image_capture_name << std::endl;
 
                 cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
@@ -927,7 +964,7 @@ void capture_gui::on_start_capture_clicked()
 
 
 
-            //set_exposure_time(cam, exp_time);
+//            set_exposure_time(cam, exp_time);
 
         }   // end of focus_idx loop
 
@@ -941,17 +978,76 @@ void capture_gui::on_start_capture_clicked()
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
     status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
-    std::cout << "------------------------------------------------------------------" << std::endl;
+    ui->console_te->append("------------------------------------------------------------------");
     data_log_stream << "#------------------------------------------------------------------" << std::endl;
 
 
-
+    // re-enable the gui controlls
+    ui->controller_gb->setEnabled(true);
+    ui->camera_gb->setEnabled(true);
 
     // reconnect the timer for displaying camera images
     connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
 
 
-
-
-
 }
+
+void capture_gui::closeEvent (QCloseEvent *event)
+{
+
+    bool status;
+
+    // set the focus and zoom steps to zero
+    focus_step = 0;
+    zoom_step = 0;
+
+    if(ctrl_connected == true)
+    {
+        ui->console_te->append("\nSetting motors back to zero...");
+        ui->console_te->show();
+
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+
+        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+
+        // close the motor driver port first
+        ui->console_te->append("\nClosing the Controller port...");
+        ui->console_te->show();
+
+        close_com_port(ctrl_handle);
+        ctrl_connected = false;
+    }
+
+    if(cam_connected == true)
+    {
+        // close out the camera
+        ui->console_te->append("\nClosing Camera...");
+        ui->console_te->show();
+
+        // de-initialize the camera
+        cam->DeInit();
+
+        // Release reference to the camera
+        cam = nullptr;
+
+        // Clear camera list before releasing system
+        cam_list.Clear();
+
+        // Release system
+        cam_system->ReleaseInstance();
+        cam_connected = false;
+    }
+
+    cv::destroyAllWindows();
+
+    data_log_stream.close();
+
+    ui->console_te->append("\nProgram Complete!");
+    ui->console_te->show();
+}
+
+

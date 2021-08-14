@@ -17,6 +17,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QTimer>
+#include <QCloseEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class capture_gui; }
@@ -29,6 +30,7 @@ class capture_gui : public QMainWindow
 public:
     capture_gui(QWidget *parent = nullptr);
     ~capture_gui();
+
 
 public slots:
 
@@ -100,12 +102,15 @@ private:
 
     bool cam_connected = false;
 
-    QString save_location;
+//    QString save_location;
     std::string output_save_location;
 
     QTimer *image_timer;
+
     template <typename T>
     void generate_range(T start, T stop, T step, std::vector<T>& range);
+
+    void closeEvent (QCloseEvent *event);
 
 };
 #endif // _CAPTURE_GUI_H_
