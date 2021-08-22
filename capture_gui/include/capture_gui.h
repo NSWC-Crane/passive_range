@@ -18,6 +18,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QThread>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class capture_gui; }

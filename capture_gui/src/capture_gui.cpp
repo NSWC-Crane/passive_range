@@ -231,202 +231,214 @@ void capture_gui::on_ftdi_connect_btn_clicked()
     uint32_t read_timeout = 60000;
     uint32_t write_timeout = 1000;
 
-    uint32_t controller_device_num = ui->ftdi_cb->currentIndex();
-
-//    std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete...";
-    msgBox.setText("Rotate the focus and the zoom lens to the zero position.  Press OK when complete...");
-    msgBox.exec();
-
-    ui->console_te->append("Connecting to Controller...");
-    ftdi_devices[controller_device_num].baud_rate = 250000;
-    while ((ctrl_handle == NULL) && (connect_count < 10))
+    if(ctrl_connected == false)
     {
-        ctrl_handle = open_com_port(ftdi_devices[controller_device_num], read_timeout, write_timeout);
-        ++connect_count;
-    }
+        uint32_t controller_device_num = ui->ftdi_cb->currentIndex();
 
-    if (ctrl_handle == NULL)
-    {
-        ui->console_te->append("No Controller found...");
-        ui->console_te->show();
-//        data_log_stream << "No Controller found... Exiting!" << std::endl;
-        //std::cin.ignore();
-        //return -1;
-    }
+        msgBox.setText("Rotate the focus and the zoom lens to the zero position.  Press OK when complete...");
+        msgBox.exec();
 
-    ctrl.tx = data_packet(DRIVER_CONNECT);
+        ui->console_te->setText("Connecting to Controller...");
+        qApp->processEvents();
 
-    // send connection request packet and get response back
-    ctrl.send_packet(ctrl_handle, ctrl.tx);
-    status = ctrl.receive_packet(ctrl_handle, 6, ctrl.rx);
+        ftdi_devices[controller_device_num].baud_rate = 250000;
+        while ((ctrl_handle == NULL) && (connect_count < 10))
+        {
+            ctrl_handle = open_com_port(ftdi_devices[controller_device_num], read_timeout, write_timeout);
+            QThread::msleep(50);
+            ++connect_count;
+        }
 
-    if (status == false)
-    {
-        ui->console_te->append("No Controller found...");
-        ui->console_te->show();
-//        data_log_stream << "No Controller found... Exiting!" << std::endl;
-        //std::cin.ignore();
-        //return -1;
-    }
+        if (ctrl_handle == NULL)
+        {
+            ui->console_te->append("No Controller found...");
+        }
 
-    // get the controller information and display
-    ctrl.set_driver_info(ctrl.rx);
-    ui->console_te->append("-----------------------------------------------------------------------------");
-    ss << ctrl;
-    ui->console_te->append(QString::fromStdString(ss.str()));
-    ui->console_te->show();
-    //ui->console_te->append("-----------------------------------------------------------------------------");
+        ctrl.tx = data_packet(DRIVER_CONNECT);
 
-//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-//    data_log_stream << ctrl;
-//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        // send connection request packet and get response back
+        ctrl.send_packet(ctrl_handle, ctrl.tx);
+        status = ctrl.receive_packet(ctrl_handle, 6, ctrl.rx);
 
-    //-----------------------------------------------------------------------------
-    // ping the motors to get the model number and firmware version
-    status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
+        if (status == false)
+        {
+            ui->console_te->append("No Controller found...");
+        }
 
-    ui->console_te->append("-----------------------------------------------------------------------------");
-    ui->console_te->append("Focus Motor Information: ");
-
-//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-//    data_log_stream << "Focus Motor Information: " << std::endl;
-
-    if (status)
-    {
-        ss << focus_motor;
+        // get the controller information and display
+        ctrl.set_driver_info(ctrl.rx);
+        ui->console_te->append("-----------------------------------------------------------------------------");
+        ss << ctrl;
         ui->console_te->append(QString::fromStdString(ss.str()));
-//        data_log_stream << focus_motor;
+        ss.str(std::string());
+        ss.clear();
+
+        QThread::msleep(50);
+        qApp->processEvents();
+
+        //-----------------------------------------------------------------------------
+        // ping the motors to get the model number and firmware version
+        status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
+
+        ui->console_te->append("-----------------------------------------------------------------------------");
+        ui->console_te->append("Focus Motor Information: ");
+
+        if (status)
+        {
+            ss << focus_motor;
+            ui->console_te->append(QString::fromStdString(ss.str()));
+            ss.str(std::string());
+            ss.clear();
+        }
+        else
+        {
+            ui->console_te->append("  Error getting focus motor info");
+        }
+//        ui->console_te->show();
+        qApp->processEvents();
+
+        // configure the homing offsets for the focus motor
+        // set the offset to zero
+        status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
+
+        // get the current motor positions
+        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+
+        ui->console_te->append("  Current Step:     " + QString::number(focus_step));
+        QThread::msleep(50);
+
+        //-----------------------------------------------------------------------------
+        status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
+
+        ui->console_te->append("\n-----------------------------------------------------------------------------");
+        ui->console_te->append("Zoom Motor Information: ");
+
+        if (status)
+        {
+            ss << zoom_motor;
+            ui->console_te->append(QString::fromStdString(ss.str()));
+            ss.str(std::string());
+            ss.clear();
+        }
+        else
+        {
+            ui->console_te->append("  Error getting zoom motor info");
+        }
+//        ui->console_te->show();
+        qApp->processEvents();
+
+        // configure the homing offsets for the zoom motor
+        // set the offset to zero
+        status = ctrl.set_offset(ctrl_handle, ZOOM_MOTOR_ID);
+
+        // get the current motor positions
+        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+
+        ui->console_te->append("  Current Step:     " + QString::number(zoom_step));
+        //ui->console_te->append("-----------------------------------------------------------------------------\n");
+
+        QThread::msleep(50);
+
+        // configure the trigger according to the inputs
+        // channel 1
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T1, tc_ch1);
+
+        // channel 2
+        status = ctrl.config_channel(ctrl_handle, CONFIG_T2, tc_ch2);
+
+        //-----------------------------------------------------------------------------
+        // get the current trigger configurations and display the information
+        status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
+
+        ui->console_te->append("\n-----------------------------------------------------------------------------");
+        ui->console_te->append("Trigger Information: ");
+        ss << t1_info << std::endl;
+        //ui->console_te->append(QString::fromStdString(ss.str()) + "\n");
+        //ss.clear();
+
+        ss << t2_info;
+        ui->console_te->append(QString::fromStdString(ss.str()));
+        ss.str(std::string());
+        ss.clear();
+        ui->console_te->append("-----------------------------------------------------------------------------");
+        //ui->console_te->show();
+        qApp->processEvents();
+        QThread::msleep(50);
+
+        //-----------------------------------------------------------------------------
+        // read in the position PID config file and set the PID values for each motor
+        status = read_pid_config(pid_config_filename, (uint32_t)(ctrl.ctrl_info.serial_number - 1), pid_values);
+
+        if (status == false)
+        {
+            ui->console_te->append("The pid_config.txt file does not have enough entries based on supplied serial number.  Using default values.");
+            //ui->console_te->show();
+
+            // fill in the pid_values with default values
+            pid_values.push_back(0);
+            pid_values.push_back(2);
+            pid_values.push_back(800);
+            pid_values.push_back(0);
+            pid_values.push_back(2);
+            pid_values.push_back(800);
+        }
+
+        // config the motors with the specified pid values
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_D, pid_values[0]);
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_I, pid_values[1]);
+        ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_P, pid_values[2]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_D, pid_values[3]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_I, pid_values[4]);
+        ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_P, pid_values[5]);
+
+        //-----------------------------------------------------------------------------
+        // start off at the fist supplied lens position for both focus and zoom motors
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+
+        ui->console_te->append("Setting motors to intial position:");
+        ui->console_te->append("focus motor: " + QString::number(focus_range[0]));
+        ui->console_te->append("zoom motor: " + QString::number(zoom_range[0]));
+        //ui->console_te->show();
+        QThread::msleep(50);
+
+        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+        status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+
+        if (!status)
+        {
+            ui->console_te->append("Error setting motor positions.");
+        }
+//        ui->console_te->show();
+        qApp->processEvents();
+
+        // disable the motors
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+
+        ui->ftdi_connect_btn->setText("Disconnect");
+        ctrl_connected = true;
     }
     else
     {
-        ui->console_te->append("  Error getting focus motor info");
-//        data_log_stream << "  Error getting focus motor info" << std::endl;
+
+        ui->console_te->append("\nSetting motors back to zero...");
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, 0);
+        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+
+        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, 0);
+        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+
+        // close the motor driver port first
+        ui->console_te->append("\nClosing the Controller port...");
+        qApp->processEvents();
+        close_com_port(ctrl_handle);
+
+        ui->ftdi_connect_btn->setText("Connect");
+        ctrl_connected = false;
     }
-
-    // configure the homing offsets for the focus motor
-    // set the offset to zero
-    status = ctrl.set_offset(ctrl_handle, FOCUS_MOTOR_ID);
-
-    // get the current motor positions
-    status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-
-    ui->console_te->append("  Current Step:     " + QString::number(focus_step));
-//    data_log_stream << "  Current Step:     " << focus_step << std::endl;
-
-
-    //-----------------------------------------------------------------------------
-    status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
-
-    std::cout << std::endl;
-    ui->console_te->append("\nZoom Motor Information: ");
-    ui->console_te->show();
-
-//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-//    data_log_stream << "Zoom Motor Information: " << std::endl;
-
-    if (status)
-    {
-        ss << zoom_motor;
-        ui->console_te->append(QString::fromStdString(ss.str()));
-//        data_log_stream << zoom_motor;
-    }
-    else
-    {
-        ui->console_te->append("  Error getting zoom motor info");
-//        data_log_stream << "  Error getting zoom motor info" << std::endl;
-    }
-
-    // configure the homing offsets for the zoom motor
-    // set the offset to zero
-    status = ctrl.set_offset(ctrl_handle, ZOOM_MOTOR_ID);
-
-    // get the current motor positions
-    status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-
-    ui->console_te->append("  Current Step:     " + QString::number(zoom_step));
-    ui->console_te->append("-----------------------------------------------------------------------------\n");
-    ui->console_te->show();
-
-//    data_log_stream << "  Current Step:     " << zoom_step << std::endl;
-//    data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
-
-    // configure the trigger according to the inputs
-    // channel 1
-    status = ctrl.config_channel(ctrl_handle, CONFIG_T1, tc_ch1);
-
-    // channel 2
-    status = ctrl.config_channel(ctrl_handle, CONFIG_T2, tc_ch2);
-
-    //-----------------------------------------------------------------------------
-    // get the current trigger configurations and display the information
-    status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
-
-    ui->console_te->append("-----------------------------------------------------------------------------");
-    ui->console_te->append("Trigger Information: ");
-    ss << t1_info;
-    ui->console_te->append(QString::fromStdString(ss.str()) + "\n");
-
-    ss << t2_info;
-    ui->console_te->append(QString::fromStdString(ss.str()));
-    ui->console_te->append("-----------------------------------------------------------------------------\n");
-    ui->console_te->show();
-
-//    data_log_stream << "#----------------------------------------------------------------------------" << std::endl;
-//    data_log_stream << "Trigger Information: " << std::endl;
-//    data_log_stream << t1_info << std::endl;
-//    data_log_stream << t2_info;
-//    data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
-
-    //-----------------------------------------------------------------------------
-    // read in the position PID config file and set the PID values for each motor
-    status = read_pid_config(pid_config_filename, (uint32_t)(ctrl.ctrl_info.serial_number - 1), pid_values);
-
-    if (status == false)
-    {
-        ui->console_te->append("The pid_config.txt file does not have enough entries based on supplied serial number.  Using default values.");
-        ui->console_te->show();
-
-        // fill in the pid_values with default values
-        pid_values.push_back(0);
-        pid_values.push_back(2);
-        pid_values.push_back(800);
-        pid_values.push_back(0);
-        pid_values.push_back(2);
-        pid_values.push_back(800);
-    }
-
-    // config the motors with the specified pid values
-    ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_D, pid_values[0]);
-    ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_I, pid_values[1]);
-    ctrl.set_pid_value(ctrl_handle, FOCUS_MOTOR_ID, ADD_POSITION_P, pid_values[2]);
-    ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_D, pid_values[3]);
-    ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_I, pid_values[4]);
-    ctrl.set_pid_value(ctrl_handle, ZOOM_MOTOR_ID, ADD_POSITION_P, pid_values[5]);
-
-    //-----------------------------------------------------------------------------
-    // start off at the fist supplied lens position for both focus and zoom motors
-    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
-
-    ui->console_te->append("Setting motors to intial position:");
-    ui->console_te->append("focus motor: " + QString::number(focus_range[0]));
-    ui->console_te->append("zoom motor: " + QString::number(zoom_range[0]));
-    ui->console_te->show();
-
-    status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
-    status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
-
-    if (!status)
-    {
-        ui->console_te->append("Error setting motor positions.");
-        ui->console_te->show();
-    }
-
-    // disable the motors
-    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
-    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
-
-    ctrl_connected = true;
 
 
 }
@@ -569,7 +581,7 @@ void capture_gui::on_toolButton_clicked()
 
     dialog.setFileMode(QFileDialog::Directory);
 
-    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), QDir::currentPath());
+    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), ("../" + QDir::currentPath()));
 
     ui->save_location->setText(save_location);
 
@@ -579,20 +591,28 @@ void capture_gui::on_toolButton_clicked()
 
 void capture_gui::update_zoom_position()
 {
+    int32_t position = 0;
+
     // set the current step to the minimum
     bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
     status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
     status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
+    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
+    ui->console_te->append("zoom motor: " + QString::number(position));
 }
 
 void capture_gui::update_focus_position()
 {
+    int32_t position = 0;
+
     // set the current step to the minimum
     bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
     status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
     status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
 
+    status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
+    ui->console_te->append("focus motor: " + QString::number(position));
 }
 
 template <typename T>

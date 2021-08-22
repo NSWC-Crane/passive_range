@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "sleep_ms.h"
 #include "ftd2xx_functions.h"
 #include "file_parser.h"
 
@@ -388,7 +389,7 @@ public:
 
         while (mtr_moving == true)
         {
-            //sleep_ms(50);
+            sleep_ms(10);
             status &= motor_moving(ctrl_handle, id);
             //mtr_error = rx.data[SP_ERROR_POS];
             mtr_moving = (rx.data[SP_PARAMS_POS] == 1);
@@ -398,6 +399,7 @@ public:
         {
             std::cout << "Error setting position for motor id: " << (uint32_t)id << ".  Error: " << mtr_error_string[rx.data[SP_ERROR_POS]] << std::endl;
         }
+        sleep_ms(10);
 
         return status;
 

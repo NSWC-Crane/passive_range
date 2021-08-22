@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>721</width>
+    <width>669</width>
     <height>600</height>
    </rect>
   </property>
@@ -18,9 +18,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>380</y>
-      <width>701</width>
-      <height>171</height>
+      <y>290</y>
+      <width>651</width>
+      <height>264</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -41,7 +41,7 @@
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>0</height>
+         <height>240</height>
         </size>
        </property>
        <property name="maximumSize">
@@ -49,6 +49,18 @@
          <width>700</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Terminal</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="undoRedoEnabled">
+        <bool>false</bool>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -58,8 +70,8 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>350</y>
-      <width>701</width>
+      <y>260</y>
+      <width>652</width>
       <height>31</height>
      </rect>
     </property>
@@ -75,7 +87,7 @@
       <widget class="QLineEdit" name="save_location">
        <property name="minimumSize">
         <size>
-         <width>669</width>
+         <width>619</width>
          <height>0</height>
         </size>
        </property>
@@ -92,7 +104,7 @@
       <x>10</x>
       <y>10</y>
       <width>321</width>
-      <height>191</height>
+      <height>151</height>
      </rect>
     </property>
     <property name="title">
@@ -143,6 +155,12 @@
           <width>70</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>MS Shell Dlg 2</family>
+          <pointsize>8</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>Connect</string>
@@ -419,7 +437,7 @@
       <x>340</x>
       <y>10</y>
       <width>321</width>
-      <height>241</height>
+      <height>221</height>
      </rect>
     </property>
     <property name="title">
@@ -497,13 +515,13 @@
        <widget class="QLabel" name="label_16">
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>75</width>
           <height>16777215</height>
          </size>
         </property>
@@ -521,13 +539,13 @@
        <widget class="QLineEdit" name="exposure">
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>55</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>55</width>
           <height>16777215</height>
          </size>
         </property>
@@ -791,13 +809,13 @@
        <widget class="QLabel" name="label_15">
         <property name="minimumSize">
          <size>
-          <width>55</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>70</width>
+          <width>75</width>
           <height>16777215</height>
          </size>
         </property>
@@ -815,13 +833,13 @@
        <widget class="QLineEdit" name="gain">
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>55</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>55</width>
           <height>16777215</height>
          </size>
         </property>
@@ -897,9 +915,9 @@
     <widget class="QWidget" name="horizontalLayoutWidget_14">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>180</y>
-       <width>131</width>
+       <x>160</x>
+       <y>150</y>
+       <width>151</width>
        <height>31</height>
       </rect>
      </property>
@@ -908,13 +926,13 @@
        <widget class="QLabel" name="label_17">
         <property name="minimumSize">
          <size>
-          <width>20</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>75</width>
           <height>16777215</height>
          </size>
         </property>
@@ -956,8 +974,8 @@
    <widget class="QPushButton" name="start_capture">
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>260</y>
+      <x>10</x>
+      <y>200</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -972,7 +990,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>721</width>
+     <width>669</width>
      <height>21</height>
     </rect>
    </property>
