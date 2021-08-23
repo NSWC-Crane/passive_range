@@ -426,10 +426,12 @@ void capture_gui::on_ftdi_connect_btn_clicked()
         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
         status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, 0);
         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+        QThread::msleep(50);
 
         status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
         status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, 0);
         status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+        QThread::msleep(50);
 
         // close the motor driver port first
         ui->console_te->append("\nClosing the Controller port...");
@@ -447,114 +449,140 @@ void capture_gui::on_cam_connect_btn_clicked()
 {
     std::stringstream ss;
 
-    // get the selected camera
-    cam = cam_list.GetByIndex(ui->cam_cb->currentIndex());
-
-    // print out some information about the camera
-    ui->console_te->append("------------------------------------------------------------------");
-    ss << cam;
-    ui->console_te->append(QString::fromStdString(ss.str()));
-    ui->console_te->show();
-
-    data_log_stream << cam;
-
-    // initialize the camera
-    init_camera(cam);
-    cam_connected = true;
-    //cam->TriggerActivation.SetValue(Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge);
-
-    get_temperature(cam, camera_temp);
-    ui->console_te->append("  Camera Temp:       " + QString::number(camera_temp) + "\n");
-    ui->console_te->show();
-
-    data_log_stream << "  Camera Temp:       " << camera_temp << std::endl << std::endl;
-
-    // config the image size
-    //get_image_size(cam, height, width, y_offset, x_offset);
-    //std::cout << "Image Size (h x w): " << height << " x " << width << ", [" << x_offset << ", " << y_offset << "]" << std::endl;
-
-    width = (uint64_t)ui->width->text().toInt();
-    height = (uint64_t)ui->height->text().toInt();
-    x_offset = (uint64_t)ui->x_offset->text().toInt();
-    y_offset = (uint64_t)ui->y_offset->text().toInt();
-
-    camera_gain = ui->gain->text().toDouble();
-
-    switch(ui->px_format->currentIndex())
+    if(cam_connected == false)
     {
-    case 0:
-        pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
-        break;
+        // get the selected camera
+        cam = cam_list.GetByIndex(ui->cam_cb->currentIndex());
 
-    case 1:
-        pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
-        break;
+        // print out some information about the camera
+        ui->console_te->append("------------------------------------------------------------------");
+        ss << cam;
+        ui->console_te->append(QString::fromStdString(ss.str()));
+        ss.str(std::string());
+        ss.clear();
+        qApp->processEvents();
+
+        //data_log_stream << cam;
+
+        // initialize the camera
+        init_camera(cam);
+        cam_connected = true;
+        //cam->TriggerActivation.SetValue(Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge);
+
+        get_temperature(cam, camera_temp);
+        ui->console_te->append("  Camera Temp:       " + QString::number(camera_temp) + "\n");
+        qApp->processEvents();
+
+        // config the image size
+        //get_image_size(cam, height, width, y_offset, x_offset);
+        //std::cout << "Image Size (h x w): " << height << " x " << width << ", [" << x_offset << ", " << y_offset << "]" << std::endl;
+
+        width = (uint64_t)ui->width->text().toInt();
+        height = (uint64_t)ui->height->text().toInt();
+        x_offset = (uint64_t)ui->x_offset->text().toInt();
+        y_offset = (uint64_t)ui->y_offset->text().toInt();
+
+        camera_gain = ui->gain->text().toDouble();
+
+        switch(ui->px_format->currentIndex())
+        {
+        case 0:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+            break;
+
+        case 1:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+            break;
+        }
+
+        // configure the camera
+        set_image_size(cam, height, width, y_offset, x_offset);
+        set_pixel_format(cam, pixel_format);
+        set_gain_mode(cam, gain_mode);
+        set_gain_value(cam, camera_gain);
+        set_exposure_mode(cam, exp_mode);
+        set_exposure_time(cam, exp_time);
+        set_acquisition_mode(cam, acq_mode); //acq_mode
+
+        // print out the camera configuration
+    //    ui->console_te->append("------------------------------------------------------------------");
+    //    ui->console_te->append("Camera Configuration:");
+
+
+        //get_image_size(cam, height, width, y_offset, x_offset);
+
+        // pixel format
+        //get_pixel_format(cam, pixel_format);
+        //get_gain_value(cam, camera_gain);
+
+        //set_gain_mode(cam, gain_mode);
+
+        // exposure
+    //    double tmp_exp_time;
+    //    get_exposure_time(cam, tmp_exp_time);
+
+        // start the acquistion if the mode is set to continuous
+        if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
+            cam->BeginAcquisition();
+
+        image_window = image_window + "_" + cam_sn[cam_index];
+
+        // set trigger mode and enable
+        set_trigger_source(cam, trigger_source, trigger_activation);
+        //config_trigger(cam, OFF);
+        config_trigger(cam, ON);
+        sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
+
+        // grab an initial image to get the padding
+        //acquire_image(cam, image);
+    //    switch (ts)
+    //    {
+    //    case 0:
+    //        cam->BeginAcquisition();
+    //        status = ctrl.trigger(ctrl_handle, TRIG_ALL);
+    //        aquire_trigger_image(cam, image);
+    //        cam->EndAcquisition();
+    //        break;
+    //    case 1:
+    //        aquire_software_trigger_image(cam, image);
+    //        break;
+    //    }
+
+    //    x_padding = (uint32_t)image->GetXPadding();
+    //    y_padding = (uint32_t)image->GetYPadding();
+
+        image_timer = new QTimer(this);
+        connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
+        image_timer->start(16);
+
+        cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+
+        cam_connected = true;
     }
+    else
+    {
 
-    // configure the camera
-    set_image_size(cam, height, width, y_offset, x_offset);
-    set_pixel_format(cam, pixel_format);
-    set_gain_mode(cam, gain_mode);
-    set_gain_value(cam, camera_gain);
-    set_exposure_mode(cam, exp_mode);
-    set_exposure_time(cam, exp_time);
-    set_acquisition_mode(cam, acq_mode); //acq_mode
+        ui->console_te->append("\nClosing Camera...");
 
-    // print out the camera configuration
-    ui->console_te->append("------------------------------------------------------------------");
-    ui->console_te->append("Camera Configuration:");
-    ui->console_te->show();
+        // disconnect the timer signal
+        disconnect(image_timer, SIGNAL(timeout()), 0, 0);
 
-//    data_log_stream << "#------------------------------------------------------------------" << std::endl;
-//    data_log_stream << "Camera Configuration:" << std::endl;
+        // de-initialize the camera
+        cam->DeInit();
 
-    //get_image_size(cam, height, width, y_offset, x_offset);
+        // Release reference to the camera
+        cam = nullptr;
 
-    // pixel format
-    //get_pixel_format(cam, pixel_format);
-    //get_gain_value(cam, camera_gain);
+        // Clear camera list before releasing system
+        cam_list.Clear();
 
-    //set_gain_mode(cam, gain_mode);
+        // Release system
+        cam_system->ReleaseInstance();
 
-    // exposure
-//    double tmp_exp_time;
-//    get_exposure_time(cam, tmp_exp_time);
+        cv::destroyAllWindows();
+        cam_connected = false;
 
-    // start the acquistion if the mode is set to continuous
-    if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
-        cam->BeginAcquisition();
-
-    image_window = image_window + "_" + cam_sn[cam_index];
-
-    // set trigger mode and enable
-    set_trigger_source(cam, trigger_source, trigger_activation);
-    //config_trigger(cam, OFF);
-    config_trigger(cam, ON);
-    sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
-
-    // grab an initial image to get the padding
-    //acquire_image(cam, image);
-//    switch (ts)
-//    {
-//    case 0:
-//        cam->BeginAcquisition();
-//        status = ctrl.trigger(ctrl_handle, TRIG_ALL);
-//        aquire_trigger_image(cam, image);
-//        cam->EndAcquisition();
-//        break;
-//    case 1:
-//        aquire_software_trigger_image(cam, image);
-//        break;
-//    }
-
-//    x_padding = (uint32_t)image->GetXPadding();
-//    y_padding = (uint32_t)image->GetYPadding();
-
-    image_timer = new QTimer(this);
-    connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
-    image_timer->start(20);
-
-    cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+    }
 
 }
 
@@ -581,7 +609,8 @@ void capture_gui::on_toolButton_clicked()
 
     dialog.setFileMode(QFileDialog::Directory);
 
-    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), ("../" + QDir::currentPath()));
+//    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), ("../" + QDir::currentPath()));
+    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), ("../"));
 
     ui->save_location->setText(save_location);
 
@@ -834,8 +863,6 @@ void capture_gui::on_start_capture_clicked()
 //    data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
 //    data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
 //    data_log_stream << "Number of Captures:  " << cap_num << std::endl;
-
-
 
     data_log_stream << "Save location: " << img_save_folder << std::endl;
     ui->console_te->append("------------------------------------------------------------------");

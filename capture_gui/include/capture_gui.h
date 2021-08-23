@@ -103,7 +103,7 @@ private:
 
     bool cam_connected = false;
 
-//    QString save_location;
+    QString save_location;
     std::string output_save_location;
 
     QTimer *image_timer;
