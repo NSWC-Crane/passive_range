@@ -1,7 +1,6 @@
 #include "capture_gui.h"
 #include "./ui_capture_gui.h"
 
-
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -62,11 +61,11 @@ Spinnaker::SystemPtr cam_system;
 // OpenCV
 cv::Mat cv_image;
 cv::Size img_size;
-std::string image_window = "Image";
+std::string image_window = "Cam: ";
 std::vector<int> compression_params;
 
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 capture_gui::capture_gui(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::capture_gui)
@@ -90,37 +89,53 @@ capture_gui::capture_gui(QWidget *parent)
     // returnPressed()
     QIntValidator zoom_val(min_zoom_steps, max_zoom_steps, this);
     ui->z_start->setValidator(&zoom_val);
-    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(z_start_edit_complete()));
     ui->z_step->setValidator(&zoom_val);
-    connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(z_step_edit_complete()));
     ui->z_stop->setValidator(&zoom_val);
-    connect(ui->z_stop, SIGNAL(editingFinished()), this, SLOT(z_stop_edit_complete()));
+//    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(z_start_edit_complete()));
+    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_stop, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
 
     // focus slots
     QIntValidator focus_val(min_focus_steps, max_focus_steps, this);
     ui->f_start->setValidator(&focus_val);
-    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(f_start_edit_complete()));
     ui->f_step->setValidator(&focus_val);
-    connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(f_step_edit_complete()));
     ui->f_stop->setValidator(&focus_val);
-    connect(ui->f_stop, SIGNAL(editingFinished()), this, SLOT(f_stop_edit_complete()));
+//    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(f_start_edit_complete()));
+    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_stop, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
 
+    //-----------------------------------------------------------------------------
     // camera slots
-    QIntValidator x_off(0, 2048, this);
-    ui->x_offset->setValidator(&x_off);
-    connect(ui->x_offset, SIGNAL(returnPressed()), this, SLOT(x_offset_edit_complete()));
-    ui->width->setValidator(&x_off);
-    connect(ui->width, SIGNAL(returnPressed()), this, SLOT(width_edit_complete()));
+    //-----------------------------------------------------------------------------
 
-    QIntValidator y_off(0, 1536, this);
-    ui->y_offset->setValidator(&y_off);
-    connect(ui->y_offset, SIGNAL(returnPressed()), this, SLOT(y_offset_edit_complete()));
-    ui->height->setValidator(&y_off);
-    connect(ui->height, SIGNAL(returnPressed()), this, SLOT(height_edit_complete()));
+    // QIntValidators
+    QIntValidator h_val(0, 2048, this);
+    QIntValidator v_val(0, 1536, this);
 
+    // set the validators
+    ui->x_offset->setValidator(&h_val);
+    ui->width->setValidator(&h_val);
+    ui->y_offset->setValidator(&v_val);
+    ui->height->setValidator(&v_val);
+
+    // connect the signals
+//    connect(ui->x_offset, SIGNAL(returnPressed()), this, SLOT(x_offset_edit_complete()));
+//    connect(ui->width, SIGNAL(returnPressed()), this, SLOT(width_edit_complete()));
+    connect(ui->x_offset, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));
+    connect(ui->width, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));
+
+//    connect(ui->y_offset, SIGNAL(returnPressed()), this, SLOT(y_offset_edit_complete()));
+//    connect(ui->height, SIGNAL(returnPressed()), this, SLOT(height_edit_complete()));
+    connect(ui->y_offset, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));
+    connect(ui->height, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));
+
+    // gain settings
     ui->gain->setValidator( new QDoubleValidator(0, 8, 4, this) );
     connect(ui->gain, SIGNAL(returnPressed()), this, SLOT(gain_edit_complete()));
 
+    // exposure settings
     ui->exposure->setValidator( new QDoubleValidator(0, 50000, 1, this) );
     connect(ui->exposure, SIGNAL(returnPressed()), this, SLOT(exposure_edit_complete()));
 
@@ -195,7 +210,7 @@ capture_gui::capture_gui(QWidget *parent)
     }
 
     // Finish if there are no cameras
-    if ((num_cams == 0) || (cam_index < 0) || (cam_index > num_cams - 1))
+    if (num_cams == 0)
     {
         // Clear camera list before releasing system
         cam_list.Clear();
@@ -205,9 +220,6 @@ capture_gui::capture_gui(QWidget *parent)
 
         ui->console_te->append("No Camera found...");
         ui->console_te->show();
-//        data_log_stream << "No Camera found... Exiting!" << std::endl;
-        //std::cin.ignore();
-        //return -1;
     }
 
     on_toolButton_clicked();
@@ -218,7 +230,7 @@ capture_gui::~capture_gui()
     delete ui;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 void capture_gui::on_ftdi_connect_btn_clicked()
 {
     bool status = false;
@@ -445,14 +457,16 @@ void capture_gui::on_ftdi_connect_btn_clicked()
 
 }
 
+//-----------------------------------------------------------------------------
 void capture_gui::on_cam_connect_btn_clicked()
 {
     std::stringstream ss;
 
     if(cam_connected == false)
     {
+        cam_index = ui->cam_cb->currentIndex();
         // get the selected camera
-        cam = cam_list.GetByIndex(ui->cam_cb->currentIndex());
+        cam = cam_list.GetByIndex(cam_index);
 
         // print out some information about the camera
         ui->console_te->append("------------------------------------------------------------------");
@@ -525,9 +539,10 @@ void capture_gui::on_cam_connect_btn_clicked()
         if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
             cam->BeginAcquisition();
 
-        image_window = image_window + "_" + cam_sn[cam_index];
+        image_window = "Cam: " + cam_sn[cam_index];
 
         // set trigger mode and enable
+        trigger_source = Spinnaker::TriggerSourceEnums::TriggerSource_Software;
         set_trigger_source(cam, trigger_source, trigger_activation);
         //config_trigger(cam, OFF);
         config_trigger(cam, ON);
@@ -544,19 +559,20 @@ void capture_gui::on_cam_connect_btn_clicked()
     //        cam->EndAcquisition();
     //        break;
     //    case 1:
-    //        aquire_software_trigger_image(cam, image);
+            aquire_software_trigger_image(cam, image);
     //        break;
     //    }
 
-    //    x_padding = (uint32_t)image->GetXPadding();
-    //    y_padding = (uint32_t)image->GetYPadding();
+        x_padding = (uint32_t)image->GetXPadding();
+        y_padding = (uint32_t)image->GetYPadding();
 
         image_timer = new QTimer(this);
         connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
-        image_timer->start(16);
+        image_timer->start(10);
 
         cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
 
+        ui->cam_connect_btn->setText("Disconnect");
         cam_connected = true;
     }
     else
@@ -574,20 +590,22 @@ void capture_gui::on_cam_connect_btn_clicked()
         cam = nullptr;
 
         // Clear camera list before releasing system
-        cam_list.Clear();
+        //cam_list.Clear();
 
         // Release system
-        cam_system->ReleaseInstance();
+        //cam_system->ReleaseInstance();
 
         cv::destroyAllWindows();
+
+        ui->cam_connect_btn->setText("Connect");
+
         cam_connected = false;
 
     }
 
 }
 
-
-
+//-----------------------------------------------------------------------------
 void capture_gui::on_px_format_currentIndexChanged(int index)
 {
 //    switch(ui->px_format->currentIndex())
@@ -601,8 +619,9 @@ void capture_gui::on_px_format_currentIndexChanged(int index)
         pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
         break;
     }
-}
+}   // end of on_px_format_currentIndexChanged
 
+//-----------------------------------------------------------------------------
 void capture_gui::on_toolButton_clicked()
 {
     QFileDialog dialog(this);
@@ -616,8 +635,9 @@ void capture_gui::on_toolButton_clicked()
 
     output_save_location = path_check(save_location.toStdString());
 
-}
+}   // end of on_toolButton_clicked
 
+//-----------------------------------------------------------------------------
 void capture_gui::update_zoom_position()
 {
     int32_t position = 0;
@@ -631,6 +651,7 @@ void capture_gui::update_zoom_position()
     ui->console_te->append("zoom motor: " + QString::number(position));
 }
 
+//-----------------------------------------------------------------------------
 void capture_gui::update_focus_position()
 {
     int32_t position = 0;
@@ -644,6 +665,7 @@ void capture_gui::update_focus_position()
     ui->console_te->append("focus motor: " + QString::number(position));
 }
 
+//-----------------------------------------------------------------------------
 template <typename T>
 void capture_gui::generate_range(T start, T stop, T step, std::vector<T>& range)
 {
@@ -673,8 +695,31 @@ void capture_gui::generate_range(T start, T stop, T step, std::vector<T>& range)
 
 }   // end of generate_range
 
-void capture_gui::z_start_edit_complete()
+
+//-----------------------------------------------------------------------------
+void capture_gui::focus_edit_complete()
 {
+
+    QObject* sender_obj = sender();
+
+    int32_t start = (int32_t)ui->f_start->text().toInt();
+    int32_t step = (int32_t)ui->f_step->text().toInt();
+    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+    // generate the step ranges
+    generate_range(start, stop, step, focus_range);
+
+    if((ctrl_connected == true) && (sender_obj == ui->f_start))
+        update_focus_position();
+
+}   // end of focus_edit_complete
+
+//-----------------------------------------------------------------------------
+void capture_gui::zoom_edit_complete()
+{
+
+    QObject* sender_obj = sender();
+
     int32_t start = (int32_t)ui->z_start->text().toInt();
     int32_t step = (int32_t)ui->z_step->text().toInt();
     int32_t stop = (int32_t)ui->z_stop->text().toInt();
@@ -682,102 +727,133 @@ void capture_gui::z_start_edit_complete()
     // generate the step ranges
     generate_range(start, stop, step, zoom_range);
 
-    if(ctrl_connected == true)
+    if((ctrl_connected == true) && (sender_obj == ui->z_start))
         update_zoom_position();
 
-}
+}   // end of zoom_edit_complete
 
-void capture_gui::z_step_edit_complete()
+////-----------------------------------------------------------------------------
+//void capture_gui::z_start_edit_complete()
+//{
+//    int32_t start = (int32_t)ui->z_start->text().toInt();
+//    int32_t step = (int32_t)ui->z_step->text().toInt();
+//    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+//    // generate the step ranges
+//    generate_range(start, stop, step, zoom_range);
+
+//    if(ctrl_connected == true)
+//        update_zoom_position();
+
+//}
+
+////-----------------------------------------------------------------------------
+//void capture_gui::z_step_edit_complete()
+//{
+//    int32_t start = (int32_t)ui->z_start->text().toInt();
+//    int32_t step = (int32_t)ui->z_step->text().toInt();
+//    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+//    // generate the step ranges
+//    generate_range(start, stop, step, zoom_range);
+
+//}
+
+////-----------------------------------------------------------------------------
+//void capture_gui::z_stop_edit_complete()
+//{
+//    int32_t start = (int32_t)ui->z_start->text().toInt();
+//    int32_t step = (int32_t)ui->z_step->text().toInt();
+//    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+//    // generate the step ranges
+//    generate_range(start, stop, step, zoom_range);
+
+//}
+
+////-----------------------------------------------------------------------------
+//void capture_gui::f_start_edit_complete()
+//{
+//    int32_t start = (int32_t)ui->f_start->text().toInt();
+//    int32_t step = (int32_t)ui->f_step->text().toInt();
+//    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+//    // generate the step ranges
+//    generate_range(start, stop, step, focus_range);
+
+//    if(ctrl_connected == true)
+//        update_focus_position();
+//}
+
+////-----------------------------------------------------------------------------
+//void capture_gui::f_step_edit_complete()
+//{
+//    int32_t start = (int32_t)ui->f_start->text().toInt();
+//    int32_t step = (int32_t)ui->f_step->text().toInt();
+//    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+//    // generate the step ranges
+//    generate_range(start, stop, step, focus_range);
+
+//}
+
+////-----------------------------------------------------------------------------
+//void capture_gui::f_stop_edit_complete()
+//{
+//    int32_t start = (int32_t)ui->f_start->text().toInt();
+//    int32_t step = (int32_t)ui->f_step->text().toInt();
+//    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+//    // generate the step ranges
+//    generate_range(start, stop, step, focus_range);
+
+//}
+
+//-----------------------------------------------------------------------------
+void capture_gui::image_size_edit_complete()
 {
-    int32_t start = (int32_t)ui->z_start->text().toInt();
-    int32_t step = (int32_t)ui->z_step->text().toInt();
-    int32_t stop = (int32_t)ui->z_stop->text().toInt();
 
-    // generate the step ranges
-    generate_range(start, stop, step, zoom_range);
-
-}
-
-void capture_gui::z_stop_edit_complete()
-{
-    int32_t start = (int32_t)ui->z_start->text().toInt();
-    int32_t step = (int32_t)ui->z_step->text().toInt();
-    int32_t stop = (int32_t)ui->z_stop->text().toInt();
-
-    // generate the step ranges
-    generate_range(start, stop, step, zoom_range);
-
-}
-
-
-//void capture_gui::on_f_start_valueChanged(int arg1)
-void capture_gui::f_start_edit_complete()
-{
-    int32_t start = (int32_t)ui->f_start->text().toInt();
-    int32_t step = (int32_t)ui->f_step->text().toInt();
-    int32_t stop = (int32_t)ui->f_stop->text().toInt();
-
-    // generate the step ranges
-    generate_range(start, stop, step, focus_range);
-
-    if(ctrl_connected == true)
-        update_focus_position();
-}
-
-void capture_gui::f_step_edit_complete()
-{
-    int32_t start = (int32_t)ui->f_start->text().toInt();
-    int32_t step = (int32_t)ui->f_step->text().toInt();
-    int32_t stop = (int32_t)ui->f_stop->text().toInt();
-
-    // generate the step ranges
-    generate_range(start, stop, step, focus_range);
-
-}
-
-void capture_gui::f_stop_edit_complete()
-{
-    int32_t start = (int32_t)ui->f_start->text().toInt();
-    int32_t step = (int32_t)ui->f_step->text().toInt();
-    int32_t stop = (int32_t)ui->f_stop->text().toInt();
-
-    // generate the step ranges
-    generate_range(start, stop, step, focus_range);
-
-}
-
-void capture_gui::x_offset_edit_complete()
-{
-    x_offset = (uint64_t)ui->x_offset->text().toInt();
-
-    if(cam_connected == true)
-        set_image_size(cam, height, width, y_offset, x_offset);
-}
-
-void capture_gui::y_offset_edit_complete()
-{
-    y_offset = (uint64_t)ui->y_offset->text().toInt();
-
-    if(cam_connected == true)
-        set_image_size(cam, height, width, y_offset, x_offset);
-}
-
-void capture_gui::height_edit_complete()
-{
+    width = (uint64_t)ui->width->text().toInt();
     height = (uint64_t)ui->height->text().toInt();
 
+    if(ui->center_cb->isChecked())
+    {
+        x_offset = (max_width - width) >> 1;
+        y_offset = (max_height - height) >> 1;
+    }
+    else
+    {
+        x_offset = (uint64_t)ui->x_offset->text().toInt();
+        y_offset = (uint64_t)ui->y_offset->text().toInt();
+    }
+
     if(cam_connected == true)
+    {
+        // disable duplicate event triggers
+        ui->x_offset->blockSignals(true);
+        ui->y_offset->blockSignals(true);
+        ui->width->blockSignals(true);
+        ui->height->blockSignals(true);
+
         set_image_size(cam, height, width, y_offset, x_offset);
-}
 
-void capture_gui::width_edit_complete()
-{
-    width = (uint64_t)ui->width->text().toInt();
+        get_image_size(cam, height, width, y_offset, x_offset);
 
-    if(cam_connected == true)
-        set_image_size(cam, height, width, y_offset, x_offset);
-}
+        ui->x_offset->setText(QString::number(x_offset));
+        ui->y_offset->setText(QString::number(y_offset));
+        ui->width->setText(QString::number(width));
+        ui->height->setText(QString::number(height));
 
+        // enable the signals again
+        ui->x_offset->blockSignals(false);
+        ui->y_offset->blockSignals(false);
+        ui->width->blockSignals(false);
+        ui->height->blockSignals(false);
+
+    }
+}   // end of image_size_edit_complete
+
+//-----------------------------------------------------------------------------
 void capture_gui::gain_edit_complete()
 {
     camera_gain = ui->gain->text().toDouble();
@@ -787,6 +863,7 @@ void capture_gui::gain_edit_complete()
 
 }
 
+//-----------------------------------------------------------------------------
 void capture_gui::exposure_edit_complete()
 {
     exp_time = ui->exposure->text().toDouble();
@@ -796,17 +873,22 @@ void capture_gui::exposure_edit_complete()
 
 }
 
-
+//-----------------------------------------------------------------------------
 void capture_gui::update_image()
 {
-    cv::RNG rng(time(NULL));
-    cv_image = cv::Mat(200,200, CV_8UC3, cv::Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256)));
+    //cv::RNG rng(time(NULL));
+    //cv_image = cv::Mat(200,200, CV_8UC3, cv::Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256)));
+
+    aquire_software_trigger_image(cam, image);
+
+    cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
     cv::imshow(image_window, cv_image);
     cv::waitKey(1);
 
-}
+}   // end of update_image
 
+//-----------------------------------------------------------------------------
 void capture_gui::on_start_capture_clicked()
 {
     uint32_t focus_idx, zoom_idx, img_idx;
@@ -820,7 +902,6 @@ void capture_gui::on_start_capture_clicked()
 
     double tmp_exp_time;
 
-
     if(ctrl_connected == false || cam_connected == false)
         return;
 
@@ -832,7 +913,10 @@ void capture_gui::on_start_capture_clicked()
 
     int32_t dir_status = mkdir(output_save_location);
     if (dir_status != 0)
-        std::cout << "Error creating folder: " << dir_status << std::endl;
+    {
+        ui->console_te->append("Error creating folder: " + QString::number(dir_status));
+        qApp->processEvents();
+    }
 
     // start the data logging by creating the file
     get_current_time(sdate, stime);
@@ -842,6 +926,7 @@ void capture_gui::on_start_capture_clicked()
     if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
     {
          ui->console_te->append("Error creating directory:");
+         qApp->processEvents();
     }
 
     get_current_time(sdate, stime);
@@ -854,15 +939,6 @@ void capture_gui::on_start_capture_clicked()
     data_log_stream << "#------------------------------------------------------------------" << std::endl;
     data_log_stream << "Version: 1.0    Date: " << sdate << "    Time: " << stime << std::endl << std::endl;
     data_log_stream << "#------------------------------------------------------------------" << std::endl;
-
-//    data_log_stream << "Input Parameters:" << std::endl;
-//    data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
-//    data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
-//    data_log_stream << "Focus Step Range:    " << focus_str << std::endl;
-//    data_log_stream << "Zoom Step Range:     " << zoom_str << std::endl;
-//    data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
-//    data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
-//    data_log_stream << "Number of Captures:  " << cap_num << std::endl;
 
     data_log_stream << "Save location: " << img_save_folder << std::endl;
     ui->console_te->append("------------------------------------------------------------------");
@@ -909,7 +985,7 @@ void capture_gui::on_start_capture_clicked()
     ui->console_te->append("Trigger Source:           " + QString::fromStdString(cam->TriggerSource.GetCurrentEntry()->GetSymbolic().c_str()));
     ui->console_te->append("Min/Max Gain:             " + QString::number(cam->Gain.GetMin()) + " / " + QString::number(cam->Gain.GetMax()));
     ui->console_te->append("Min/Max Exposure (ms):    " + QString::number(cam->ExposureTime.GetMin()/1000.0) + " / " + QString::number((uint64_t)cam->ExposureTime.GetMax()/1000.0) + "\n");
-    ui->console_te->show();
+    qApp->processEvents();
 
     // save the capture parameters to a file
     data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
@@ -931,7 +1007,6 @@ void capture_gui::on_start_capture_clicked()
     data_log_stream << t2_info;
     data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
 
-
     data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
     data_log_stream << "Image Size (h x w):       " << height << " x " << width << std::endl;
     data_log_stream << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
@@ -948,10 +1023,6 @@ void capture_gui::on_start_capture_clicked()
 
     // disconnect the timer for displaying the camera images
     disconnect(image_timer, SIGNAL(timeout()), 0, 0);
-
-
-    // set the trigger
-
 
     // loop through the zoom and focus settings
     for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
@@ -995,12 +1066,13 @@ void capture_gui::on_start_capture_clicked()
 
                 cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-                cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+                //cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
                 cv::imshow(image_window, cv_image);
                 cv::waitKey(1);
 
                 // save the image
                 ui->console_te->append("saving: " + QString::fromStdString(img_save_folder) + QString::fromStdString(image_capture_name));
+                qApp->processEvents();
                 data_log_stream << image_capture_name << std::endl;
 
                 cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
@@ -1008,10 +1080,6 @@ void capture_gui::on_start_capture_clicked()
                 //sleep_ms(100);
 
             }   // end of img_idx loop
-
-
-
-//            set_exposure_time(cam, exp_time);
 
         }   // end of focus_idx loop
 
@@ -1026,8 +1094,9 @@ void capture_gui::on_start_capture_clicked()
     status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
     ui->console_te->append("------------------------------------------------------------------");
-    data_log_stream << "#------------------------------------------------------------------" << std::endl;
+    qApp->processEvents();
 
+    data_log_stream << "#------------------------------------------------------------------" << std::endl;
 
     // re-enable the gui controlls
     ui->controller_gb->setEnabled(true);
@@ -1036,10 +1105,10 @@ void capture_gui::on_start_capture_clicked()
     // reconnect the timer for displaying camera images
     connect(image_timer, SIGNAL(timeout()), this, SLOT(update_image()));
 
-
 }
 
-void capture_gui::closeEvent (QCloseEvent *event)
+//-----------------------------------------------------------------------------
+void capture_gui::closeEvent(QCloseEvent *event)
 {
 
     bool status;
@@ -1069,6 +1138,12 @@ void capture_gui::closeEvent (QCloseEvent *event)
         ctrl_connected = false;
     }
 
+    // Clear camera list before releasing system
+    cam_list.Clear();
+
+    // Release system
+    cam_system->ReleaseInstance();
+
     if(cam_connected == true)
     {
         // close out the camera
@@ -1081,20 +1156,9 @@ void capture_gui::closeEvent (QCloseEvent *event)
         // Release reference to the camera
         cam = nullptr;
 
-        // Clear camera list before releasing system
-        cam_list.Clear();
+        cv::destroyAllWindows();
 
-        // Release system
-        cam_system->ReleaseInstance();
         cam_connected = false;
     }
 
-    cv::destroyAllWindows();
-
-    data_log_stream.close();
-
-    ui->console_te->append("\nProgram Complete!");
-    ui->console_te->show();
-}
-
-
+}   // end of closeEvent

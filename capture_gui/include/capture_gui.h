@@ -48,18 +48,21 @@ private slots:
 
     void on_toolButton_clicked();
 
-    void z_start_edit_complete();
-    void z_step_edit_complete();
-    void z_stop_edit_complete();
+//    void z_start_edit_complete();
+//    void z_step_edit_complete();
+//    void z_stop_edit_complete();
+    void zoom_edit_complete();
+    void focus_edit_complete();
 
-    void f_start_edit_complete();
-    void f_step_edit_complete();
-    void f_stop_edit_complete();
+//    void f_start_edit_complete();
+//    void f_step_edit_complete();
+//    void f_stop_edit_complete();
 
-    void x_offset_edit_complete();
-    void y_offset_edit_complete();
-    void height_edit_complete();
-    void width_edit_complete();
+//    void x_offset_edit_complete();
+//    void y_offset_edit_complete();
+    void image_size_edit_complete();
+//    void height_edit_complete();
+//    void width_edit_complete();
     void gain_edit_complete();
     void exposure_edit_complete();
 
@@ -95,11 +98,14 @@ private:
     uint64_t width, height, x_offset, y_offset;
     uint32_t x_padding, y_padding;
     uint32_t ts = 0;
-    //uint32_t sharpness;
+
     double camera_temp;
     double camera_gain;
     double frame_rate;
     double exp_time;
+
+    const uint32_t max_height = 1536;
+    const uint32_t max_width = 2048;
 
     bool cam_connected = false;
 
