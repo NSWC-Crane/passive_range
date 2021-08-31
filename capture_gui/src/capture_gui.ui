@@ -258,7 +258,7 @@
          </size>
         </property>
         <property name="text">
-         <string>1000</string>
+         <string>2000</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -417,7 +417,7 @@
          </size>
         </property>
         <property name="text">
-         <string>200</string>
+         <string>500</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>

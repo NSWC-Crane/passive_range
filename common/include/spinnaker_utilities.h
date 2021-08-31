@@ -442,7 +442,7 @@ void get_exposure_time(Spinnaker::CameraPtr& cam, double& value)
 
 // ----------------------------------------------------------------------------------------
 //void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
-void set_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeEnums& mode)
+void set_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeEnums mode)
 {
     if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionMode) && Spinnaker::GenApi::IsWritable(cam->AcquisitionMode))
     {

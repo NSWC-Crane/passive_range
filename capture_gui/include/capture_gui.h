@@ -95,7 +95,7 @@ private:
     // camera variables
     uint32_t cam_index;
     uint32_t num_cams;
-    uint64_t width, height, x_offset, y_offset;
+    uint64_t img_w, img_h;  //, x_offset, y_offset;
     uint32_t x_padding, y_padding;
     uint32_t ts = 0;
 

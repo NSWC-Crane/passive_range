@@ -51,9 +51,9 @@ Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
 //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
 Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
 Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
-//Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
+Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
 //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
-Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
+//Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
 Spinnaker::TriggerSourceEnums trigger_source;
 Spinnaker::TriggerActivationEnums trigger_activation = Spinnaker::TriggerActivation_RisingEdge;
 Spinnaker::SystemPtr cam_system;
@@ -132,10 +132,10 @@ capture_gui::capture_gui(QWidget *parent)
 
     ui->num_caps->setValidator(new QIntValidator(1,1000, this));
 
-    x_offset = (uint64_t)ui->x_offset->text().toInt();
-    y_offset = (uint64_t)ui->y_offset->text().toInt();
-    height = (uint64_t)ui->height->text().toInt();
-    width = (uint64_t)ui->width->text().toInt();
+//    x_offset = (uint64_t)ui->x_offset->text().toInt();
+//    y_offset = (uint64_t)ui->y_offset->text().toInt();
+    img_h = (uint64_t)ui->height->text().toInt();
+    img_w = (uint64_t)ui->width->text().toInt();
 
     camera_gain = ui->gain->text().toDouble();
     exp_time = ui->exposure->text().toDouble();
@@ -386,12 +386,29 @@ void capture_gui::on_ftdi_connect_btn_clicked()
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
 
         ui->console_te->append("Setting motors to intial position:");
-        ui->console_te->append("focus motor: " + QString::number(focus_range[0]));
-        ui->console_te->append("zoom motor: " + QString::number(zoom_range[0]) + "\n");
+        qApp->processEvents();
+
+        int32_t start = (int32_t)ui->f_start->text().toInt();
+        int32_t step = (int32_t)ui->f_step->text().toInt();
+        int32_t stop = (int32_t)ui->f_stop->text().toInt();
+
+        // generate the step ranges
+        generate_range(start, stop, step, focus_range);
+        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
         QThread::msleep(50);
 
-        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+        start = (int32_t)ui->z_start->text().toInt();
+        step = (int32_t)ui->z_step->text().toInt();
+        stop = (int32_t)ui->z_stop->text().toInt();
+
+        // generate the step ranges
+        generate_range(start, stop, step, zoom_range);
+
+        ui->console_te->append("focus motor: " + QString::number(focus_range[0]));
+        ui->console_te->append("zoom motor: " + QString::number(zoom_range[0]) + "\n");
+
         status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+        QThread::msleep(50);
 
         if (!status)
         {
@@ -459,12 +476,13 @@ void capture_gui::on_cam_connect_btn_clicked()
         ui->console_te->append("  Camera Temp:       " + QString::number(camera_temp) + "\n");
         qApp->processEvents();
 
-        width = (uint64_t)ui->width->text().toInt();
-        height = (uint64_t)ui->height->text().toInt();
-        x_offset = (uint64_t)ui->x_offset->text().toInt();
-        y_offset = (uint64_t)ui->y_offset->text().toInt();
+        img_w = (uint64_t)ui->width->text().toInt();
+        img_h = (uint64_t)ui->height->text().toInt();
+        uint64_t x_offset = (uint64_t)ui->x_offset->text().toInt();
+        uint64_t y_offset = (uint64_t)ui->y_offset->text().toInt();
 
         camera_gain = ui->gain->text().toDouble();
+        exp_time = ui->exposure->text().toDouble();
 
         switch(ui->px_format->currentIndex())
         {
@@ -477,14 +495,18 @@ void capture_gui::on_cam_connect_btn_clicked()
             break;
         }
 
+        set_acquisition_mode(cam, Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame); //acq_mode
+
         // configure the camera
-        set_image_size(cam, height, width, y_offset, x_offset);
+        //cam->EndAcquisition();
+        set_image_size(cam, img_h, img_w, y_offset, x_offset);
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
         set_gain_value(cam, camera_gain);
         set_exposure_mode(cam, exp_mode);
         set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
+        //cam->BeginAcquisition();
 
         // print out the camera configuration
 
@@ -518,7 +540,7 @@ void capture_gui::on_cam_connect_btn_clicked()
     //    switch (ts)
     //    {
     //    case 0:
-    //        cam->BeginAcquisition();
+//            cam->BeginAcquisition();
     //        status = ctrl.trigger(ctrl_handle, TRIG_ALL);
     //        aquire_trigger_image(cam, image);
     //        cam->EndAcquisition();
@@ -544,6 +566,9 @@ void capture_gui::on_cam_connect_btn_clicked()
     {
 
         ui->console_te->append("\nClosing Camera...");
+
+        if (acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
+            cam->EndAcquisition();
 
         // disconnect the timer signal
         disconnect(image_timer, SIGNAL(timeout()), 0, 0);
@@ -667,7 +692,12 @@ void capture_gui::generate_range(T start, T stop, T step, std::vector<T>& range)
 //-----------------------------------------------------------------------------
 void capture_gui::focus_edit_complete()
 {
+    // disable duplicate event triggers
+    ui->f_start->blockSignals(true);
+    ui->f_step->blockSignals(true);
+    ui->f_stop->blockSignals(true);
 
+    int32_t position = 0;
     QObject* sender_obj = sender();
 
     int32_t start = (int32_t)ui->f_start->text().toInt();
@@ -681,7 +711,24 @@ void capture_gui::focus_edit_complete()
     qApp->processEvents();
 
     if((ctrl_connected == true) && (sender_obj == ui->f_start))
-        update_focus_position();
+    {
+        //update_focus_position();
+
+        // set the current step to the minimum
+        bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+        //QThread::msleep(10);
+        status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+        //QThread::msleep(10);
+        status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+
+        status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
+        ui->console_te->append("focus motor: " + QString::number(position));
+    }
+
+    // enable the signals again
+    ui->f_start->blockSignals(false);
+    ui->f_step->blockSignals(false);
+    ui->f_stop->blockSignals(false);
 
 }   // end of focus_edit_complete
 
@@ -709,14 +756,14 @@ void capture_gui::zoom_edit_complete()
 //-----------------------------------------------------------------------------
 void capture_gui::image_size_edit_complete()
 {
-
-    width = (uint64_t)ui->width->text().toInt();
-    height = (uint64_t)ui->height->text().toInt();
+    uint64_t x_offset, y_offset;
+    img_w = (uint64_t)ui->width->text().toInt();
+    img_h = (uint64_t)ui->height->text().toInt();
 
     if(ui->center_cb->isChecked())
     {
-        x_offset = (max_width - width) >> 1;
-        y_offset = (max_height - height) >> 1;
+        x_offset = (max_width - img_w) >> 1;
+        y_offset = (max_height - img_h) >> 1;
     }
     else
     {
@@ -732,14 +779,17 @@ void capture_gui::image_size_edit_complete()
         ui->width->blockSignals(true);
         ui->height->blockSignals(true);
 
-        set_image_size(cam, height, width, y_offset, x_offset);
+        //cam->AcquisitionStop();
+        cam->EndAcquisition();
+        set_image_size(cam, img_h, img_w, y_offset, x_offset);
+        cam->BeginAcquisition();
 
-        get_image_size(cam, height, width, y_offset, x_offset);
+        get_image_size(cam, img_h, img_w, y_offset, x_offset);
 
         ui->x_offset->setText(QString::number(x_offset));
         ui->y_offset->setText(QString::number(y_offset));
-        ui->width->setText(QString::number(width));
-        ui->height->setText(QString::number(height));
+        ui->width->setText(QString::number(img_w));
+        ui->height->setText(QString::number(img_h));
 
         // enable the signals again
         ui->x_offset->blockSignals(false);
@@ -778,7 +828,7 @@ void capture_gui::update_image()
 
     aquire_software_trigger_image(cam, image);
 
-    cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
+    cv_image = cv::Mat(img_h + y_padding, img_w + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
     cv::imshow(image_window, cv_image);
     cv::waitKey(1);
@@ -797,7 +847,9 @@ void capture_gui::on_start_capture_clicked()
     std::string img_save_folder;
     std::string sdate, stime;
 
-    double tmp_exp_time;
+    uint64_t x_offset, y_offset;
+
+    //double tmp_exp_time;
 
     if(ctrl_connected == false || cam_connected == false)
         return;
@@ -849,16 +901,18 @@ void capture_gui::on_start_capture_clicked()
     zoom_step = 0;
 
     // set the camera settings
-    set_image_size(cam, height, width, y_offset, x_offset);
+    cam->EndAcquisition();
+    set_image_size(cam, img_h, img_w, y_offset, x_offset);
     set_pixel_format(cam, pixel_format);
     //set_gain_mode(cam, gain_mode);
     set_gain_value(cam, camera_gain);
     //set_exposure_mode(cam, exp_mode);
     set_exposure_time(cam, exp_time);
     //set_acquisition_mode(cam, acq_mode); //acq_mode
+    cam->BeginAcquisition();
 
     // get all of the camera settings
-    get_image_size(cam, height, width, y_offset, x_offset);
+    get_image_size(cam, img_h, img_w, y_offset, x_offset);
 
     // pixel format
     get_pixel_format(cam, pixel_format);
@@ -870,7 +924,7 @@ void capture_gui::on_start_capture_clicked()
     get_acquisition_mode(cam, acq_mode);
 
     // dispaly the capture parameters
-    ui->console_te->append("Image Size (h x w):       " + QString::number(height) + " x " + QString::number(width));
+    ui->console_te->append("Image Size (h x w):       " + QString::number(img_h) + " x " + QString::number(img_w));
     ui->console_te->append("Image Offset (x, y):      " + QString::number(x_offset) + ", " + QString::number(y_offset));
     ui->console_te->append("Pixel Format:             " + QString::fromStdString(cam->PixelFormat.GetCurrentEntry()->GetSymbolic().c_str()));
     ui->console_te->append("ADC Bit Depth:            " + QString::fromStdString(cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic().c_str()));
@@ -903,7 +957,7 @@ void capture_gui::on_start_capture_clicked()
     data_log_stream << t2_info << std::endl;
 
     data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
-    data_log_stream << "Image Size (h x w):       " << height << " x " << width << std::endl;
+    data_log_stream << "Image Size (h x w):       " << img_h << " x " << img_w << std::endl;
     data_log_stream << "Image Offset (x, y):      " << x_offset << ", " << y_offset << std::endl;
     data_log_stream << "Pixel Format:             " << cam->PixelFormat.GetCurrentEntry()->GetSymbolic() << std::endl;
     data_log_stream << "ADC Bit Depth:            " << cam->AdcBitDepth.GetCurrentEntry()->GetSymbolic() << std::endl;
@@ -928,20 +982,25 @@ void capture_gui::on_start_capture_clicked()
     // loop through the zoom and focus settings
     for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
     {
+        ui->console_te->append("setting zoom motor: " + QString::number(zoom_range[zoom_idx]));
+
         // set the zoom motor value to each value in focus_range
         status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
+        QThread::msleep(50);
         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
         zoom_str = num2str(zoom_step, "z%05d_");
 
         for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
         {
+            ui->console_te->append("setting focus motor: " + QString::number(focus_range[focus_idx]));
             // set the focus motor value to each value in focus_range
             status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[focus_idx]);
+            QThread::msleep(50);
             status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
             focus_str = num2str(focus_step, "f%05d_");
-            sleep_ms(5);
+            //sleep_ms(5);
 
             for (img_idx = 0; img_idx < cap_num; ++img_idx)
             {
@@ -960,12 +1019,10 @@ void capture_gui::on_start_capture_clicked()
 //                    break;
 //                }
 
-                get_exposure_time(cam, tmp_exp_time);
-                exposure_str = num2str(tmp_exp_time, "e%05.0f_");
+//                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+                image_capture_name = image_header + zoom_str + focus_str + num2str(img_idx, "i%02d") + ".png";
 
-                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
-
-                cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
+                cv_image = cv::Mat(img_h + y_padding, img_w + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
                 //cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
                 cv::imshow(image_window, cv_image);
@@ -973,21 +1030,28 @@ void capture_gui::on_start_capture_clicked()
 
                 // save the image QString::fromStdString(img_save_folder) +
                 ui->console_te->append("saving: " + QString::fromStdString(image_capture_name));
-                qApp->processEvents();
+                //qApp->processEvents();
                 data_log_stream << image_capture_name << std::endl;
 
                 cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
                 //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                //sleep_ms(100);
+                qApp->processEvents();
 
             }   // end of img_idx loop
+            //sleep_ms(100);
 
         }   // end of focus_idx loop
+
+        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+        QThread::msleep(100);
 
     }   // end of zoom_idx loop
 
     // set the focus step to the first focus_range setting
+    ui->console_te->append("setting focus motor: " + QString::number(focus_range[0]));
     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+
+    ui->console_te->append("setting zoom motor: " + QString::number(zoom_range[0]));
     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
     // disable the motors

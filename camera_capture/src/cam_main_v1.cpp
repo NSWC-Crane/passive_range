@@ -94,9 +94,9 @@ int main(int argc, char** argv)
     Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
     double frame_rate;
     Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
-    //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
+    Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
-    Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
+    //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
     Spinnaker::TriggerSourceEnums trigger_source;
     Spinnaker::TriggerActivationEnums trigger_activation = Spinnaker::TriggerActivation_RisingEdge;
     Spinnaker::ImagePtr image;
@@ -866,6 +866,8 @@ int main(int argc, char** argv)
         x_padding = (uint32_t)image->GetXPadding();
         y_padding = (uint32_t)image->GetYPadding();
 
+        cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+
         do
         {
 
@@ -887,7 +889,6 @@ int main(int argc, char** argv)
             //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding. 
             cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-            cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
             cv::imshow(image_window, cv_image);
 
             key = cv::waitKey(1);
@@ -986,7 +987,7 @@ int main(int argc, char** argv)
 
                                 cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-                                cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+                                //cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
                                 cv::imshow(image_window, cv_image);
                                 key = cv::waitKey(1);
 
@@ -996,7 +997,7 @@ int main(int argc, char** argv)
 
                                 cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
                                 //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                                //sleep_ms(100);
+                                sleep_ms(100);
 
                             }   // end of img_idx loop
 
