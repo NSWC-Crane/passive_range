@@ -827,10 +827,10 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
         std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
-        //std::cout << "  f - Step the focus motor by 160 steps" << std::endl;
-        //std::cout << "  g - Step the focus motor by -160 steps" << std::endl;
+        std::cout << "  f - Step the focus motor" << std::endl;
         //std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
-        //std::cout << "  x - Step the zoom motor by -160 steps" << std::endl;
+        //std::cout << "  g - Set the camera gain" << std::endl;
+        //std::cout << "  x - set the camera exposure time (ms)" << std::endl;
 
         std::cout << "  s - Save an image" << std::endl;
         std::cout << "  q - Quit" << std::endl;
@@ -1021,34 +1021,32 @@ int main(int argc, char** argv)
                 data_log_stream << "#------------------------------------------------------------------" << std::endl;
                 break;
                 // end of key == 's'
-/*
+
             case 'f':
-                focus_step = 160;
-                //md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
-                std::cout << "focus step: " << focus_step << "   \r";
-                std::cout.flush();
-                break;
 
-            case 'g':
-                focus_step = -160;
-                //md.step_focus_motor(ctrl_handle, focus_step, CMD_FOCUS_CTRL);
-                std::cout << "focus step: " << focus_step << "   \r";
-                std::cout.flush();
-                break;
+                std::cout << "Enter focus step: ";
+                std::getline(std::cin, console_input);
+                try
+                {
+                    focus_step = stoi(console_input);
+                    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+                    status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
 
+                }
+                catch (std::exception e)
+                {
+                    std::cout << "error converting step: " << e.what() << std::endl;
+                }
+                break;
+/*
             case 'z':
                 zoom_step = 160;
                 //md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
                 std::cout << "zoom step:  " << zoom_step << "   \r";
                 std::cout.flush();
                 break;
-
-            case 'x':
-                zoom_step = -160;
-                //md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
-                std::cout << "zoom step:  " << zoom_step << "   \r";
-                std::cout.flush();
-                break;
+            
 */
             default:
                 break;
