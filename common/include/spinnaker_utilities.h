@@ -794,7 +794,7 @@ int configure_trigger(Spinnaker::GenApi::INodeMap& node_map, const trigger_type 
 void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image)
 {
 
-    cam->BeginAcquisition();
+    //cam->BeginAcquisition();
     cam->TriggerSoftware.Execute();
 
     Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
@@ -812,7 +812,7 @@ void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePt
 
     // Release image
     ptr_img->Release();
-    cam->EndAcquisition();
+    //cam->EndAcquisition();
 
 }
 
