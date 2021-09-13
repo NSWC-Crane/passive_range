@@ -1032,22 +1032,62 @@ int main(int argc, char** argv)
                     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
                     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
                     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
-
                 }
                 catch (std::exception e)
                 {
-                    std::cout << "error converting step: " << e.what() << std::endl;
+                    std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
                 }
                 break;
-/*
+
             case 'z':
-                zoom_step = 160;
-                //md.step_zoom_motor(ctrl_handle, zoom_step, CMD_ZOOM_CTRL);
-                std::cout << "zoom step:  " << zoom_step << "   \r";
-                std::cout.flush();
+
+                std::cout << "Enter zoom step: ";
+                std::getline(std::cin, console_input);
+                try
+                {
+                    zoom_step = stoi(console_input);
+                    status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+                    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                    status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+                }
+                catch (std::exception e)
+                {
+                    std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
+                }
                 break;
             
-*/
+            case 'e':
+                std::cout << "Enter exposure time (ms): ";
+                std::getline(std::cin, console_input);
+                try
+                {
+                    double tmp_exp = stod(console_input);
+                    set_exposure_time(cam, tmp_exp);
+                }
+                catch (std::exception e)
+                {
+                    std::cout << "error converting exposure time: " << console_input << " error msg: " << e.what() << std::endl;
+                }         
+                break;
+                
+                
+            case 'g':
+                std::cout << "Enter gain: ";
+                std::getline(std::cin, console_input);
+                try
+                {
+                    double tmp_gain = stod(console_input);
+                    set_gain_value(cam, tmp_gain);
+                }
+                catch (std::exception e)
+                {
+                    std::cout << "error converting exposure time: " << console_input << " error msg: " << e.what() << std::endl;
+                }                   
+                
+                break;
+
+
+
             default:
                 break;
             }   // end of switch case
