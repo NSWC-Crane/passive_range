@@ -123,11 +123,11 @@ capture_gui::capture_gui(QWidget *parent)
     connect(ui->height, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));
 
     // gain settings
-    ui->gain->setValidator( new QDoubleValidator(0, 8, 4, this) );
+    ui->gain->setValidator( new QDoubleValidator(0, 30, 4, this) );
     connect(ui->gain, SIGNAL(returnPressed()), this, SLOT(gain_edit_complete()));
 
     // exposure settings
-    ui->exposure->setValidator( new QDoubleValidator(0, 50000, 1, this) );
+    ui->exposure->setValidator( new QDoubleValidator(0, 500000, 1, this) );
     connect(ui->exposure, SIGNAL(returnPressed()), this, SLOT(exposure_edit_complete()));
 
     ui->num_caps->setValidator(new QIntValidator(1,1000, this));
@@ -635,12 +635,10 @@ void capture_gui::update_zoom_position()
     // set the current step to the minimum
     bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
     status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
-    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
-
-    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
-    ui->console_te->append("zoom motor: " + QString::number(position));
     QThread::msleep(20);
-    qApp->processEvents();
+    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
+    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+    ui->console_te->append("zoom motor: " + QString::number(position));
 }   // end of update_zoom_position
 
 //-----------------------------------------------------------------------------
@@ -716,12 +714,11 @@ void capture_gui::focus_edit_complete()
 
         // set the current step to the minimum
         bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-        //QThread::msleep(10);
         status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
-        //QThread::msleep(10);
+        QThread::msleep(10);
+        status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
         status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
 
-        status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
         ui->console_te->append("focus motor: " + QString::number(position));
     }
 
@@ -735,7 +732,12 @@ void capture_gui::focus_edit_complete()
 //-----------------------------------------------------------------------------
 void capture_gui::zoom_edit_complete()
 {
+    // disable duplicate event triggers
+    ui->z_start->blockSignals(true);
+    ui->z_step->blockSignals(true);
+    ui->z_stop->blockSignals(true);
 
+    int32_t position = 0;
     QObject* sender_obj = sender();
 
     int32_t start = (int32_t)ui->z_start->text().toInt();
@@ -749,7 +751,19 @@ void capture_gui::zoom_edit_complete()
     qApp->processEvents();
 
     if((ctrl_connected == true) && (sender_obj == ui->z_start))
-        update_zoom_position();
+    {
+        bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+        status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+        QThread::msleep(20);
+        status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+        ui->console_te->append("zoom motor: " + QString::number(position));
+    }
+
+    // enable the signals again
+    ui->z_start->blockSignals(false);
+    ui->z_step->blockSignals(false);
+    ui->z_stop->blockSignals(false);
 
 }   // end of zoom_edit_complete
 
@@ -806,7 +820,12 @@ void capture_gui::gain_edit_complete()
     camera_gain = ui->gain->text().toDouble();
 
     if(cam_connected == true)
+    {
         set_gain_value(cam, camera_gain);
+        QThread::msleep(20);
+        get_gain_value(cam, camera_gain);
+        ui->console_te->append("Gain Value: " + QString::number(camera_gain));
+    }
 
 }   // end of gain_edit_complete
 
@@ -816,7 +835,12 @@ void capture_gui::exposure_edit_complete()
     exp_time = ui->exposure->text().toDouble();
 
     if(cam_connected == true)
+    {
         set_exposure_time(cam, exp_time);
+        QThread::msleep(20);
+        get_exposure_time(cam, exp_time);
+        ui->console_te->append("Exposure Time (us): " + QString::number(exp_time));
+    }
 
 }   // end of exposure_edit_complete
 

@@ -97,9 +97,6 @@
          <height>0</height>
         </size>
        </property>
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
       </widget>
      </item>
     </layout>
@@ -1046,7 +1043,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>200</y>
+      <y>210</y>
       <width>75</width>
       <height>23</height>
      </rect>

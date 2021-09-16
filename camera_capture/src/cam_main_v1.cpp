@@ -105,7 +105,8 @@ int main(int argc, char** argv)
     uint32_t ts = 0;
     //uint32_t sharpness;
     double camera_temp;
-    std::vector<double> exp_time;
+//    std::vector<double> exp_time;
+    double exp_time;
     uint32_t cap_num;
     std::vector<std::string> cam_sn;
     Spinnaker::CameraPtr cam;
@@ -245,8 +246,9 @@ int main(int argc, char** argv)
             // line 4: camera properties settings
             //sharpness = std::stoi(cfg_params[2][0]);
             //frame_rate = std::stod(cfg_params[2][1]);
-            exposure_str = cfg_params[3][0];
-            parse_input_range(cfg_params[3][0], exp_time);
+            //exposure_str = cfg_params[3][0];
+            //parse_input_range(cfg_params[3][0], exp_time);
+            exp_time = std::stod(cfg_params[3][0]);
             camera_gain = std::stod(cfg_params[3][1]);
 
             if (camera_gain < 0)
@@ -375,8 +377,9 @@ int main(int argc, char** argv)
         // line 4: camera properties settings
         //sharpness = parser.get<uint32_t>("sharpness");
         //frame_rate = parser.get<double>("fps");
-        exposure_str = parser.get<string>("exp_time");
-        parse_input_range(parser.get<string>("exp_time"), exp_time);
+        //exposure_str = parser.get<string>("exp_time");
+        //parse_input_range(parser.get<string>("exp_time"), exp_time);
+        exp_time = parser.get<double>("exp_time");
         camera_gain = parser.get<double>("gain");
 
         if (camera_gain < 0)
@@ -788,7 +791,7 @@ int main(int argc, char** argv)
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
         set_exposure_mode(cam, exp_mode);
-        set_exposure_time(cam, exp_time[0]);
+        set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
 
         // if the gain is 0 or greater then them is set to off and a value must be set
@@ -924,7 +927,7 @@ int main(int argc, char** argv)
 
                 switch (key)
                 {
-                    // check to save the image
+                // check to save the image
                 case 's':
                     get_current_time(sdate, stime);
                     img_save_folder = output_save_location + sdate + "_" + stime + "/";
@@ -988,9 +991,9 @@ int main(int argc, char** argv)
                                 combined_save_location = output_save_location + sub_dir + "/";
                             }
                             */
-                            for (exp_idx = 0; exp_idx < exp_time.size(); ++exp_idx)
-                            {
-                                set_exposure_time(cam, exp_time[exp_idx]);
+                            //for (exp_idx = 0; exp_idx < exp_time.size(); ++exp_idx)
+                            //{
+                            //    set_exposure_time(cam, exp_time[exp_idx]);
 
                                 for (img_idx = 0; img_idx < cap_num; ++img_idx)
                                 {
@@ -1026,13 +1029,13 @@ int main(int argc, char** argv)
 
                                     cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
                                     //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                                    sleep_ms(100);
+                                    sleep_ms(20);
 
                                 }   // end of img_idx loop
 
-                            }   // end of exp_idx loop
+                            //}   // end of exp_idx loop
 
-                            set_exposure_time(cam, exp_time[0]);
+                            //set_exposure_time(cam, exp_time[0]);
 
                         }   // end of focus_idx loop
 
@@ -1060,6 +1063,7 @@ int main(int argc, char** argv)
                         focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
                         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
                         status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                        sleep_ms(10);
                         status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
                         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
                         std::cout << "Focus step: " << focus_step << std::endl;
@@ -1079,6 +1083,7 @@ int main(int argc, char** argv)
                         zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
                         status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
                         status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                        sleep_ms(10);
                         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
                         status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
                         std::cout << "Zoom step: " << zoom_step << std::endl;
@@ -1096,6 +1101,7 @@ int main(int argc, char** argv)
                     {
                         double tmp_exp = floor(std::stod(console_input.substr(2, console_input.length() - 1)));
                         set_exposure_time(cam, tmp_exp);
+                        sleep_ms(10);
                         get_exposure_time(cam, tmp_exp);
                         std::cout << "Exposure time (us): " << tmp_exp << std::endl;
 
@@ -1114,6 +1120,7 @@ int main(int argc, char** argv)
                     {
                         double tmp_gain = std::stod(console_input.substr(2, console_input.length() - 1));
                         set_gain_value(cam, tmp_gain);
+                        sleep_ms(10);
                         get_gain_value(cam, tmp_gain);
                         std::cout << "Gain: " << tmp_gain << std::endl;
                     }

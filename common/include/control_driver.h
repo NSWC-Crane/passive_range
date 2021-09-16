@@ -387,9 +387,11 @@ public:
         status &= receive_packet(ctrl_handle, write_sp_size, rx);
         status &= (rx.data[SP_ERROR_POS] == 0);
 
+        sleep_ms(20);
+
         while (mtr_moving == true)
         {
-            sleep_ms(20);
+            sleep_ms(5);
             status &= motor_moving(ctrl_handle, id);
             //mtr_error = rx.data[SP_ERROR_POS];
             mtr_moving = (rx.data[SP_PARAMS_POS] == 1);
