@@ -90,7 +90,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="save_location">
+      <widget class="QLineEdit" name="save_location_tb">
        <property name="minimumSize">
         <size>
          <width>619</width>
