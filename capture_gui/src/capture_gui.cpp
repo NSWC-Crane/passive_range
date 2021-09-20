@@ -125,15 +125,12 @@ capture_gui::capture_gui(QWidget *parent)
     connect(ui->gain, SIGNAL(returnPressed()), this, SLOT(gain_edit_complete()));
 
     // exposure settings
-    ui->exposure->setValidator( new QDoubleValidator(0, 29999999, 1, this) );
+    ui->exposure->setValidator( new QDoubleValidator(17, 29999999, 1, this) );
     connect(ui->exposure, SIGNAL(returnPressed()), this, SLOT(exposure_edit_complete()));
 
     ui->num_caps->setValidator(new QIntValidator(1,1000, this));
 
-
     connect(ui->save_location_tb, SIGNAL(returnPressed()), this, SLOT(save_location_update()));
-
-
 
 //    x_offset = (uint64_t)ui->x_offset->text().toInt();
 //    y_offset = (uint64_t)ui->y_offset->text().toInt();
@@ -449,7 +446,7 @@ void capture_gui::on_ftdi_connect_btn_clicked()
         ctrl_connected = false;
     }
 
-}
+}   // end of on_ftdi_connect_btn_clicked
 
 //-----------------------------------------------------------------------------
 void capture_gui::on_cam_connect_btn_clicked()
@@ -580,7 +577,7 @@ void capture_gui::on_cam_connect_btn_clicked()
 
     }
 
-}
+}   // end of on_cam_connect_btn_clicked
 
 //-----------------------------------------------------------------------------
 void capture_gui::on_px_format_currentIndexChanged(int index)
@@ -697,6 +694,12 @@ void capture_gui::focus_edit_complete()
     int32_t step = (int32_t)ui->f_step->text().toInt();
     int32_t stop = (int32_t)ui->f_stop->text().toInt();
 
+    if(start > stop)
+    {
+        stop = start;
+        ui->f_stop->setText(QString::number(stop));
+    }
+
     // generate the step ranges
     generate_range(start, stop, step, focus_range);
 
@@ -738,6 +741,12 @@ void capture_gui::zoom_edit_complete()
     int32_t start = (int32_t)ui->z_start->text().toInt();
     int32_t step = (int32_t)ui->z_step->text().toInt();
     int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+    if(start > stop)
+    {
+        stop = start;
+        ui->z_stop->setText(QString::number(stop));
+    }
 
     // generate the step ranges
     generate_range(start, stop, step, zoom_range);
@@ -1019,7 +1028,7 @@ void capture_gui::on_start_capture_clicked()
             status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
             focus_str = num2str(focus_step, "f%05d_");
-            //sleep_ms(5);
+            sleep_ms(20);
 
             for (img_idx = 0; img_idx < cap_num; ++img_idx)
             {
