@@ -87,7 +87,6 @@ capture_gui::capture_gui(QWidget *parent)
     ui->z_start->setValidator(&zoom_val);
     ui->z_step->setValidator(&zoom_val);
     ui->z_stop->setValidator(&zoom_val);
-//    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(z_start_edit_complete()));
     connect(ui->z_start, SIGNAL(returnPressed()), this, SLOT(zoom_edit_complete()));
     connect(ui->z_step, SIGNAL(returnPressed()), this, SLOT(zoom_edit_complete()));
     connect(ui->z_stop, SIGNAL(returnPressed()), this, SLOT(zoom_edit_complete()));
@@ -97,7 +96,6 @@ capture_gui::capture_gui(QWidget *parent)
     ui->f_start->setValidator(&focus_val);
     ui->f_step->setValidator(&focus_val);
     ui->f_stop->setValidator(&focus_val);
-//    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(f_start_edit_complete()));
     connect(ui->f_start, SIGNAL(returnPressed()), this, SLOT(focus_edit_complete()));
     connect(ui->f_step, SIGNAL(returnPressed()), this, SLOT(focus_edit_complete()));
     connect(ui->f_stop, SIGNAL(returnPressed()), this, SLOT(focus_edit_complete()));
@@ -123,14 +121,16 @@ capture_gui::capture_gui(QWidget *parent)
     connect(ui->height, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));
 
     // gain settings
-    ui->gain->setValidator( new QDoubleValidator(0, 8, 4, this) );
+    ui->gain->setValidator( new QDoubleValidator(0, 47.99, 4, this) );
     connect(ui->gain, SIGNAL(returnPressed()), this, SLOT(gain_edit_complete()));
 
     // exposure settings
-    ui->exposure->setValidator( new QDoubleValidator(0, 50000, 1, this) );
+    ui->exposure->setValidator( new QDoubleValidator(17, 29999999, 1, this) );
     connect(ui->exposure, SIGNAL(returnPressed()), this, SLOT(exposure_edit_complete()));
 
     ui->num_caps->setValidator(new QIntValidator(1,1000, this));
+
+    connect(ui->save_location_tb, SIGNAL(returnPressed()), this, SLOT(save_location_update()));
 
 //    x_offset = (uint64_t)ui->x_offset->text().toInt();
 //    y_offset = (uint64_t)ui->y_offset->text().toInt();
@@ -446,7 +446,7 @@ void capture_gui::on_ftdi_connect_btn_clicked()
         ctrl_connected = false;
     }
 
-}
+}   // end of on_ftdi_connect_btn_clicked
 
 //-----------------------------------------------------------------------------
 void capture_gui::on_cam_connect_btn_clicked()
@@ -498,7 +498,6 @@ void capture_gui::on_cam_connect_btn_clicked()
         set_acquisition_mode(cam, Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame); //acq_mode
 
         // configure the camera
-        //cam->EndAcquisition();
         set_image_size(cam, img_h, img_w, y_offset, x_offset);
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
@@ -506,21 +505,6 @@ void capture_gui::on_cam_connect_btn_clicked()
         set_exposure_mode(cam, exp_mode);
         set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
-        //cam->BeginAcquisition();
-
-        // print out the camera configuration
-
-        //get_image_size(cam, height, width, y_offset, x_offset);
-
-        // pixel format
-        //get_pixel_format(cam, pixel_format);
-        //get_gain_value(cam, camera_gain);
-
-        //set_gain_mode(cam, gain_mode);
-
-        // exposure
-    //    double tmp_exp_time;
-    //    get_exposure_time(cam, tmp_exp_time);
 
         // start the acquistion if the mode is set to continuous
         if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
@@ -593,7 +577,7 @@ void capture_gui::on_cam_connect_btn_clicked()
 
     }
 
-}
+}   // end of on_cam_connect_btn_clicked
 
 //-----------------------------------------------------------------------------
 void capture_gui::on_px_format_currentIndexChanged(int index)
@@ -621,11 +605,19 @@ void capture_gui::on_toolButton_clicked()
 //    QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), ("../" + QDir::currentPath()));
     QString save_location = QFileDialog::getExistingDirectory(0, ("Select Output Folder"), ("../"));
 
-    ui->save_location->setText(save_location);
+    ui->save_location_tb->setText(save_location);
 
     output_save_location = path_check(save_location.toStdString());
 
 }   // end of on_toolButton_clicked
+
+//-----------------------------------------------------------------------------
+void capture_gui::save_location_update()
+{
+     QString save_location = ui->save_location_tb->text();
+     output_save_location = path_check(save_location.toStdString());
+
+}   // end of save_location_update
 
 //-----------------------------------------------------------------------------
 void capture_gui::update_zoom_position()
@@ -635,12 +627,10 @@ void capture_gui::update_zoom_position()
     // set the current step to the minimum
     bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
     status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
-    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
-
-    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
-    ui->console_te->append("zoom motor: " + QString::number(position));
     QThread::msleep(20);
-    qApp->processEvents();
+    status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
+    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+    ui->console_te->append("zoom motor: " + QString::number(position));
 }   // end of update_zoom_position
 
 //-----------------------------------------------------------------------------
@@ -704,6 +694,12 @@ void capture_gui::focus_edit_complete()
     int32_t step = (int32_t)ui->f_step->text().toInt();
     int32_t stop = (int32_t)ui->f_stop->text().toInt();
 
+    if(start > stop)
+    {
+        stop = start;
+        ui->f_stop->setText(QString::number(stop));
+    }
+
     // generate the step ranges
     generate_range(start, stop, step, focus_range);
 
@@ -716,12 +712,11 @@ void capture_gui::focus_edit_complete()
 
         // set the current step to the minimum
         bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-        //QThread::msleep(10);
         status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
-        //QThread::msleep(10);
+        QThread::msleep(10);
+        status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
         status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
 
-        status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
         ui->console_te->append("focus motor: " + QString::number(position));
     }
 
@@ -735,12 +730,23 @@ void capture_gui::focus_edit_complete()
 //-----------------------------------------------------------------------------
 void capture_gui::zoom_edit_complete()
 {
+    // disable duplicate event triggers
+    ui->z_start->blockSignals(true);
+    ui->z_step->blockSignals(true);
+    ui->z_stop->blockSignals(true);
 
+    int32_t position = 0;
     QObject* sender_obj = sender();
 
     int32_t start = (int32_t)ui->z_start->text().toInt();
     int32_t step = (int32_t)ui->z_step->text().toInt();
     int32_t stop = (int32_t)ui->z_stop->text().toInt();
+
+    if(start > stop)
+    {
+        stop = start;
+        ui->z_stop->setText(QString::number(stop));
+    }
 
     // generate the step ranges
     generate_range(start, stop, step, zoom_range);
@@ -749,7 +755,19 @@ void capture_gui::zoom_edit_complete()
     qApp->processEvents();
 
     if((ctrl_connected == true) && (sender_obj == ui->z_start))
-        update_zoom_position();
+    {
+        bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+        status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+        QThread::msleep(20);
+        status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
+        status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+        ui->console_te->append("zoom motor: " + QString::number(position));
+    }
+
+    // enable the signals again
+    ui->z_start->blockSignals(false);
+    ui->z_step->blockSignals(false);
+    ui->z_stop->blockSignals(false);
 
 }   // end of zoom_edit_complete
 
@@ -771,33 +789,33 @@ void capture_gui::image_size_edit_complete()
         y_offset = (uint64_t)ui->y_offset->text().toInt();
     }
 
+    // disable duplicate event triggers
+    ui->x_offset->blockSignals(true);
+    ui->y_offset->blockSignals(true);
+    ui->width->blockSignals(true);
+    ui->height->blockSignals(true);
+
     if(cam_connected == true)
     {
-        // disable duplicate event triggers
-        ui->x_offset->blockSignals(true);
-        ui->y_offset->blockSignals(true);
-        ui->width->blockSignals(true);
-        ui->height->blockSignals(true);
-
         //cam->AcquisitionStop();
         cam->EndAcquisition();
         set_image_size(cam, img_h, img_w, y_offset, x_offset);
         cam->BeginAcquisition();
 
         get_image_size(cam, img_h, img_w, y_offset, x_offset);
-
-        ui->x_offset->setText(QString::number(x_offset));
-        ui->y_offset->setText(QString::number(y_offset));
-        ui->width->setText(QString::number(img_w));
-        ui->height->setText(QString::number(img_h));
-
-        // enable the signals again
-        ui->x_offset->blockSignals(false);
-        ui->y_offset->blockSignals(false);
-        ui->width->blockSignals(false);
-        ui->height->blockSignals(false);
-
     }
+
+    ui->x_offset->setText(QString::number(x_offset));
+    ui->y_offset->setText(QString::number(y_offset));
+    ui->width->setText(QString::number(img_w));
+    ui->height->setText(QString::number(img_h));
+
+    // enable the signals again
+    ui->x_offset->blockSignals(false);
+    ui->y_offset->blockSignals(false);
+    ui->width->blockSignals(false);
+    ui->height->blockSignals(false);
+
 }   // end of image_size_edit_complete
 
 //-----------------------------------------------------------------------------
@@ -806,7 +824,12 @@ void capture_gui::gain_edit_complete()
     camera_gain = ui->gain->text().toDouble();
 
     if(cam_connected == true)
+    {
         set_gain_value(cam, camera_gain);
+        QThread::msleep(20);
+        get_gain_value(cam, camera_gain);
+        ui->console_te->append("Gain Value: " + QString::number(camera_gain));
+    }
 
 }   // end of gain_edit_complete
 
@@ -816,7 +839,12 @@ void capture_gui::exposure_edit_complete()
     exp_time = ui->exposure->text().toDouble();
 
     if(cam_connected == true)
+    {
         set_exposure_time(cam, exp_time);
+        QThread::msleep(20);
+        get_exposure_time(cam, exp_time);
+        ui->console_te->append("Exposure Time (us): " + QString::number(exp_time));
+    }
 
 }   // end of exposure_edit_complete
 
@@ -1002,7 +1030,7 @@ void capture_gui::on_start_capture_clicked()
             status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
             focus_str = num2str(focus_step, "f%05d_");
-            //sleep_ms(5);
+            sleep_ms(20);
 
             for (img_idx = 0; img_idx < cap_num; ++img_idx)
             {

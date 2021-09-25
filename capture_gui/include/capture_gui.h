@@ -47,6 +47,7 @@ private slots:
     void on_px_format_currentIndexChanged(int index);
 
     void on_toolButton_clicked();
+    void save_location_update();
 
 //    void z_start_edit_complete();
 //    void z_step_edit_complete();

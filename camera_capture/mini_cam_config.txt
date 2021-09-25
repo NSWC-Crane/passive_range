@@ -32,7 +32,7 @@
 512, 512, 1024, 512, 0
 
 # Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
-54992:0:54992, 0.5
+54992, 0.5
 
 # Line 5: the number of images to capture per focus/zoom/exposure setting
 1

@@ -30,7 +30,7 @@
 
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
-2000:500:4000
+0:500:2000
 
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
 #full
@@ -39,7 +39,8 @@
 
 
 # Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
-30000:0:30000, 0.1
+#30000:0:30000, 5.0
+30000, 5.0
 
 # Line 5: the number of images to capture per focus/zoom/exposure setting
 1

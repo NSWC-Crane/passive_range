@@ -90,15 +90,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="save_location">
+      <widget class="QLineEdit" name="save_location_tb">
        <property name="minimumSize">
         <size>
          <width>619</width>
          <height>0</height>
         </size>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -258,7 +255,7 @@
          </size>
         </property>
         <property name="text">
-         <string>2000</string>
+         <string>100</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -280,7 +277,7 @@
          </size>
         </property>
         <property name="text">
-         <string>40000</string>
+         <string>17000</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -417,7 +414,7 @@
          </size>
         </property>
         <property name="text">
-         <string>500</string>
+         <string>20</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -439,7 +436,7 @@
          </size>
         </property>
         <property name="text">
-         <string>4000</string>
+         <string>40</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -1107,7 +1104,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>200</y>
+      <y>210</y>
       <width>75</width>
       <height>23</height>
      </rect>
