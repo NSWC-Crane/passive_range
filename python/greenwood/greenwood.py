@@ -13,6 +13,13 @@ from bokeh.plotting import figure, show
 from bokeh.layouts import column, row, Spacer
 
 
+spin_width = 110
+
+wind_speed = Spinner(title="wind speed (m/s)", low=0.0, high=10.0, step=0.1, value=1.0, width=spin_width)
+
+freq_plot = figure(plot_height=550, plot_width=1300, title="Frequency Surface")
+
+
 
 ## setup the range of variables
 wavelength = 0.525e-6
