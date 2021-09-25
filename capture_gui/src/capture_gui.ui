@@ -107,7 +107,7 @@
       <x>10</x>
       <y>10</y>
       <width>291</width>
-      <height>151</height>
+      <height>181</height>
      </rect>
     </property>
     <property name="title">
@@ -233,7 +233,7 @@
          </size>
         </property>
         <property name="text">
-         <string>15500</string>
+         <string>0</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -445,6 +445,25 @@
       </item>
      </layout>
     </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_15">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>121</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_15">
+      <item>
+       <widget class="QCheckBox" name="checkBox">
+        <property name="text">
+         <string>Hardware Trigger</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="camera_gb">
     <property name="geometry">
@@ -519,9 +538,9 @@
     <widget class="QWidget" name="horizontalLayoutWidget_12">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>160</x>
        <y>120</y>
-       <width>161</width>
+       <width>171</width>
        <height>31</height>
       </rect>
      </property>
@@ -530,13 +549,13 @@
        <widget class="QLabel" name="label_16">
         <property name="minimumSize">
          <size>
-          <width>75</width>
+          <width>100</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>75</width>
+          <width>100</width>
           <height>16777215</height>
          </size>
         </property>
@@ -693,9 +712,9 @@
     <widget class="QWidget" name="horizontalLayoutWidget_10">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>160</x>
        <y>60</y>
-       <width>161</width>
+       <width>171</width>
        <height>31</height>
       </rect>
      </property>
@@ -710,7 +729,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>75</width>
+          <width>90</width>
           <height>16777215</height>
          </size>
         </property>
@@ -813,9 +832,9 @@
     <widget class="QWidget" name="horizontalLayoutWidget_11">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>160</x>
        <y>90</y>
-       <width>161</width>
+       <width>171</width>
        <height>31</height>
       </rect>
      </property>
@@ -824,13 +843,13 @@
        <widget class="QLabel" name="label_15">
         <property name="minimumSize">
          <size>
-          <width>75</width>
+          <width>100</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>75</width>
+          <width>100</width>
           <height>16777215</height>
          </size>
         </property>
@@ -942,9 +961,9 @@
     <widget class="QWidget" name="horizontalLayoutWidget_14">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>160</x>
        <y>150</y>
-       <width>161</width>
+       <width>171</width>
        <height>31</height>
       </rect>
      </property>
@@ -953,13 +972,13 @@
        <widget class="QLabel" name="label_17">
         <property name="minimumSize">
          <size>
-          <width>75</width>
+          <width>100</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>75</width>
+          <width>100</width>
           <height>16777215</height>
          </size>
         </property>
@@ -997,25 +1016,6 @@
       </item>
      </layout>
     </widget>
-    <widget class="QWidget" name="horizontalLayoutWidget_15">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>180</y>
-       <width>161</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_15">
-      <item>
-       <widget class="QCheckBox" name="checkBox">
-        <property name="text">
-         <string>Hardware Trigger</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
     <widget class="QWidget" name="horizontalLayoutWidget_16">
      <property name="geometry">
       <rect>
@@ -1033,6 +1033,67 @@
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_17">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>180</y>
+       <width>191</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_17">
+      <item>
+       <widget class="QLabel" name="label_18">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>120</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Capture  Delay (ms):</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="cap_delay_sb">
+        <property name="minimumSize">
+         <size>
+          <width>55</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>55</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>10</number>
         </property>
        </widget>
       </item>
