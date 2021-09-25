@@ -849,6 +849,8 @@ void capture_gui::on_start_capture_clicked()
 
     uint64_t x_offset, y_offset;
 
+    uint64_t sleep_delay = (uint64_t)ui->cap_delay_sb->value();
+
     //double tmp_exp_time;
 
     if(ctrl_connected == false || cam_connected == false)
@@ -1035,6 +1037,8 @@ void capture_gui::on_start_capture_clicked()
 
                 cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
                 //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
+                QThread::msleep(sleep_delay);
+
                 qApp->processEvents();
 
             }   // end of img_idx loop
