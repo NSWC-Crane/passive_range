@@ -387,7 +387,7 @@ public:
         status &= receive_packet(ctrl_handle, write_sp_size, rx);
         status &= (rx.data[SP_ERROR_POS] == 0);
 
-        sleep_ms(20);
+        sleep_ms(50);
 
         while (mtr_moving == true)
         {

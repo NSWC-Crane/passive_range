@@ -505,6 +505,7 @@ void capture_gui::on_cam_connect_btn_clicked()
         set_exposure_mode(cam, exp_mode);
         set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
+        set_adc_bit_depth(cam, bit_depth);
 
         // start the acquistion if the mode is set to continuous
         if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
@@ -1068,7 +1069,7 @@ void capture_gui::on_start_capture_clicked()
             status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
             focus_str = num2str(focus_step, "f%05d_");
-            sleep_ms(20);
+            sleep_ms(50);
 
             for (img_idx = 0; img_idx < cap_num; ++img_idx)
             {
