@@ -109,10 +109,10 @@ capture_gui::capture_gui(QWidget *parent)
 //    QIntValidator v_val(0, 1536, this);
 
     // set the validators
-    ui->x_offset->setValidator(&h_val);
-    ui->width->setValidator(&h_val);
-    ui->y_offset->setValidator(&v_val);
-    ui->height->setValidator(&v_val);
+    ui->x_offset->setValidator(new QIntValidator(0, 2048, this));
+    ui->width->setValidator(new QIntValidator(0, 2048, this));
+    ui->y_offset->setValidator(new QIntValidator(0, 1536, this));
+    ui->height->setValidator(new QIntValidator(0, 1536, this));
 
     // connect the signals
     connect(ui->x_offset, SIGNAL(returnPressed()), this, SLOT(image_size_edit_complete()));

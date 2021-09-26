@@ -735,7 +735,7 @@
        <widget class="QLabel" name="label_14">
         <property name="minimumSize">
          <size>
-          <width>75</width>
+          <width>90</width>
           <height>0</height>
          </size>
         </property>
@@ -1017,7 +1017,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="num_caps">
+       <widget class="QSpinBox" name="num_caps">
         <property name="minimumSize">
          <size>
           <width>60</width>
@@ -1030,11 +1030,14 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>1</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="maximum">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>1</number>
         </property>
        </widget>
       </item>
@@ -1052,6 +1055,21 @@
      <layout class="QHBoxLayout" name="horizontalLayout_16">
       <item>
        <widget class="QCheckBox" name="center_cb">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>120</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
         <property name="text">
          <string>Center Image</string>
         </property>
@@ -1117,7 +1135,7 @@
          <set>Qt::AlignCenter</set>
         </property>
         <property name="maximum">
-         <number>10000</number>
+         <number>100000</number>
         </property>
         <property name="value">
          <number>10</number>
