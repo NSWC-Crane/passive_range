@@ -509,6 +509,9 @@
         <property name="text">
          <string>Width:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item>
@@ -538,7 +541,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_12">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>180</x>
        <y>120</y>
        <width>171</width>
        <height>31</height>
@@ -566,6 +569,9 @@
         </property>
         <property name="text">
          <string>Exposure:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -625,6 +631,9 @@
         <property name="text">
          <string>Height:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item>
@@ -683,6 +692,9 @@
         <property name="text">
          <string>X Offset:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item>
@@ -712,7 +724,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_10">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>180</x>
        <y>60</y>
        <width>171</width>
        <height>31</height>
@@ -740,6 +752,9 @@
         </property>
         <property name="text">
          <string>Pixel Format:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -803,6 +818,9 @@
         <property name="text">
          <string>Y Offset:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item>
@@ -832,7 +850,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_11">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>180</x>
        <y>90</y>
        <width>171</width>
        <height>31</height>
@@ -860,6 +878,9 @@
         </property>
         <property name="text">
          <string>Gain:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -961,7 +982,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_14">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>180</x>
        <y>150</y>
        <width>171</width>
        <height>31</height>
@@ -989,6 +1010,9 @@
         </property>
         <property name="text">
          <string>Captures:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -1069,6 +1093,9 @@
         </property>
         <property name="text">
          <string>Capture  Delay (ms):</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
