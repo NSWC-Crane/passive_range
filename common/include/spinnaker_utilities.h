@@ -15,9 +15,11 @@
 // ----------------------------------------------------------------------------------------
 const uint64_t width_mod = 16;
 const uint64_t x_offset_mod = 4;
+const uint64_t max_cam_width = 2048;
 
 const uint64_t height_mod = 2;
 const uint64_t y_offset_mod = 2;
+const uint64_t max_cam_height = 1536;
 
 double min_exp_time = 0;
 double max_exp_time = 0;
