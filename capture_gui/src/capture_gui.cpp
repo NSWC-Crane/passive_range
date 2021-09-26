@@ -385,6 +385,11 @@ void capture_gui::on_ftdi_connect_btn_clicked()
         status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
 
+        ui->console_te->append("PID Values:");
+        ui->console_te->append("  Focus PID: " + QString::number(pid_values[0]) + ", " + QString::number(pid_values[1]) + ", " + QString::number(pid_values[2]));
+        ui->console_te->append("  Zoom PID:  " + QString::number(pid_values[3]) + ", " + QString::number(pid_values[4]) + ", " + QString::number(pid_values[5]));
+
+        ui->console_te->append("\n-----------------------------------------------------------------------------");
         ui->console_te->append("Setting motors to intial position:");
         qApp->processEvents();
 
@@ -1024,6 +1029,11 @@ void capture_gui::on_start_capture_clicked()
     data_log_stream << "Trigger Information: " << std::endl;
     data_log_stream << t1_info << std::endl;
     data_log_stream << t2_info << std::endl;
+
+    data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
+    data_log_stream << "PID Values: " << std::endl;
+    data_log_stream << "  Focus PID: " << pid_values[0] << ", " << pid_values[1] << ", " << pid_values[2] << std::endl;
+    data_log_stream << "  Zoom PID:  " << pid_values[3] << ", " << pid_values[4] << ", " << pid_values[5] << std::endl << std::endl;
 
     data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
     data_log_stream << "Image Size (h x w):       " << img_h << " x " << img_w << std::endl;
