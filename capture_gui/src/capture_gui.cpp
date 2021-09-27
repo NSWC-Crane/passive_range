@@ -47,9 +47,11 @@ Spinnaker::ImagePtr image;
 Spinnaker::CameraPtr cam;
 Spinnaker::CameraList cam_list;
 Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
-Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+//Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
 //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
-Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+//Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
 Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
 Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
 //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
@@ -506,9 +508,9 @@ void capture_gui::on_cam_connect_btn_clicked()
         set_image_size(cam, img_h, img_w, y_offset, x_offset);
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
-        set_gain_value(cam, camera_gain);
+        //set_gain_value(cam, camera_gain);
         set_exposure_mode(cam, exp_mode);
-        set_exposure_time(cam, exp_time);
+        //set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
         set_adc_bit_depth(cam, bit_depth);
 
@@ -979,9 +981,9 @@ void capture_gui::on_start_capture_clicked()
     set_image_size(cam, img_h, img_w, y_offset, x_offset);
     set_pixel_format(cam, pixel_format);
     //set_gain_mode(cam, gain_mode);
-    set_gain_value(cam, camera_gain);
+    //set_gain_value(cam, camera_gain);
     //set_exposure_mode(cam, exp_mode);
-    set_exposure_time(cam, exp_time);
+    //set_exposure_time(cam, exp_time);
     //set_acquisition_mode(cam, acq_mode); //acq_mode
     cam->BeginAcquisition();
 
@@ -1097,9 +1099,11 @@ void capture_gui::on_start_capture_clicked()
                     aquire_software_trigger_image(cam, image);
 //                    break;
 //                }
+                get_exposure_time(cam, exp_time);
+                exposure_str = num2str(exp_time, "e%05.0f_");
 
-//                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
-                image_capture_name = image_header + zoom_str + focus_str + num2str(img_idx, "i%02d") + ".png";
+                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+//                image_capture_name = image_header + zoom_str + focus_str + num2str(img_idx, "i%02d") + ".png";
 
                 cv_image = cv::Mat(img_h + y_padding, img_w + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
