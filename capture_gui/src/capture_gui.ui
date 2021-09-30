@@ -219,7 +219,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="f_start">
+       <widget class="QSpinBox" name="f_start">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -232,16 +232,25 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>0</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>55000</number>
+        </property>
+        <property name="singleStep">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>0</number>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="f_step">
+       <widget class="QSpinBox" name="f_step">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -254,16 +263,25 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>100</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>55000</number>
+        </property>
+        <property name="singleStep">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>20</number>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="f_stop">
+       <widget class="QSpinBox" name="f_stop">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -276,11 +294,20 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>17000</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>55000</number>
+        </property>
+        <property name="singleStep">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>10000</number>
         </property>
        </widget>
       </item>
@@ -378,7 +405,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="z_start">
+       <widget class="QSpinBox" name="z_start">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -391,16 +418,25 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>0</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>5900</number>
+        </property>
+        <property name="singleStep">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>0</number>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="z_step">
+       <widget class="QSpinBox" name="z_step">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -413,16 +449,22 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>20</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>5900</number>
+        </property>
+        <property name="value">
+         <number>100</number>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="z_stop">
+       <widget class="QSpinBox" name="z_stop">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -435,11 +477,20 @@
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>40</string>
-        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>5900</number>
+        </property>
+        <property name="singleStep">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>5900</number>
         </property>
        </widget>
       </item>

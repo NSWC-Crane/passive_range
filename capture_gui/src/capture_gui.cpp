@@ -86,21 +86,41 @@ capture_gui::capture_gui(QWidget *parent)
     // zoom slots
     // returnPressed()
 //    QIntValidator zoom_val(min_zoom_steps, max_zoom_steps, this);
-    ui->z_start->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
-    ui->z_step->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
-    ui->z_stop->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
-    connect(ui->z_start, SIGNAL(returnPressed()), this, SLOT(zoom_edit_complete()));
-    connect(ui->z_step, SIGNAL(returnPressed()), this, SLOT(zoom_edit_complete()));
-    connect(ui->z_stop, SIGNAL(returnPressed()), this, SLOT(zoom_edit_complete()));
+//    ui->z_start->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
+//    ui->z_step->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
+//    ui->z_stop->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
+    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_start, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_step, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_stop, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_stop, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
+
+    ui->z_start->setSingleStep(ui->z_step->value());
+    ui->z_stop->setSingleStep(ui->z_step->value());
+
+    ui->z_start->setMaximum(max_zoom_steps);
+    ui->z_step->setMaximum(max_zoom_steps);
+    ui->z_stop->setMaximum(max_zoom_steps);
 
     // focus slots
 //    QIntValidator focus_val(min_focus_steps, max_focus_steps, this);
-    ui->f_start->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
-    ui->f_step->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
-    ui->f_stop->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
-    connect(ui->f_start, SIGNAL(returnPressed()), this, SLOT(focus_edit_complete()));
-    connect(ui->f_step, SIGNAL(returnPressed()), this, SLOT(focus_edit_complete()));
-    connect(ui->f_stop, SIGNAL(returnPressed()), this, SLOT(focus_edit_complete()));
+//    ui->f_start->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
+//    ui->f_step->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
+//    ui->f_stop->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
+    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_start, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
+    connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_step, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
+    connect(ui->f_stop, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_stop, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
+
+    ui->f_start->setSingleStep(ui->z_step->value());
+    ui->f_stop->setSingleStep(ui->z_step->value());
+
+    ui->f_start->setMaximum(max_focus_steps);
+    ui->f_step->setMaximum(max_focus_steps);
+    ui->f_stop->setMaximum(max_focus_steps);
 
     //-----------------------------------------------------------------------------
     // camera slots
@@ -705,27 +725,28 @@ void capture_gui::focus_edit_complete()
     if(start > max_focus_steps)
     {
         start = max_focus_steps;
-        ui->f_start->setText(QString::number(start));
-
+        ui->f_start->setValue(start);
     }
 
     if(stop > max_focus_steps)
     {
         stop = max_focus_steps;
-        ui->f_stop->setText(QString::number(stop));
-
+        ui->f_stop->setValue(stop);
     }
 
     if(start > stop)
     {
         stop = start;
-        ui->f_stop->setText(QString::number(stop));
+        ui->f_stop->setValue(stop);
     }
+
+    ui->f_start->setSingleStep(ui->f_step->value());
+    ui->f_stop->setSingleStep(ui->f_step->value());
 
     // generate the step ranges
     generate_range(start, stop, step, focus_range);
 
-    ui->console_te->append("focus range: " + QString::number(focus_range[0]) + ":" + QString::number(focus_range[focus_range.size()-1]));
+    ui->console_te->append("focus range: " + QString::number(focus_range[0]) + ":" + QString::number(step) + ":" + QString::number(focus_range[focus_range.size()-1]));
     qApp->processEvents();
 
     if((ctrl_connected == true) && (sender_obj == ui->f_start))
@@ -760,34 +781,41 @@ void capture_gui::zoom_edit_complete()
     int32_t position = 0;
     QObject* sender_obj = sender();
 
-    int32_t start = (int32_t)ui->z_start->text().toInt();
-    int32_t step = (int32_t)ui->z_step->text().toInt();
-    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+//    int32_t start = (int32_t)ui->z_start->text().toInt();
+//    int32_t step = (int32_t)ui->z_step->text().toInt();
+//    int32_t stop = (int32_t)ui->z_stop->text().toInt();
+    int32_t start = (int32_t)ui->z_start->value();
+    int32_t step = (int32_t)ui->z_step->value();
+    int32_t stop = (int32_t)ui->z_stop->value();
 
     if(start > max_zoom_steps)
     {
         start = max_zoom_steps;
-        ui->z_start->setText(QString::number(start));
-
+//        ui->z_start->setText(QString::number(start));
+        ui->z_start->setValue(start);
     }
 
     if(stop > max_zoom_steps)
     {
         stop = max_zoom_steps;
-        ui->z_stop->setText(QString::number(stop));
-
+//        ui->z_stop->setText(QString::number(stop));
+        ui->z_stop->setValue(stop);
     }
 
     if(start > stop)
     {
         stop = start;
-        ui->z_stop->setText(QString::number(stop));
+//        ui->z_stop->setText(QString::number(stop));
+        ui->z_stop->setValue(stop);
     }
+
+    ui->z_start->setSingleStep(ui->z_step->value());
+    ui->z_stop->setSingleStep(ui->z_step->value());
 
     // generate the step ranges
     generate_range(start, stop, step, zoom_range);
 
-    ui->console_te->append("zoom range: " + QString::number(zoom_range[0]) + ":" + QString::number(zoom_range[zoom_range.size()-1]));
+    ui->console_te->append("zoom range: " + QString::number(zoom_range[0]) + ":" + QString::number(step) + ":" + QString::number(zoom_range[zoom_range.size()-1]));
     qApp->processEvents();
 
     if((ctrl_connected == true) && (sender_obj == ui->z_start))
