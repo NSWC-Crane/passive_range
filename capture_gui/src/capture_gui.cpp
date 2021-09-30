@@ -1150,6 +1150,9 @@ void capture_gui::on_start_capture_clicked()
 
                 qApp->processEvents();
 
+                if(stop_capture == true)
+                    return;
+
             }   // end of img_idx loop
             //sleep_ms(100);
 
@@ -1248,3 +1251,8 @@ void capture_gui::closeEvent(QCloseEvent *event)
     }
 
 }   // end of closeEvent
+
+void capture_gui::on_stop_capture_clicked()
+{
+    stop_capture = false;
+}

@@ -71,6 +71,8 @@ private slots:
 
     void on_start_capture_clicked();
 
+    void on_stop_capture_clicked();
+
 private:
     Ui::capture_gui *ui;
 
@@ -112,6 +114,8 @@ private:
 
     QString save_location;
     std::string output_save_location;
+
+    bool stop_capture = false;
 
     QTimer *image_timer;
 
