@@ -73,6 +73,10 @@ private slots:
 
     void on_stop_capture_clicked();
 
+    void on_auto_gain_stateChanged(int arg1);
+
+    void on_auto_exp_stateChanged(int arg1);
+
 private:
     Ui::capture_gui *ui;
 

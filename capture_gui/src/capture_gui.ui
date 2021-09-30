@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>680</width>
-    <height>604</height>
+    <width>640</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>680</width>
-    <height>0</height>
+    <width>640</width>
+    <height>600</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
      <rect>
       <x>10</x>
       <y>270</y>
-      <width>661</width>
+      <width>621</width>
       <height>291</height>
      </rect>
     </property>
@@ -77,7 +77,7 @@
      <rect>
       <x>10</x>
       <y>240</y>
-      <width>661</width>
+      <width>621</width>
       <height>31</height>
      </rect>
     </property>
@@ -93,8 +93,14 @@
       <widget class="QLineEdit" name="save_location_tb">
        <property name="minimumSize">
         <size>
-         <width>619</width>
+         <width>585</width>
          <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>585</width>
+         <height>16777215</height>
         </size>
        </property>
       </widget>
@@ -487,7 +493,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_15">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>20</x>
        <y>140</y>
        <width>121</width>
        <height>31</height>
@@ -509,7 +515,7 @@
      <rect>
       <x>270</x>
       <y>10</y>
-      <width>401</width>
+      <width>361</width>
       <height>221</height>
      </rect>
     </property>
@@ -580,24 +586,49 @@
     <widget class="QWidget" name="horizontalLayoutWidget_12">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>160</x>
        <y>120</y>
-       <width>219</width>
+       <width>191</width>
        <height>31</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_12">
       <item>
-       <widget class="QLabel" name="label_16">
+       <widget class="QCheckBox" name="auto_exp">
         <property name="minimumSize">
          <size>
-          <width>95</width>
+          <width>50</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>95</width>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string>Auto</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_16">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -633,31 +664,6 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="auto_exp">
-        <property name="minimumSize">
-         <size>
-          <width>50</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Auto</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -788,7 +794,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_10">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>180</x>
        <y>60</y>
        <width>171</width>
        <height>31</height>
@@ -914,24 +920,49 @@
     <widget class="QWidget" name="horizontalLayoutWidget_11">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>160</x>
        <y>90</y>
-       <width>219</width>
+       <width>191</width>
        <height>31</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_11">
       <item>
-       <widget class="QLabel" name="label_15">
+       <widget class="QCheckBox" name="auto_gain">
         <property name="minimumSize">
          <size>
-          <width>95</width>
+          <width>50</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>95</width>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string>Auto</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_15">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -967,31 +998,6 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="auto_gain">
-        <property name="minimumSize">
-         <size>
-          <width>50</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Auto</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -1047,7 +1053,7 @@
     <widget class="QWidget" name="horizontalLayoutWidget_14">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>180</x>
        <y>150</y>
        <width>171</width>
        <height>31</height>
@@ -1266,7 +1272,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>680</width>
+     <width>640</width>
      <height>21</height>
     </rect>
    </property>

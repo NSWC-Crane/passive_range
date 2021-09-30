@@ -1087,6 +1087,7 @@ void capture_gui::on_start_capture_clicked()
 
     // disconnect the timer for displaying the camera images
     disconnect(image_timer, SIGNAL(timeout()), 0, 0);
+    stop_capture = false;
 
     // loop through the zoom and focus settings
     for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
@@ -1254,5 +1255,24 @@ void capture_gui::closeEvent(QCloseEvent *event)
 
 void capture_gui::on_stop_capture_clicked()
 {
-    stop_capture = false;
+    stop_capture = true;
+}
+
+void capture_gui::on_auto_gain_stateChanged(int arg1)
+{
+
+    gain_mode = ui->auto_gain->isChecked() ? Spinnaker::GainAutoEnums::GainAuto_Continuous : Spinnaker::GainAutoEnums::GainAuto_Off;
+
+    if(cam_connected == true)
+        set_gain_mode(cam, gain_mode);
+
+}
+
+void capture_gui::on_auto_exp_stateChanged(int arg1)
+{
+    exp_mode = ui->auto_exp->isChecked() ? Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous : Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+
+    if(cam_connected == true)
+        set_exposure_mode(cam, exp_mode);
+
 }
