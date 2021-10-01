@@ -49,21 +49,11 @@ private slots:
     void on_toolButton_clicked();
     void save_location_update();
 
-//    void z_start_edit_complete();
-//    void z_step_edit_complete();
-//    void z_stop_edit_complete();
     void zoom_edit_complete();
     void focus_edit_complete();
 
-//    void f_start_edit_complete();
-//    void f_step_edit_complete();
-//    void f_stop_edit_complete();
-
-//    void x_offset_edit_complete();
-//    void y_offset_edit_complete();
     void image_size_edit_complete();
-//    void height_edit_complete();
-//    void width_edit_complete();
+
     void gain_edit_complete();
     void exposure_edit_complete();
 
@@ -76,6 +66,8 @@ private slots:
     void on_auto_gain_stateChanged(int arg1);
 
     void on_auto_exp_stateChanged(int arg1);
+
+    void on_motor_position_clicked();
 
 private:
     Ui::capture_gui *ui;

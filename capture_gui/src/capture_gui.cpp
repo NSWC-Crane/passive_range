@@ -1285,3 +1285,16 @@ void capture_gui::on_auto_exp_stateChanged(int arg1)
         set_exposure_mode(cam, exp_mode);
 
 }
+
+//-----------------------------------------------------------------------------
+void capture_gui::on_motor_position_clicked()
+{
+    if(ctrl_connected == true)
+    {
+        bool status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+        ui->console_te->append("focus motor: " + QString::number(focus_step));
+
+        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+        ui->console_te->append("zoom motor: " + QString::number(zoom_step));
+    }
+}
