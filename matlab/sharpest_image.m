@@ -15,12 +15,13 @@ commandwindow;
 
 image_path = uigetdir(scriptpath, 'Select Folder with Images');
 
-image_listing = dir(strcat(image_path,'\*.png'));
+image_listing = dir(strcat(image_path,'\*i00.png'));
 img = imread(fullfile(image_listing(1).folder, image_listing(1).name));
 image(img);
+
 [pt_x, pt_y] = ginput(1);
 
-[max_val, index] = find_sharpest_image(image_listing, floor(pt_x), floor(pt_y), 64, 64);
+[max_val, index] = find_sharpest_image(image_listing, floor(pt_x), floor(pt_y), 128, 128);
 
 img = imread(fullfile(image_listing(1).folder, image_listing(index).name));
 
