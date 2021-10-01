@@ -1167,9 +1167,15 @@ void capture_gui::on_start_capture_clicked()
     // set the focus step to the first focus_range setting
     ui->console_te->append("setting focus motor: " + QString::number(focus_range[0]));
     status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+    QThread::msleep(50);
+    status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+    ui->console_te->append("focus motor: " + QString::number(focus_step));
 
     ui->console_te->append("setting zoom motor: " + QString::number(zoom_range[0]));
     status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+    QThread::msleep(50);
+    status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+    ui->console_te->append("zoom motor: " + QString::number(zoom_step));
 
     // disable the motors
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
@@ -1253,11 +1259,13 @@ void capture_gui::closeEvent(QCloseEvent *event)
 
 }   // end of closeEvent
 
+//-----------------------------------------------------------------------------
 void capture_gui::on_stop_capture_clicked()
 {
     stop_capture = true;
 }
 
+//-----------------------------------------------------------------------------
 void capture_gui::on_auto_gain_stateChanged(int arg1)
 {
 
@@ -1268,6 +1276,7 @@ void capture_gui::on_auto_gain_stateChanged(int arg1)
 
 }
 
+//-----------------------------------------------------------------------------
 void capture_gui::on_auto_exp_stateChanged(int arg1)
 {
     exp_mode = ui->auto_exp->isChecked() ? Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous : Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
