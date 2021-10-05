@@ -15,7 +15,7 @@ commandwindow;
 
 image_path = uigetdir(scriptpath, 'Select Folder with Images');
 
-image_listing = dir(strcat(image_path,'\*i00.png'));
+image_listing = dir(strcat(image_path,'\*.png'));
 img = imread(fullfile(image_listing(1).folder, image_listing(1).name));
 image(img);
 

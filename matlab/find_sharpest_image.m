@@ -36,7 +36,7 @@ function [max_val, index] = find_sharpest_image(image_listing, pt_x, pt_y, img_w
         img_vals(idx) = sum(Y(:));
         fprintf('%s/%s, %6.4f\n', image_listing(idx).folder, image_listing(idx).name, img_vals(idx));
         pause(0.5);
-        input(' ');
+%         input(' ');
     end
     
     [max_val, index] = max(img_vals);
