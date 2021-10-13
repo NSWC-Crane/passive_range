@@ -38,6 +38,7 @@ listing = listing(3:end);
 %% start processing
 
 fft_sum = cell(numel(listing), 1);
+max_fft_sum = cell(numel(listing), 1);
 focus_vals = cell(numel(listing), 1);
 sharpest_img = cell(numel(listing), 1);
 % shapest_index = cell(numel(listing), 1);
@@ -57,24 +58,30 @@ for kdx=1:numel(listing)
     img_idx = 1;
 %     img_name = cell(ceil(numel(image_listing)/num), 1);
     
+    
     for idx=1:num:numel(image_listing)
 %         img_name{img_idx} = image_listing(idx).name;
+        fft_sum2 = zeros(num, 1);
         tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx).name))));
 
         [z, f, e, n] = parse_image_filename(image_listing(idx).name);
 
         tl = floor(size(tmp_img)/2 - [img_h, img_w]/2);
         img{img_idx} = tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);
+        fft_sum2(1) = sum(sum(abs(fft2(img{img_idx})/(img_w * img_h))));
 
         for jdx=1:num-1
             tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx).name))));
             tl = floor(size(tmp_img)/2 - [img_h, img_w]/2);
+            fft_sum2(jdx+1) = sum(sum(abs(fft2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1))/(img_w * img_h))));
             img{img_idx} = img{img_idx} + tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);                                
         end
 
         img{img_idx} = img{img_idx}/num;
         fft_img = fft2(img{img_idx})/(img_w * img_h);
         fft_img(1,1) = 0;
+        
+        max_fft_sum{kdx}(end+1) = mean(fft_sum2);
         
         conv_img = abs(conv2(img{img_idx}, mx(end:-1:1, end:-1:1), 'valid') + conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
                 
@@ -85,7 +92,9 @@ for kdx=1:numel(listing)
         colormap(jet(256));
 
 %         fft_sum{kdx}(end+1) = sum(abs(fft_img(:)));
-        fft_sum{kdx}(end+1) = sum((conv_img(:)));
+        fft_sum{kdx}(end+1) = mean(fft_sum2);
+        
+%         fft_sum{kdx}(end+1) = sum((conv_img(:)));
         
         
         focus_vals{kdx}(end+1) = ceil(f/inc)*inc; %floor(f/5+0.5)*5;
@@ -105,6 +114,7 @@ for kdx=1:numel(listing)
 %     stem(focus_vals{kdx}, fft_sum{kdx}, 'Linewidth', line_width)
 %     stem(focus_vals{kdx}(shapest_index), fft_sum{kdx}(shapest_index), 'r', 'Linewidth', line_width)
     stairs(focus_vals{kdx}, fft_sum{kdx}, 'Linewidth', line_width)
+    stem(focus_vals{kdx}, max_fft_sum{kdx}, 'b', 'Linewidth', line_width)
     stem(focus_vals{kdx}(shapest_index), fft_sum{kdx}(shapest_index), 'r', 'Linewidth', line_width)
     set(gca,'fontweight','bold','FontSize',12);
 
