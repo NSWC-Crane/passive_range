@@ -13,8 +13,8 @@ line_width = 1.0;
 commandwindow;
 
 %% select the folder where the images are located
-img_w = 64;
-img_h = 64;
+img_w = 16;
+img_h = 16;
 
 num = 20;
 
@@ -60,20 +60,36 @@ for kdx=1:numel(listing)
     
     
     for idx=1:num:numel(image_listing)
-%         img_name{img_idx} = image_listing(idx).name;
+
         fft_sum2 = zeros(num, 1);
-        tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx).name))));
+        tmp_img = cell(num, 1);
+%         tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx).name))));
+%         [img_h, img_w] = size(tmp_img);
 
         [z, f, e, n] = parse_image_filename(image_listing(idx).name);
+        
+        
+        for jdx=1:num
+            tmp_img{jdx} = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx-1).name))));
+            tl = floor(size(tmp_img{jdx})/2 - [img_h, img_w]/2) + 1;
+            
+            
+        end
+        
+        
+        
+        
+        
 
-        tl = floor(size(tmp_img)/2 - [img_h, img_w]/2);
+%         tl = floor(size(tmp_img)/2 - [img_h, img_w]/2) + 1;
         img{img_idx} = tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);
         fft_sum2(1) = sum(sum(abs(fft2(img{img_idx})/(img_w * img_h))));
 
         for jdx=1:num-1
             tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx).name))));
-            tl = floor(size(tmp_img)/2 - [img_h, img_w]/2);
-            fft_sum2(jdx+1) = sum(sum(abs(fft2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1))/(img_w * img_h))));
+            tl = floor(size(tmp_img)/2 - [img_h, img_w]/2) + 1;
+%             fft_sum2(jdx+1) = sum(sum(abs(fft2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1))/(img_w * img_h))));
+            fft_sum2(jdx+1) = sum(sum(abs(conv2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1), my(end:-1:1, end:-1:1), 'valid'))));
             img{img_idx} = img{img_idx} + tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);                                
         end
 
@@ -83,7 +99,8 @@ for kdx=1:numel(listing)
         
         max_fft_sum{kdx}(end+1) = mean(fft_sum2);
         
-        conv_img = abs(conv2(img{img_idx}, mx(end:-1:1, end:-1:1), 'valid') + conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
+%         conv_img = abs(conv2(img{img_idx}, mx(end:-1:1, end:-1:1), 'valid') + conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
+        conv_img = abs(conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
                 
         figure(1)
 %         image(uint8(img{img_idx}))
@@ -93,11 +110,10 @@ for kdx=1:numel(listing)
 
 %         fft_sum{kdx}(end+1) = sum(abs(fft_img(:)));
         fft_sum{kdx}(end+1) = mean(fft_sum2);
-        
 %         fft_sum{kdx}(end+1) = sum((conv_img(:)));
         
         
-        focus_vals{kdx}(end+1) = ceil(f/inc)*inc; %floor(f/5+0.5)*5;
+        focus_vals{kdx}(end+1) = f; %ceil(f/inc)*inc; %floor(f/5+0.5)*5;
         img_idx = img_idx + 1;
     end
     
@@ -106,7 +122,7 @@ for kdx=1:numel(listing)
     sharpest_img{kdx} = img{shapest_index};
     img_name{kdx} = image_listing((shapest_index-1)*num+1).name;
     
-    figure(10)
+    figure(10+kdx)
     set(gcf,'position',([50,50,1400,500]),'color','w')
     box on
     grid on
@@ -120,7 +136,7 @@ for kdx=1:numel(listing)
 
     xlim([focus_vals{kdx}(1), focus_vals{kdx}(end)])
     %xticks(focus_vals{kdx}(1:5:end));
-    xticklabels(num2str(focus_vals{kdx}'));
+    %xticklabels(num2str(focus_vals{kdx}'));
     xtickangle(45);    
     ax = gca;
     ax.Position = [0.05 0.15 0.92 0.81];
@@ -151,7 +167,7 @@ ranges = zeros(numel(fft_sum), 1);
 
 for idx=1:numel(fft_sum)
 
-    figure(idx+20)
+    figure(idx+30)
     set(gcf,'position',([50,50,600,500]),'color','w')
     image(uint8(sharpest_img{idx}))
     colormap(gray(256));    
