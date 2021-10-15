@@ -51,6 +51,7 @@ ranges = zeros(numel(listing), 1);
 
 mx = [-1, 0, 1; -2, 0 ,2; -1, 0, 1];
 my = [1, 2, 1; 0, 0, 0; -1, -2, -1];
+myx = my*mx;
 
 listing_count = 0;
 
@@ -109,8 +110,9 @@ for idx=1:numel(listing)
         
         imgs = cat(3, imgs, mean(imgs, 3));
         
-        conv_imgs = abs(convn(imgs, mx(end:-1:1, end:-1:1), 'valid'))/(sum(abs(mx(:))));
+        conv_imgs = abs(convn(imgs, myx(end:-1:1, end:-1:1), 'valid'))/(sum(abs(mx(:))));
         fft_imgs = abs(fftn(imgs)/(img_h*img_w));
+        fft_imgs(1,1) = 0;
         
         fft_sum(jdx, :) = reshape(sum(sum(fft_imgs)), 1, num+1);
         conv_sum(jdx, :) = reshape(sum(sum(conv_imgs)), 1, num+1);
@@ -121,35 +123,47 @@ for idx=1:numel(listing)
         fft_stats(jdx, :) = [max(fft_sum(jdx, 1:num)), mean(fft_sum(jdx, 1:num)), fft_sum(jdx, num+1)];
         conv_stats(jdx, :) = [max(conv_sum(jdx, 1:num)), mean(conv_sum(jdx, 1:num)), conv_sum(jdx, num+1)];    
         
+        figure(1)
+%         image(uint8(img{img_idx}))
+%         imagesc(fftshift(real(fft_img)));
+        imagesc(conv_imgs(:,:, num+1));
+        colormap(jet(256));
+
     end
 
-    [~, conv_sharpest] = max(conv_stats(:,1));
-    [~, fft_sharpest] = max(fft_stats(:,1));
+    [~, conv_sharpest] = max(conv_stats(:,3));
+    [~, fft_sharpest] = max(fft_stats(:,3));
     
+    sharpest_img{idx} = img{conv_sharpest};
     
-    fprintf('%s, %s\n', image_listing(conv_sharpest).name, image_listing(fft_sharpest).name);
+    fprintf('%04d, %s, %s\n', ranges(idx), image_listing(conv_sharpest).name, image_listing(fft_sharpest).name);
 
     figure(10+idx)
-    set(gcf,'position',([50,50,1400,500]),'color','w')
+    set(gcf,'position',([50,50,1400,700]),'color','w')
+    subplot(2,1,1)
     box on
     grid on
     hold on
-    stairs(focus_vals{idx}, fft_stats(:,2), 'Linewidth', line_width);
-    stairs(focus_vals{idx}, fft_stats(:,3), 'Linewidth', line_width);
-    stem(focus_vals{idx}, fft_stats(:,1), 'b', 'Linewidth', line_width);
+    s1 = stairs(focus_vals{idx}, fft_stats(:,2), 'Linewidth', line_width);
+    s2 = stairs(focus_vals{idx}, fft_stats(:,3), 'Linewidth', line_width);
+    s3 = stem(focus_vals{idx}, fft_stats(:,1), 'b', 'Linewidth', line_width);
     stem(focus_vals{idx}(fft_sharpest), fft_stats(fft_sharpest, 1), 'r', 'Linewidth', line_width);
     set(gca,'fontweight','bold','FontSize',12);
 
     xlim([focus_vals{idx}(1), focus_vals{idx}(end)]);
-    xtickangle(45);    
-    ax = gca;
-    ax.Position = [0.05 0.15 0.92 0.81];
-    ax.XAxis.Exponent = 0;
-    ax.XAxis.TickLabelFormat = '%05d';
+    %xtickangle(45);    
+    xticks([]);
+%     ax = gca;
+%     ax.Position = [0.05 0.15 0.92 0.81];
+%     ax.XAxis.Exponent = 0;
+%     ax.XAxis.TickLabelFormat = '%05d';
+    legend([s1,s2,s3], {'mean1', 'mean2', 'max'}, 'Location', 'northoutside', 'Orientation', 'horizontal');
 
 
-    figure(20+idx)
-    set(gcf,'position',([50,50,1400,500]),'color','w')
+%     figure(20+idx)
+%     set(gcf,'position',([50,50,1400,500]),'color','w')
+    subplot(2,1,2)
+
     box on
     grid on
     hold on
@@ -162,104 +176,95 @@ for idx=1:numel(listing)
     xlim([focus_vals{idx}(1), focus_vals{idx}(end)]);
     xtickangle(45);    
     ax = gca;
-    ax.Position = [0.05 0.15 0.92 0.81];
+%     ax.Position = [0.05 0.15 0.92 0.81];
     ax.XAxis.Exponent = 0;
     ax.XAxis.TickLabelFormat = '%05d';
     pause(0.01);
 
 
 if(false)
-
-    for idx=1:num:numel(image_listing)
-
-        fft_sum2 = zeros(num, 1);
-        tmp_img = cell(num, 1);
-%         tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx).name))));
-%         [img_h, img_w] = size(tmp_img);
-
-        [z, f, e, n] = parse_image_filename(image_listing(idx).name);
-        
-        
-        for jdx=1:num
-            tmp_img{jdx} = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx-1).name))));
-            tl = floor(size(tmp_img{jdx})/2 - [img_h, img_w]/2) + 1;
-            
-            
-        end
-        
-        
-        
-        
-        
-
-%         tl = floor(size(tmp_img)/2 - [img_h, img_w]/2) + 1;
-        img{img_idx} = tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);
-        fft_sum2(1) = sum(sum(abs(fft2(img{img_idx})/(img_w * img_h))));
-
-        for jdx=1:num-1
-            tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx).name))));
-            tl = floor(size(tmp_img)/2 - [img_h, img_w]/2) + 1;
-%             fft_sum2(jdx+1) = sum(sum(abs(fft2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1))/(img_w * img_h))));
-            fft_sum2(jdx+1) = sum(sum(abs(conv2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1), my(end:-1:1, end:-1:1), 'valid'))));
-            img{img_idx} = img{img_idx} + tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);                                
-        end
-
-        img{img_idx} = img{img_idx}/num;
-        fft_img = fft2(img{img_idx})/(img_w * img_h);
-        fft_img(1,1) = 0;
-        
-        max_fft_sum{idx}(end+1) = mean(fft_sum2);
-        
-%         conv_img = abs(conv2(img{img_idx}, mx(end:-1:1, end:-1:1), 'valid') + conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
-        conv_img = abs(conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
-                
-        figure(1)
-%         image(uint8(img{img_idx}))
-%         imagesc(fftshift(real(fft_img)));
-        imagesc(conv_img);
-        colormap(jet(256));
-
-%         fft_sum{kdx}(end+1) = sum(abs(fft_img(:)));
-        fft_sum{idx}(end+1) = mean(fft_sum2);
-%         fft_sum{kdx}(end+1) = sum((conv_img(:)));
-        
-        
-        focus_vals{idx}(end+1) = f; %ceil(f/inc)*inc; %floor(f/5+0.5)*5;
-        img_idx = img_idx + 1;
-    end
-
-    [~, conv_sharpest] = max(fft_sum{idx});
-    
-    sharpest_img{idx} = img{conv_sharpest};
-    img_name{idx} = image_listing((conv_sharpest-1)*num+1).name;
-    
-    figure(10+idx)
-    set(gcf,'position',([50,50,1400,500]),'color','w')
-    box on
-    grid on
-    hold on
-%     stem(focus_vals{kdx}, fft_sum{kdx}, 'Linewidth', line_width)
-%     stem(focus_vals{kdx}(shapest_index), fft_sum{kdx}(shapest_index), 'r', 'Linewidth', line_width)
-    stairs(focus_vals{idx}, fft_sum{idx}, 'Linewidth', line_width)
-    stem(focus_vals{idx}, max_fft_sum{idx}, 'b', 'Linewidth', line_width)
-    stem(focus_vals{idx}(conv_sharpest), fft_sum{idx}(conv_sharpest), 'r', 'Linewidth', line_width)
-    set(gca,'fontweight','bold','FontSize',12);
-
-    xlim([focus_vals{idx}(1), focus_vals{idx}(end)])
-    %xticks(focus_vals{kdx}(1:5:end));
-    %xticklabels(num2str(focus_vals{kdx}'));
-    xtickangle(45);    
-    ax = gca;
-    ax.Position = [0.05 0.15 0.92 0.81];
-    ax.XAxis.Exponent = 0;
-    ax.XAxis.TickLabelFormat = '%05d';
-    
-    pause(0.1);
+% 
+%     for idx=1:num:numel(image_listing)
+% 
+%         fft_sum2 = zeros(num, 1);
+%         tmp_img = cell(num, 1);
+% %         tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx).name))));
+% %         [img_h, img_w] = size(tmp_img);
+% 
+%         [z, f, e, n] = parse_image_filename(image_listing(idx).name);
+%         
+%         
+%         for jdx=1:num
+%             tmp_img{jdx} = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx-1).name))));
+%             tl = floor(size(tmp_img{jdx})/2 - [img_h, img_w]/2) + 1;
+%             
+%         end
+%
+% %         tl = floor(size(tmp_img)/2 - [img_h, img_w]/2) + 1;
+%         img{img_idx} = tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);
+%         fft_sum2(1) = sum(sum(abs(fft2(img{img_idx})/(img_w * img_h))));
+% 
+%         for jdx=1:num-1
+%             tmp_img = double(rgb2gray(imread(fullfile(image_listing(idx).folder, image_listing(idx+jdx).name))));
+%             tl = floor(size(tmp_img)/2 - [img_h, img_w]/2) + 1;
+% %             fft_sum2(jdx+1) = sum(sum(abs(fft2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1))/(img_w * img_h))));
+%             fft_sum2(jdx+1) = sum(sum(abs(conv2(tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1), my(end:-1:1, end:-1:1), 'valid'))));
+%             img{img_idx} = img{img_idx} + tmp_img(tl(1):tl(1)+img_h-1, tl(2):tl(2)+img_w-1);                                
+%         end
+% 
+%         img{img_idx} = img{img_idx}/num;
+%         fft_img = fft2(img{img_idx})/(img_w * img_h);
+%         fft_img(1,1) = 0;
+%         
+%         max_fft_sum{idx}(end+1) = mean(fft_sum2);
+%         
+% %         conv_img = abs(conv2(img{img_idx}, mx(end:-1:1, end:-1:1), 'valid') + conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
+%         conv_img = abs(conv2(img{img_idx}, my(end:-1:1, end:-1:1), 'valid'));
+%                 
+%         figure(1)
+% %         image(uint8(img{img_idx}))
+% %         imagesc(fftshift(real(fft_img)));
+%         imagesc(conv_img);
+%         colormap(jet(256));
+% 
+% %         fft_sum{kdx}(end+1) = sum(abs(fft_img(:)));
+%         fft_sum{idx}(end+1) = mean(fft_sum2);
+% %         fft_sum{kdx}(end+1) = sum((conv_img(:)));
+%         
+%         
+%         focus_vals{idx}(end+1) = f; %ceil(f/inc)*inc; %floor(f/5+0.5)*5;
+%         img_idx = img_idx + 1;
+%     end
+% 
+%     [~, conv_sharpest] = max(fft_sum{idx});
+%     
+%     sharpest_img{idx} = img{conv_sharpest};
+%     img_name{idx} = image_listing((conv_sharpest-1)*num+1).name;
+%     
+%     figure(10+idx)
+%     set(gcf,'position',([50,50,1400,500]),'color','w')
+%     box on
+%     grid on
+%     hold on
+%     stairs(focus_vals{idx}, fft_sum{idx}, 'Linewidth', line_width)
+%     stem(focus_vals{idx}, max_fft_sum{idx}, 'b', 'Linewidth', line_width)
+%     stem(focus_vals{idx}(conv_sharpest), fft_sum{idx}(conv_sharpest), 'r', 'Linewidth', line_width)
+%     set(gca,'fontweight','bold','FontSize',12);
+% 
+%     xlim([focus_vals{idx}(1), focus_vals{idx}(end)])
+%     %xticks(focus_vals{kdx}(1:5:end));
+%     %xticklabels(num2str(focus_vals{kdx}'));
+%     xtickangle(45);    
+%     ax = gca;
+%     ax.Position = [0.05 0.15 0.92 0.81];
+%     ax.XAxis.Exponent = 0;
+%     ax.XAxis.TickLabelFormat = '%05d';
+%     
+%     pause(0.1);
 end
 end
 
-%% remove the empty cells
-
+% remove the empty cell
 index = [];
 for idx=1:numel(focus_vals)
     
