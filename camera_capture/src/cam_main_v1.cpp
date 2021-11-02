@@ -117,6 +117,7 @@ int main(int argc, char** argv)
     std::string linear_stage_filename = "linear_stage_params.txt";
     std::vector<double> coeffs;
     std::vector<uint32_t> linear_stage_range;
+    uint32_t range_idx;
 
     // motor variables
     std::string pid_config_filename = "pid_config.txt";
@@ -482,8 +483,8 @@ int main(int argc, char** argv)
     std::cout << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
     std::cout << "Focus Step Range:    " << focus_str << std::endl;
     std::cout << "Zoom Step Range:     " << zoom_str << std::endl;
-    std::cout << "Exposure Time Range: " << exposure_str << std::endl;
-    std::cout << "Camera Gain:         " << camera_gain << std::endl;
+    //std::cout << "Exposure Time Range: " << exposure_str << std::endl;
+    //std::cout << "Camera Gain:         " << camera_gain << std::endl;
     std::cout << "Number of Captures:  " << cap_num << std::endl;
     if(ts == 1)
     {
@@ -501,8 +502,8 @@ int main(int argc, char** argv)
     data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
     data_log_stream << "Focus Step Range:    " << focus_str << std::endl;
     data_log_stream << "Zoom Step Range:     " << zoom_str << std::endl;
-    data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
-    data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
+    //data_log_stream << "Exposure Time Range: " << exposure_str << std::endl;
+    //data_log_stream << "Camera Gain:         " << camera_gain << std::endl;
     data_log_stream << "Number of Captures:  " << cap_num << std::endl;
     if(ts == 1)
     {
@@ -843,10 +844,10 @@ int main(int argc, char** argv)
         set_acquisition_mode(cam, acq_mode); //acq_mode
 
         // if the gain is 0 or greater then them is set to off and a value must be set
-        if (camera_gain >= 0)
-        {
-            set_gain_value(cam, camera_gain);
-        }
+        //if (camera_gain >= 0)
+        //{
+        //    set_gain_value(cam, camera_gain);
+        //}
 
         // print out the camera configuration
         std::cout << "------------------------------------------------------------------" << std::endl;
@@ -901,10 +902,10 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
         std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
-        std::cout << "  f <value> - move the focus motor to the given step value [" << min_focus_steps << " - " << max_focus_steps << "]" << std::endl;
-        std::cout << "  z <value> - move the zoom motor to the given step value [" << min_zoom_steps << " - " << max_zoom_steps << "]" << std::endl;        //std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
-        std::cout << "  g <value> - Set the camera gain" << std::endl;
-        std::cout << "  e <value> - set the camera exposure time (us)" << std::endl;
+        //std::cout << "  f <value> - move the focus motor to the given step value [" << min_focus_steps << " - " << max_focus_steps << "]" << std::endl;
+        //std::cout << "  z <value> - move the zoom motor to the given step value [" << min_zoom_steps << " - " << max_zoom_steps << "]" << std::endl;        //std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
+        //std::cout << "  g <value> - Set the camera gain" << std::endl;
+        //std::cout << "  e <value> - set the camera exposure time (us)" << std::endl;
         std::cout << "  s - Save an image" << std::endl;
         std::cout << "  q - Quit" << std::endl;
         std::cout << std::endl;
@@ -971,43 +972,50 @@ int main(int argc, char** argv)
 
             key = cv::waitKey(1);
 
-            if (entry)
+            //if (entry)
+            //{
+            //    // get the fisrt character
+            //    key = console_input[0];
+
+            switch (key)
             {
-                // get the fisrt character
-                key = console_input[0];
+            // check to save the image
+            case 's':
+                get_current_time(sdate, stime);
+                img_save_folder = output_save_location + sdate + "_" + stime + "/";
 
-                switch (key)
+                stat = mkdir(img_save_folder);
+                if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
                 {
-                // check to save the image
-                case 's':
-                    get_current_time(sdate, stime);
-                    img_save_folder = output_save_location + sdate + "_" + stime + "/";
+                    std::cout << "Error creating directory: " << stat << std::endl;
+                }
 
-                    stat = mkdir(img_save_folder);
-                    if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
-                    {
-                        std::cout << "Error creating directory: " << stat << std::endl;
-                    }
+                data_log_stream << "Save location: " << img_save_folder << std::endl;
+                std::cout << "------------------------------------------------------------------" << std::endl;
 
-                    data_log_stream << "Save location: " << img_save_folder << std::endl;
-                    std::cout << "------------------------------------------------------------------" << std::endl;
+                // enable the motors
+                status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+                status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
 
-                    // enable the motors
-                    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-                    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+                sleep_ms(10);
 
-                    sleep_ms(10);
+                focus_step = 0;
+                zoom_step = 0;
 
-                    focus_step = 0;
-                    zoom_step = 0;
+                // set the focus and zoom steps to zero
+                //status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                    // set the focus and zoom steps to zero
-                    //status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                    //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                // get the actual focus and zoom position 
+                //status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                //status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                    // get the actual focus and zoom position 
-                    //status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                    //status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                for (range_idx = 0; range_idx < linear_stage_range.size(); ++range_idx)
+                {
+                    double step_value = calculate_stage_point(linear_stage_range[range_idx], coeffs);
+                    std::cout << "Simulated Range = " << linear_stage_range[range_idx] << ", set linear stage to: " << num2str(step_value, "%2.4f") << std::endl;
+                    std::cout << "Press Enter to Continue...";
+                    std::cin.ignore();
 
                     for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
                     {
@@ -1059,138 +1067,139 @@ int main(int argc, char** argv)
                             //{
                             //    set_exposure_time(cam, exp_time[exp_idx]);
 
-                                for (img_idx = 0; img_idx < cap_num; ++img_idx)
+                            for (img_idx = 0; img_idx < cap_num; ++img_idx)
+                            {
+
+                                // grab an image: either from the continuous, single or triggered
+                                switch (ts)
                                 {
+                                case 0:
+                                    cam->BeginAcquisition();
+                                    status = ctrl.trigger(ctrl_handle, TRIG_ALL);
+                                    aquire_trigger_image(cam, image);
+                                    cam->EndAcquisition();
+                                    break;
+                                case 1:
+                                    aquire_software_trigger_image(cam, image);
+                                    break;
+                                }
 
-                                    // grab an image: either from the continuous, single or triggered
-                                    switch (ts)
-                                    {
-                                    case 0:
-                                        cam->BeginAcquisition();
-                                        status = ctrl.trigger(ctrl_handle, TRIG_ALL);
-                                        aquire_trigger_image(cam, image);
-                                        cam->EndAcquisition();
-                                        break;
-                                    case 1:
-                                        aquire_software_trigger_image(cam, image);
-                                        break;
-                                    }
+                                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
 
-                                    image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+                                cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-                                    cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
+                                //cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+                                cv::imshow(image_window, cv_image);
+                                key = cv::waitKey(1);
 
-                                    //cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
-                                    cv::imshow(image_window, cv_image);
-                                    key = cv::waitKey(1);
+                                // save the image
+                                std::cout << "saving: " << img_save_folder << image_capture_name << std::endl;
+                                data_log_stream << image_capture_name << std::endl;
 
-                                    // save the image
-                                    std::cout << "saving: " << img_save_folder << image_capture_name << std::endl;
-                                    data_log_stream << image_capture_name << std::endl;
+                                cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
+                                //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
+                                sleep_ms(20);
 
-                                    cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
-                                    //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                                    sleep_ms(20);
+                            }   // end of img_idx loop
 
-                                }   // end of img_idx loop
+                        //}   // end of exp_idx loop
 
-                            //}   // end of exp_idx loop
-
-                            //set_exposure_time(cam, exp_time[0]);
+                        //set_exposure_time(cam, exp_time[0]);
 
                         }   // end of focus_idx loop
 
                     }   // end of zoom_idx loop
 
-                    // set the focus step to the first focus_range setting
-                    status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
-                    status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+                }   // end of range_idx loop
 
-                    // disable the motors
-                    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
-                    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+                // set the focus step to the first focus_range setting
+                status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
-                    std::cout << "------------------------------------------------------------------" << std::endl;
-                    data_log_stream << "#------------------------------------------------------------------" << std::endl;
-                    break;
-                    // end of key == 's'
+                // disable the motors
+                status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+                status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
-                case 'f':
+                std::cout << "------------------------------------------------------------------" << std::endl;
+                data_log_stream << "#------------------------------------------------------------------" << std::endl;
+                break;
+                // end of key == 's'
 
-                    //std::cout << "Enter focus step: ";
-                    //std::getline(std::cin, console_input.substr(2, console_input.length()-1));
-                    try
-                    {
-                        focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
-                        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-                        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                        sleep_ms(10);
-                        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
-                        std::cout << "Focus step: " << focus_step << std::endl;
-                    }
-                    catch (std::exception e)
-                    {
-                        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
-                    }
-                    break;
+                //case 'f':
 
-                case 'z':
+                //    //std::cout << "Enter focus step: ";
+                //    //std::getline(std::cin, console_input.substr(2, console_input.length()-1));
+                //    try
+                //    {
+                //        focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+                //        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+                //        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                //        sleep_ms(10);
+                //        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                //        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+                //        std::cout << "Focus step: " << focus_step << std::endl;
+                //    }
+                //    catch (std::exception e)
+                //    {
+                //        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
+                //    }
+                //    break;
 
-                    //std::cout << "Enter zoom step: ";
-                    //std::getline(std::cin, console_input);
-                    try
-                    {
-                        zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
-                        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
-                        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-                        sleep_ms(10);
-                        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-                        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
-                        std::cout << "Zoom step: " << zoom_step << std::endl;
-                    }
-                    catch (std::exception e)
-                    {
-                        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
-                    }
-                    break;
+                //case 'z':
 
-                case 'e':
-                    //std::cout << "Enter exposure time (us): ";
-                    //std::getline(std::cin, console_input);
-                    try
-                    {
-                        double tmp_exp = floor(std::stod(console_input.substr(2, console_input.length() - 1)));
-                        set_exposure_time(cam, tmp_exp);
-                        sleep_ms(10);
-                        get_exposure_time(cam, tmp_exp);
-                        std::cout << "Exposure time (us): " << tmp_exp << std::endl;
+                //    //std::cout << "Enter zoom step: ";
+                //    //std::getline(std::cin, console_input);
+                //    try
+                //    {
+                //        zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+                //        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+                //        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                //        sleep_ms(10);
+                //        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                //        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+                //        std::cout << "Zoom step: " << zoom_step << std::endl;
+                //    }
+                //    catch (std::exception e)
+                //    {
+                //        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
+                //    }
+                //    break;
 
-                    }
-                    catch (std::exception e)
-                    {
-                        std::cout << "error converting exposure time: " << console_input << " error msg: " << e.what() << std::endl;
-                    }
-                    break;
+                //case 'e':
+                //    //std::cout << "Enter exposure time (us): ";
+                //    //std::getline(std::cin, console_input);
+                //    try
+                //    {
+                //        double tmp_exp = floor(std::stod(console_input.substr(2, console_input.length() - 1)));
+                //        set_exposure_time(cam, tmp_exp);
+                //        sleep_ms(10);
+                //        get_exposure_time(cam, tmp_exp);
+                //        std::cout << "Exposure time (us): " << tmp_exp << std::endl;
 
+                //    }
+                //    catch (std::exception e)
+                //    {
+                //        std::cout << "error converting exposure time: " << console_input << " error msg: " << e.what() << std::endl;
+                //    }
+                //    break;
 
-                case 'g':
-                    //std::cout << "Enter gain: ";
-                    //std::getline(std::cin, console_input);
-                    try
-                    {
-                        double tmp_gain = std::stod(console_input.substr(2, console_input.length() - 1));
-                        set_gain_value(cam, tmp_gain);
-                        sleep_ms(10);
-                        get_gain_value(cam, tmp_gain);
-                        std::cout << "Gain: " << tmp_gain << std::endl;
-                    }
-                    catch (std::exception e)
-                    {
-                        std::cout << "error converting gain value: " << console_input << " error msg: " << e.what() << std::endl;
-                    }
+                //case 'g':
+                //    //std::cout << "Enter gain: ";
+                //    //std::getline(std::cin, console_input);
+                //    try
+                //    {
+                //        double tmp_gain = std::stod(console_input.substr(2, console_input.length() - 1));
+                //        set_gain_value(cam, tmp_gain);
+                //        sleep_ms(10);
+                //        get_gain_value(cam, tmp_gain);
+                //        std::cout << "Gain: " << tmp_gain << std::endl;
+                //    }
+                //    catch (std::exception e)
+                //    {
+                //        std::cout << "error converting gain value: " << console_input << " error msg: " << e.what() << std::endl;
+                //    }
 
-                    break;
+                //    break;
 
                 case 'q':
                     run = false;
@@ -1202,10 +1211,11 @@ int main(int argc, char** argv)
                 }   // end of switch case
 
                 sleep_ms(10);
-                entry = false;
-            }   // end if(entry)
+            //    entry = false;
+            //}   // end if(entry)
 
-        } while (run);  //while (key != 'q');
+//        } while (run);
+        } while (key != 'q');
 
         io_thread.join();
 
