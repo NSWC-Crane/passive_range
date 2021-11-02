@@ -35,6 +35,42 @@ std::atomic<bool> entry = false;
 std::atomic<bool> run = true;
 std::string console_input;
 
+
+// ----------------------------------------------------------------------------
+void read_linear_stage_params(std::string filename, std::vector<double> &coeffs)
+{
+    uint32_t idx;
+    coeffs.clear();
+
+    std::vector<std::vector<std::string>> params;
+    parse_csv_file(filename, params);
+
+    for (idx = 0; idx < params.size(); ++idx)
+    {
+        coeffs.push_back(std::stod(params[0][idx]));
+    }
+}   // end of read_linear_stage_params
+
+// ----------------------------------------------------------------------------
+double calculate_stage_point(double range, std::vector<double> coeffs)
+{
+    double step = 0.0;
+
+    // x^4
+    step += coeffs[0] * range * range * range * range;
+    // x^3
+    step += coeffs[1] * range * range * range;
+    // x^2
+    step += coeffs[2] * range * range;
+    // x^1
+    step += coeffs[3] * range;
+    // x^0
+    step += coeffs[4];
+
+    return step;
+}
+
+// ----------------------------------------------------------------------------
 void get_input(void)
 {
     while (1)
@@ -78,6 +114,10 @@ int main(int argc, char** argv)
     controller ctrl;
     bool ctrl_connected = false;
 
+    std::string linear_stage_filename = "linear_stage_params.txt";
+    std::vector<double> coeffs;
+    std::vector<uint32_t> linear_stage_range;
+
     // motor variables
     std::string pid_config_filename = "pid_config.txt";
     std::vector<int32_t> focus_range, zoom_range;
@@ -112,14 +152,21 @@ int main(int argc, char** argv)
     Spinnaker::CameraPtr cam;
     Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
     double camera_gain;
-    Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
-    //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
-    Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
     double frame_rate;
+
+    //Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
+    Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
+
+    //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+    //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
+    Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
+
     Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
+
     Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
     //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame;
+
     Spinnaker::TriggerSourceEnums trigger_source;
     Spinnaker::TriggerActivationEnums trigger_activation = Spinnaker::TriggerActivation_RisingEdge;
     Spinnaker::ImagePtr image;
@@ -161,7 +208,8 @@ int main(int argc, char** argv)
         "{px_format  | 3 | Pixel Type }"
         //"{sharpness  | 3072 | Sharpness setting for the camera }"
         //"{fps        | 10.0 | Frames per second setting for the camera }"
-        "{exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera }"
+        //"{exp_time   | 15000:-2000:1000 | Exposure time (us) range settings for the camera }"
+        "{linear_stage | 500:10:1100 | Linear stage simulated range (m) }"
         "{gain       | 5.0 | Inital gain setting before letting the camera find one }"
         "{cap_num    | 1 | Number of images to capture for an average }"
         "{source     | 1  | source for the trigger (0 -> Line0, 1 -> Software) }"
@@ -247,18 +295,18 @@ int main(int argc, char** argv)
             //sharpness = std::stoi(cfg_params[2][0]);
             //frame_rate = std::stod(cfg_params[2][1]);
             //exposure_str = cfg_params[3][0];
-            //parse_input_range(cfg_params[3][0], exp_time);
-            exp_time = std::stod(cfg_params[3][0]);
-            camera_gain = std::stod(cfg_params[3][1]);
+            parse_input_range(cfg_params[3][0], linear_stage_range);
+            //exp_time = std::stod(cfg_params[3][0]);
+            //camera_gain = std::stod(cfg_params[3][1]);
 
-            if (camera_gain < 0)
-            {
-                gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
-            }
-            else
-            {
-                gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
-            }
+            //if (camera_gain < 0)
+            //{
+            //    gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
+            //}
+            //else
+            //{
+            //    gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+            //}
 
             // line 5: number of images to capture for each focus/zoom/exposure setting
             cap_num = std::stoi(cfg_params[4][0]);
@@ -378,18 +426,18 @@ int main(int argc, char** argv)
         //sharpness = parser.get<uint32_t>("sharpness");
         //frame_rate = parser.get<double>("fps");
         //exposure_str = parser.get<string>("exp_time");
-        //parse_input_range(parser.get<string>("exp_time"), exp_time);
-        exp_time = parser.get<double>("exp_time");
-        camera_gain = parser.get<double>("gain");
+        parse_input_range(parser.get<string>("linear_stage"), linear_stage_range);
+        //exp_time = parser.get<double>("exp_time");
+        //camera_gain = parser.get<double>("gain");
 
-        if (camera_gain < 0)
-        {
-            gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
-        }
-        else
-        {
-            gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
-        }
+        //if (camera_gain < 0)
+        //{
+        //    gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
+        //}
+        //else
+        //{
+        //    gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+        //}
 
         // line 5: number of images to capture for each focus/zoom/exposure settinge
         cap_num = parser.get<uint32_t>("cap_num");
@@ -895,6 +943,9 @@ int main(int argc, char** argv)
 
         std::thread io_thread(get_input);
 
+        // read in the file to describe the linear stage interpolation
+        read_linear_stage_params(linear_stage_filename, coeffs);
+
         do
         {
 
@@ -966,6 +1017,19 @@ int main(int argc, char** argv)
 
                         zoom_str = num2str(zoom_step, "z%05d_");
 
+                        // reset the camera exposure time
+                        exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
+                        set_exposure_mode(cam, exp_mode);
+                        get_exposure_time(cam, tmp_exp_time);
+                        exposure_str = num2str(tmp_exp_time, "e%05.0f_");
+
+                        // reset the camera gain
+                        gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
+                        set_gain_mode(cam, gain_mode);
+                        get_gain_value(cam, camera_gain);
+
+                        data_log_stream << "# exposure time: " << num2str(tmp_exp_time, "%6.4f") << ", camera gain: " << num2str(camera_gain, "%6.4f") << std::endl;
+
                         for (focus_idx = 0; focus_idx < focus_range.size(); ++focus_idx)
                         {
                             // set the focus motor value to each value in focus_range
@@ -1011,9 +1075,6 @@ int main(int argc, char** argv)
                                         aquire_software_trigger_image(cam, image);
                                         break;
                                     }
-
-                                    get_exposure_time(cam, tmp_exp_time);
-                                    exposure_str = num2str(tmp_exp_time, "e%05.0f_");
 
                                     image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
 
