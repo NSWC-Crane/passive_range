@@ -89,8 +89,13 @@ endforeach()
 message("--------------------------------------------------------------------------------")
 message(" ")
 
+# copy the pid configuration file for the dynamixel motors
 set(pid_file "pid_config.txt")
 file(COPY "${PR_ROOT}/common/${pid_file}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+# copy the linear stage calibration file 
+set(linear_stage_file "linear_stage_cal.txt")
+file(COPY "${PR_ROOT}/common/${linear_stage_file}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
