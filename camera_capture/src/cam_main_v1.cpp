@@ -45,7 +45,7 @@ void read_linear_stage_params(std::string filename, std::vector<double> &coeffs)
     std::vector<std::vector<std::string>> params;
     parse_csv_file(filename, params);
 
-    for (idx = 0; idx < params.size(); ++idx)
+    for (idx = 0; idx < params[0].size(); ++idx)
     {
         coeffs.push_back(std::stod(params[0][idx]));
     }
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     controller ctrl;
     bool ctrl_connected = false;
 
-    std::string linear_stage_filename = "linear_stage_params.txt";
+    std::string linear_stage_filename = "linear_stage_cal.txt";
     std::vector<double> coeffs;
     std::vector<uint32_t> linear_stage_range;
     uint32_t range_idx;
@@ -195,6 +195,7 @@ int main(int argc, char** argv)
     std::string image_str;
 
     std::string img_save_folder;
+    std::string sub_dir;
     int32_t stat;
 
     const std::string params =
@@ -472,9 +473,8 @@ int main(int argc, char** argv)
     data_log_stream.open((output_save_location + log_filename), ios::out | ios::app);
 
     // Add the date and time to the start of the log file
-    data_log_stream << "#------------------------------------------------------------------" << std::endl;
+    data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
     data_log_stream << "Version: 1.0    Date: " << sdate << "    Time: " << stime << std::endl << std::endl;
-    data_log_stream << "#------------------------------------------------------------------" << std::endl;
 
     // print out the info about what was passed in to the code
     std::cout << "------------------------------------------------------------------" << std::endl;
@@ -497,6 +497,7 @@ int main(int argc, char** argv)
     }
     std::cout <<  std::endl;
 
+    data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
     data_log_stream << "Input Parameters:" << std::endl;
     data_log_stream << "Image Size (h x w):  " << height << " x " << width << std::endl;
     data_log_stream << "Image Offset (x, y): " << x_offset << ", " << y_offset << std::endl;
@@ -514,7 +515,7 @@ int main(int argc, char** argv)
         data_log_stream << "Trigger Source:      " << ts << ", " << (uint32_t)t1_polarity << "," << t1_offset << "," << t1_length;
         data_log_stream << ", " << (uint32_t)t2_polarity << "," << t2_offset << "," << t2_length <<std::endl;
     }
-    data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
+    data_log_stream << std::endl;
 
 
     try {
@@ -588,9 +589,9 @@ int main(int argc, char** argv)
         std::cout << ctrl;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
-        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
-        data_log_stream << ctrl;
-        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
+        data_log_stream << ctrl << std::endl;
+        //data_log_stream << "#------------------------------------------------------------------------------" << std::endl ;
 
         //-----------------------------------------------------------------------------
         // ping the motors to get the model number and firmware version
@@ -599,7 +600,7 @@ int main(int argc, char** argv)
         std::cout << "-----------------------------------------------------------------------------" << std::endl;
         std::cout << "Focus Motor Information: " << std::endl;
 
-        data_log_stream << "-----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
         data_log_stream << "Focus Motor Information: " << std::endl;
 
         if (status)
@@ -653,8 +654,8 @@ int main(int argc, char** argv)
         std::cout << "  Current Step:     " << zoom_step << std::endl;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
-        data_log_stream << "  Current Step:     " << zoom_step << std::endl;
-        data_log_stream << "-----------------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << "  Current Step:     " << zoom_step << std::endl << std::endl;
+        //data_log_stream << "-----------------------------------------------------------------------------" << std::endl ;
 
         /*
         //-----------------------------------------------------------------------------
@@ -731,11 +732,10 @@ int main(int argc, char** argv)
         std::cout << t2_info;
         std::cout << "-----------------------------------------------------------------------------" << std::endl << std::endl;
 
-        data_log_stream << "#----------------------------------------------------------------------------" << std::endl;
+        data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
         data_log_stream << "Trigger Information: " << std::endl;
         data_log_stream << t1_info << std::endl;
-        data_log_stream << t2_info;
-        data_log_stream << "#----------------------------------------------------------------------------" << std::endl << std::endl;
+        data_log_stream << t2_info << std::endl;
 
         //-----------------------------------------------------------------------------
         // read in the position PID config file and set the PID values for each motor 
@@ -820,6 +820,7 @@ int main(int argc, char** argv)
         // print out some information about the camera
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << cam;
+        data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
         data_log_stream << cam;
 
         // initialize the camera
@@ -852,7 +853,8 @@ int main(int argc, char** argv)
         // print out the camera configuration
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Camera Configuration:" << std::endl;
-        data_log_stream << "#------------------------------------------------------------------" << std::endl;
+
+        data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
         data_log_stream << "Camera Configuration:" << std::endl;
 
         get_image_size(cam, height, width, y_offset, x_offset);
@@ -893,7 +895,7 @@ int main(int argc, char** argv)
         data_log_stream << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
         data_log_stream << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
         data_log_stream << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;       
-        data_log_stream << std::endl << "#------------------------------------------------------------------" << std::endl;
+        data_log_stream << std::endl;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Save location: " << output_save_location << std::endl << std::endl;
@@ -942,7 +944,7 @@ int main(int argc, char** argv)
 
         cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
 
-        std::thread io_thread(get_input);
+        //std::thread io_thread(get_input);
 
         // read in the file to describe the linear stage interpolation
         read_linear_stage_params(linear_stage_filename, coeffs);
@@ -990,7 +992,10 @@ int main(int argc, char** argv)
                     std::cout << "Error creating directory: " << stat << std::endl;
                 }
 
-                data_log_stream << "Save location: " << img_save_folder << std::endl;
+                data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
+                data_log_stream << "Save location: " << img_save_folder << std::endl << std::endl;
+                data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
+
                 std::cout << "------------------------------------------------------------------" << std::endl;
 
                 // enable the motors
@@ -1023,17 +1028,45 @@ int main(int argc, char** argv)
                         status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[zoom_idx]);
                         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
-                        zoom_str = num2str(zoom_step, "z%05d_");
+                        zoom_str = num2str(zoom_step, "z%04d_");
 
-                        // reset the camera exposure time
-                        exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
+                        // set the camera exposure time and gain to auto for each zoom setting and then freeze
+                        exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
+                        gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
                         set_exposure_mode(cam, exp_mode);
+                        set_gain_mode(cam, gain_mode);
+
+                        sub_dir = num2str((uint32_t)linear_stage_range[range_idx], "%04d") + "/" + num2str(zoom_range[zoom_idx], "z%04d") + "/";
+
+                        stat = mkdir(img_save_folder + sub_dir);
+                        if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
+                        {
+                            std::cout << "Error creating directory: " << stat << std::endl;
+                        }
+
+                        // grab an image: either from the continuous, single or triggered
+                        switch (ts)
+                        {
+                        case 0:
+                            cam->BeginAcquisition();
+                            status = ctrl.trigger(ctrl_handle, TRIG_ALL);
+                            aquire_trigger_image(cam, image);
+                            cam->EndAcquisition();
+                            break;
+                        case 1:
+                            aquire_software_trigger_image(cam, image);
+                            break;
+                        }
+
+                        sleep_ms(40);
+                        exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+                        gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
+                        set_exposure_mode(cam, exp_mode);
+                        set_gain_mode(cam, gain_mode);
+
+                        // get the final camera exposure time and camera gain values
                         get_exposure_time(cam, tmp_exp_time);
                         exposure_str = num2str(tmp_exp_time, "e%05.0f_");
-
-                        // reset the camera gain
-                        gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
-                        set_gain_mode(cam, gain_mode);
                         get_gain_value(cam, camera_gain);
 
                         data_log_stream << "# exposure time: " << num2str(tmp_exp_time, "%6.4f") << ", camera gain: " << num2str(camera_gain, "%6.4f") << std::endl;
@@ -1045,7 +1078,7 @@ int main(int argc, char** argv)
                             status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
                             focus_str = num2str(focus_step, "f%05d_");
-                            sleep_ms(5);
+                            sleep_ms(10);
 
                             // create the directory to save the images at various focus steps
                             /*
@@ -1063,9 +1096,6 @@ int main(int argc, char** argv)
                                 combined_save_location = output_save_location + sub_dir + "/";
                             }
                             */
-                            //for (exp_idx = 0; exp_idx < exp_time.size(); ++exp_idx)
-                            //{
-                            //    set_exposure_time(cam, exp_time[exp_idx]);
 
                             for (img_idx = 0; img_idx < cap_num; ++img_idx)
                             {
@@ -1088,25 +1118,23 @@ int main(int argc, char** argv)
 
                                 cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
-                                //cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
                                 cv::imshow(image_window, cv_image);
                                 key = cv::waitKey(1);
 
                                 // save the image
-                                std::cout << "saving: " << img_save_folder << image_capture_name << std::endl;
-                                data_log_stream << image_capture_name << std::endl;
+                                std::cout << "saving: " << img_save_folder << sub_dir << image_capture_name << std::endl;
+                                data_log_stream << sub_dir << image_capture_name << std::endl;
 
-                                cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
+                                cv::imwrite((img_save_folder + sub_dir + image_capture_name), cv_image, compression_params);
                                 //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                                sleep_ms(20);
+                                sleep_ms(10);
 
                             }   // end of img_idx loop
 
-                        //}   // end of exp_idx loop
-
-                        //set_exposure_time(cam, exp_time[0]);
-
                         }   // end of focus_idx loop
+
+                        // set the focus step to the first focus_range setting
+                        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
 
                     }   // end of zoom_idx loop
 
@@ -1120,8 +1148,17 @@ int main(int argc, char** argv)
                 status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
                 status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
 
+                // set the camera exposure time and gain to auto
+                exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
+                gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
+                set_exposure_mode(cam, exp_mode);
+                set_gain_mode(cam, gain_mode);
+
                 std::cout << "------------------------------------------------------------------" << std::endl;
-                data_log_stream << "#------------------------------------------------------------------" << std::endl;
+                std::cout << "Data Collection Complete!" << std::endl;
+                std::cout << "------------------------------------------------------------------" << std::endl;
+
+                data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
                 break;
                 // end of key == 's'
 
@@ -1217,7 +1254,7 @@ int main(int argc, char** argv)
 //        } while (run);
         } while (key != 'q');
 
-        io_thread.join();
+        //io_thread.join();
 
         if (acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
             cam->EndAcquisition();

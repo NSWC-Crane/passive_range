@@ -1,19 +1,14 @@
 # Camera configuration file
-# 
 # Parameters should be supplied in the following order:
 # Line 1: colon separated values of the focus motor step range (start:inc:stop)
-#         current settings: 
 # Line 2: colon separated values of the zoom motor step range (start:inc:stop)
-#         current settings: 
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
 #		  0 -> PixelFormat_Mono8
 #		  1 -> PixelFormat_Mono10
 #		  2 -> PixelFormat_Mono12
 #		  3 -> PixelFormat_Mono16
 #		  4 -> PixelFormat_RGB8
-# Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
-#		  - negative gain will set the gain mode to GainAuto_Once
-#		  - non-negative values will set the gain mode to GainAuto_Off and apply the gain value
+# Line 4: colon separated values for the linear stage range
 # Line 5: single value for the number of images to capture to average
 # Line 6: trigger source (0 -> Line0, 1 -> Software)
 # Line 7: base directory where the results will be saved
@@ -21,7 +16,6 @@
 #------------------------------------------------------------------------------
 # General Settings
 #------------------------------------------------------------------------------
-
 # Line 1: colon separated values of the focus motor: (start:inc:stop)
 600:10:1600
 
@@ -31,8 +25,8 @@
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
 512, 512, 1024, 512, 0
 
-# Line 4: comma separated values for the camera properties: exposure time (ms) range, gain
-54992, 0.5
+# Line 4: colon separated values for the linear stage ranges (m)
+0:0:0
 
 # Line 5: the number of images to capture per focus/zoom/exposure setting
 1
