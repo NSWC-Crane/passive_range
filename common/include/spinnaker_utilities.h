@@ -223,6 +223,10 @@ void init_camera(Spinnaker::CameraPtr& cam)
     //else
         //std::cout << "can't set bit depth" << std::endl;
 
+    // set the upperr and lower limits on the auto exposre time limits
+    cam->AutoExposureExposureTimeLowerLimit.SetValue(100.0);
+    cam->AutoExposureExposureTimeUpperLimit.SetValue(29999999.0);
+
     // get the upper and lower bounds for certain camera parameters
     get_bounds(cam);
 }   // end of init_camera
