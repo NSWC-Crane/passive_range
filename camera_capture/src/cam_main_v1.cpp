@@ -15,6 +15,8 @@
 #include <cstdint>
 #include <iostream>
 #include <sstream>
+#include <thread>
+#include <atomic>
 
 // OpenCV Includes
 #include <opencv2/core.hpp>
@@ -31,8 +33,8 @@
 // Project Includes
 #include "control_driver.h"
 
-std::atomic<bool> entry = false;
-std::atomic<bool> run = true;
+std::atomic<bool> entry(false);
+std::atomic<bool> run(true);
 std::string console_input;
 
 
@@ -179,7 +181,7 @@ int main(int argc, char** argv)
     char key;
     cv::Mat cv_image;
     cv::Size img_size;
-    std::string image_window = "Image";
+    std::string image_window = "Camera: ";
     std::vector<int> compression_params;
     compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
     compression_params.push_back(4);
@@ -232,12 +234,17 @@ int main(int argc, char** argv)
     focus_range.clear();
     zoom_range.clear();
 
+    std::cout << "------------------------------------------------------------------" << std::endl;
+    
     // if the input is a config file use this over all other input parameters
     if (parser.has("cfg_file"))
     {
+
         // input config file should contain all required inputs
         std::string cfg_filename = parser.get<std::string>("cfg_file");
         std::vector<std::vector<std::string>> cfg_params;
+        
+        std::cout << "reading parameters from: " << cfg_filename << std::endl;
         parse_csv_file(cfg_filename, cfg_params);
 
         // config file should be in the following format
@@ -593,6 +600,8 @@ int main(int argc, char** argv)
         data_log_stream << ctrl << std::endl;
         //data_log_stream << "#------------------------------------------------------------------------------" << std::endl ;
 
+        sleep_ms(20);
+        
         //-----------------------------------------------------------------------------
         // ping the motors to get the model number and firmware version
         status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
@@ -624,7 +633,8 @@ int main(int argc, char** argv)
         std::cout << "  Current Step:     " << focus_step << std::endl;
         data_log_stream << "  Current Step:     " << focus_step << std::endl;
 
-
+        sleep_ms(20);
+        
         //-----------------------------------------------------------------------------
         status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
 
@@ -843,6 +853,8 @@ int main(int argc, char** argv)
         set_exposure_mode(cam, exp_mode);
         set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
+        
+        sleep_ms(100);
 
         // if the gain is 0 or greater then them is set to off and a value must be set
         //if (camera_gain >= 0)
@@ -864,7 +876,7 @@ int main(int argc, char** argv)
         get_gain_value(cam, camera_gain);
 
         // exposure
-        double tmp_exp_time;
+        double tmp_exp_time = 0.0;
         get_exposure_mode(cam, exp_mode);
         get_exposure_time(cam, tmp_exp_time);
         get_acquisition_mode(cam, acq_mode);
@@ -905,7 +917,7 @@ int main(int argc, char** argv)
         std::cout << "Beginning Acquisition:" << std::endl;
         std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
         //std::cout << "  f <value> - move the focus motor to the given step value [" << min_focus_steps << " - " << max_focus_steps << "]" << std::endl;
-        //std::cout << "  z <value> - move the zoom motor to the given step value [" << min_zoom_steps << " - " << max_zoom_steps << "]" << std::endl;        //std::cout << "  z - Step the zoom motor by 160 steps" << std::endl;
+        //std::cout << "  z <value> - move the zoom motor to the given step value [" << min_zoom_steps << " - " << max_zoom_steps << "]" << std::endl;
         //std::cout << "  g <value> - Set the camera gain" << std::endl;
         //std::cout << "  e <value> - set the camera exposure time (us)" << std::endl;
         std::cout << "  s - Save an image" << std::endl;
@@ -916,7 +928,7 @@ int main(int argc, char** argv)
         if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
             cam->BeginAcquisition();
 
-        image_window = image_window + "_" + cam_sn[cam_index];
+        image_window = image_window + cam_sn[cam_index];
 
         // set trigger mode and enable
         set_trigger_source(cam, trigger_source, trigger_activation);
