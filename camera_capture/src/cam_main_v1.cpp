@@ -193,6 +193,7 @@ int main(int argc, char** argv)
     std::vector<int> compression_params;
     compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
     compression_params.push_back(4);
+    uint8_t cv_type = CV_8UC3;
 
     std::string sdate, stime;
     std::string log_filename = "camera_capture_log_";
@@ -285,26 +286,32 @@ int main(int argc, char** argv)
             {
             case 0:
                 pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono8;
+                cv_type = CV_8UC1;
                 break;
 
             case 1:
-                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono10;
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono10p;
+                cv_type = CV_16UC1;
                 break;
 
             case 2:
-                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+                pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12p;
+                cv_type = CV_16UC1;
                 break;
 
             case 3:
                 pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono16;
+                cv_type = CV_16UC1;
                 break;
 
             case 4:
                 pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+                cv_type = CV_8UC3;
                 break;
 
             default:
                 pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+                cv_type = CV_8UC3;
                 break;
             }
 
@@ -417,28 +424,35 @@ int main(int argc, char** argv)
         {
         case 0:
             pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono8;
+            cv_type = CV_8UC1;
             break;
 
         case 1:
-            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono10;
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono10p;
+            cv_type = CV_16UC1;
             break;
 
         case 2:
-            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12p;
+            cv_type = CV_16UC1;
             break;
 
         case 3:
             pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono16;
+            cv_type = CV_16UC1;
             break;
 
         case 4:
             pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+            cv_type = CV_8UC3;
             break;
 
         default:
             pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
+            cv_type = CV_8UC3;
             break;
         }
+
         // line 4: camera properties settings
         //sharpness = parser.get<uint32_t>("sharpness");
         //frame_rate = parser.get<double>("fps");
@@ -855,8 +869,8 @@ int main(int argc, char** argv)
         //std::cout << "Image Size (h x w): " << height << " x " << width << ", [" << x_offset << ", " << y_offset << "]" << std::endl;
 
         // configure the camera
-        set_image_size(cam, height, width, y_offset, x_offset);
         set_pixel_format(cam, pixel_format);
+        set_image_size(cam, height, width, y_offset, x_offset);
         set_gain_mode(cam, gain_mode);
         set_exposure_mode(cam, exp_mode);
         //set_exposure_time(cam, exp_time);
@@ -1002,7 +1016,7 @@ int main(int argc, char** argv)
             }
 
             //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding. 
-            cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
+            cv_image = cv::Mat(height + y_padding, width + x_padding, cv_type, image->GetData(), image->GetStride());
 
             cv::imshow(image_window, cv_image);
 
@@ -1160,7 +1174,7 @@ int main(int argc, char** argv)
 
                                 image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
 
-                                cv_image = cv::Mat(height + y_padding, width + x_padding, CV_8UC3, image->GetData(), image->GetStride());
+                                cv_image = cv::Mat(height + y_padding, width + x_padding, cv_type, image->GetData(), image->GetStride());
 
                                 cv::imshow(image_window, cv_image);
                                 key = cv::waitKey(1);

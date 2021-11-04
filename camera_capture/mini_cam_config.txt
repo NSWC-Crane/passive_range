@@ -4,8 +4,8 @@
 # Line 2: colon separated values of the zoom motor step range (start:inc:stop)
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
 #		  0 -> PixelFormat_Mono8
-#		  1 -> PixelFormat_Mono10
-#		  2 -> PixelFormat_Mono12
+#		  1 -> PixelFormat_Mono10p
+#		  2 -> PixelFormat_Mono12p
 #		  3 -> PixelFormat_Mono16
 #		  4 -> PixelFormat_RGB8
 # Line 4: colon separated values for the linear stage range
