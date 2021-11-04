@@ -44,13 +44,21 @@ void read_linear_stage_params(std::string filename, std::vector<double> &coeffs)
     uint32_t idx;
     coeffs.clear();
 
-    std::vector<std::vector<std::string>> params;
-    parse_csv_file(filename, params);
-
-    for (idx = 0; idx < params[0].size(); ++idx)
+    try
     {
-        coeffs.push_back(std::stod(params[0][idx]));
+        std::vector<std::vector<std::string>> params;
+        parse_csv_file(filename, params);
+
+        for (idx = 0; idx < params[0].size(); ++idx)
+        {
+            coeffs.push_back(std::stod(params[0][idx]));
+        }
     }
+    catch (std::exception e)
+    {
+        std::cout << "error reading the linear stage calibration file: " << e.what() << std::endl;
+    }
+
 }   // end of read_linear_stage_params
 
 // ----------------------------------------------------------------------------
@@ -851,10 +859,34 @@ int main(int argc, char** argv)
         set_pixel_format(cam, pixel_format);
         set_gain_mode(cam, gain_mode);
         set_exposure_mode(cam, exp_mode);
-        set_exposure_time(cam, exp_time);
+        //set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
         
-        sleep_ms(100);
+        // start the acquistion if the mode is set to continuous
+        if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
+            cam->BeginAcquisition();
+        
+        // set trigger mode and enable
+        set_trigger_source(cam, trigger_source, trigger_activation);
+        //config_trigger(cam, OFF);
+        config_trigger(cam, ON);
+        sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
+                        
+        // grab an image: either from the continuous, single or triggered
+        switch (ts)
+        {
+        case 0:
+            cam->BeginAcquisition();
+            status = ctrl.trigger(ctrl_handle, TRIG_ALL);
+            aquire_trigger_image(cam, image);
+            cam->EndAcquisition();
+            break;
+        case 1:
+            aquire_software_trigger_image(cam, image);
+            break;
+        }
+
+        //sleep_ms(100);
 
         // if the gain is 0 or greater then them is set to off and a value must be set
         //if (camera_gain >= 0)
@@ -924,17 +956,7 @@ int main(int argc, char** argv)
         std::cout << "  q - Quit" << std::endl;
         std::cout << std::endl;
 
-        // start the acquistion if the mode is set to continuous
-        if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
-            cam->BeginAcquisition();
-
         image_window = image_window + cam_sn[cam_index];
-
-        // set trigger mode and enable
-        set_trigger_source(cam, trigger_source, trigger_activation);
-        //config_trigger(cam, OFF);
-        config_trigger(cam, ON);
-        sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
 
         // grab an initial image to get the padding 
         //acquire_image(cam, image);
@@ -995,6 +1017,16 @@ int main(int argc, char** argv)
             {
             // check to save the image
             case 's':
+
+                // save the linear stage parameters
+                data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
+                data_log_stream << "linear stage curve coefficients: ";
+                for (idx = 0; idx < coeffs.size()-1; ++idx)
+                {
+                    data_log_stream << num2str(coeffs[idx], "%17.15g") << ", ";
+                }
+                data_log_stream << num2str(coeffs[idx], "%17.15g") << std::endl << std::endl;
+
                 get_current_time(sdate, stime);
                 img_save_folder = output_save_location + sdate + "_" + stime + "/";
 
@@ -1005,7 +1037,7 @@ int main(int argc, char** argv)
                 }
 
                 data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
-                data_log_stream << "Save location: " << img_save_folder << std::endl << std::endl;
+                data_log_stream << "save location: " << img_save_folder << std::endl << std::endl;
                 data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
 
                 std::cout << "------------------------------------------------------------------" << std::endl;
