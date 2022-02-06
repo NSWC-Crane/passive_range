@@ -30,6 +30,7 @@
 #include "file_parser.h"
 #include "file_ops.h"
 
+
 // Project Includes
 #include "control_driver.h"
 
@@ -37,6 +38,27 @@ std::atomic<bool> entry(false);
 std::atomic<bool> run(true);
 std::string console_input;
 
+
+// ----------------------------------------------------------------------------
+void print_progress(double progress)
+{
+    uint32_t bar_width = 70;
+
+    if (progress == 0.0)
+    {
+        std::cout << "[" << std::string(bar_width, ' ') << "] " << std::fixed << std::setprecision(2) << (progress * 100.0) << "%\r";
+        std::cout.flush();
+        return;
+    }
+    else
+    {
+        uint32_t bar_count = (uint32_t)(bar_width * progress);
+
+        std::cout << "[" << std::string(bar_count, '=') << std::string(bar_width - bar_count, ' ') << "] " << std::fixed << std::setprecision(2) << (progress * 100.0) << "%\r";
+        std::cout.flush();
+    }
+
+}
 
 // ----------------------------------------------------------------------------
 void read_linear_stage_params(std::string filename, std::vector<double> &coeffs)
@@ -138,6 +160,7 @@ int main(int argc, char** argv)
     int32_t zoom_step = 0;
     bool mtr_moving = false;
     std::vector<uint16_t> pid_values;
+    double focus_progress = 0.0;
 
     // trigger variables
     std::vector<uint8_t> tc_ch1(9);
@@ -579,7 +602,9 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  Press Enter when complete...";
+        // this needs to happen so that zero is that same for each run
+        std::cout << std::endl << "Rotate the focus and the zoom lens to the zero position.  " << std::endl 
+            << "If the lens won't turn, remove power from the motors and then reconnect. Press Enter when complete...";
         std::cin.ignore();
 
         std::cout << std::endl << "Connecting to Controller..." << std::endl;
@@ -1080,6 +1105,8 @@ int main(int argc, char** argv)
                     std::cout << "Press Enter to Continue...";
                     std::cin.ignore();
 
+                    std::cout << std::endl;
+
                     for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
                     {
                         // set the zoom motor value to each value in focus_range
@@ -1087,6 +1114,8 @@ int main(int argc, char** argv)
                         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
                         zoom_str = num2str(zoom_step, "z%04d_");
+
+                        std::cout << "Zoom setting: " << num2str(zoom_range[zoom_idx], "%04d") << std::endl;
 
                         // set the camera exposure time and gain to auto for each zoom setting and then freeze
                         exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
@@ -1136,6 +1165,11 @@ int main(int argc, char** argv)
                             status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
 
                             focus_str = num2str(focus_step, "f%05d_");
+
+                            focus_progress = focus_idx / (double)(focus_range.size() - 1);
+
+                            print_progress(focus_progress);
+
                             sleep_ms(10);
 
                             // create the directory to save the images at various focus steps
@@ -1180,7 +1214,7 @@ int main(int argc, char** argv)
                                 key = cv::waitKey(1);
 
                                 // save the image
-                                std::cout << "saving: " << img_save_folder << sub_dir << image_capture_name << std::endl;
+                                //std::cout << "saving: " << img_save_folder << sub_dir << image_capture_name << std::endl;
                                 data_log_stream << sub_dir << image_capture_name << std::endl;
 
                                 cv::imwrite((img_save_folder + sub_dir + image_capture_name), cv_image, compression_params);
@@ -1190,6 +1224,8 @@ int main(int argc, char** argv)
                             }   // end of img_idx loop
 
                         }   // end of focus_idx loop
+
+                        std::cout << std::endl;
 
                         // set the focus step to the first focus_range setting
                         status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
@@ -1212,6 +1248,7 @@ int main(int argc, char** argv)
                 set_exposure_mode(cam, exp_mode);
                 set_gain_mode(cam, gain_mode);
 
+                std::cout << std::endl;
                 std::cout << "------------------------------------------------------------------" << std::endl;
                 std::cout << "Data Collection Complete!" << std::endl;
                 std::cout << "------------------------------------------------------------------" << std::endl;
@@ -1325,12 +1362,16 @@ int main(int argc, char** argv)
     {
         std::cout << "Error: " << e.what() << std::endl;
         data_log_stream << "Error: " << e.what() << std::endl;
+
+        std::cout << "Press Enter to close!" << std::endl;
         std::cin.ignore();
     }
     catch (std::exception e)
     {
         std::cout << "Error: " << e.what() << std::endl;
         data_log_stream << "Error: " << e.what() << std::endl;
+
+        std::cout << "Press Enter to close!" << std::endl;
         std::cin.ignore();
     }
     
