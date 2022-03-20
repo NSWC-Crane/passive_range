@@ -97,6 +97,10 @@ file(COPY "${PR_ROOT}/common/${pid_file}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR
 set(linear_stage_file "linear_stage_cal.txt")
 file(COPY "${PR_ROOT}/common/${linear_stage_file}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+if(UNIX)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif()
+
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
 target_link_libraries(${exe_name} ${project_libs})
