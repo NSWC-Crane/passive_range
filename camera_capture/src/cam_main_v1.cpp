@@ -30,14 +30,59 @@
 #include "file_parser.h"
 #include "file_ops.h"
 
-
 // Project Includes
 #include "control_driver.h"
 
+// ----------------------------------------------------------------------------
+// GLOBALS
+// ----------------------------------------------------------------------------
 std::atomic<bool> entry(false);
 std::atomic<bool> run(true);
+
+std::atomic<bool> image_capture(false);
+// global variable to store the status of the image aquisition thread
+std::atomic<bool> image_aquisition_complete(false);
+// global variable for the Spinnacker camera
+Spinnaker::CameraPtr cam;
+// global variable for the opencv image container
+cv::Mat cv_image;
+// global variables to store the image properties
+uint64_t width, height, x_offset, y_offset;
+uint32_t x_padding, y_padding;
+uint8_t cv_type;
+
 std::string console_input;
 
+// ----------------------------------------------------------------------------
+void image_aquisition()
+{
+    std::string image_window = "Image Capture";
+    Spinnaker::ImagePtr image;
+
+    // create the window
+    cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+
+    cv::resizeWindow(image_window, 512, 512);
+
+    while (image_capture)
+    {
+        //if (!image_aquisition_complete)
+        //{
+            aquire_software_trigger_image(cam, image);
+
+            //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding. 
+            cv_image = cv::Mat(height + y_padding, width + x_padding, cv_type, image->GetData(), image->GetStride());
+
+            cv::imshow(image_window, cv_image);
+
+            cv::waitKey(1);
+            image_aquisition_complete = true;
+        //}
+    }
+
+    // destroy the window
+    cv::destroyWindow(image_window);
+}
 
 // ----------------------------------------------------------------------------
 void print_progress(double progress)
@@ -174,8 +219,8 @@ int main(int argc, char** argv)
     // camera variables
     uint32_t cam_index;
     uint32_t num_cams;
-    uint64_t width, height, x_offset, y_offset;
-    uint32_t x_padding, y_padding;
+    //uint64_t width, height, x_offset, y_offset;
+    //uint32_t x_padding, y_padding;
     uint32_t ts = 0;
     //uint32_t sharpness;
     double camera_temp;
@@ -183,7 +228,7 @@ int main(int argc, char** argv)
     double exp_time;
     uint32_t cap_num;
     std::vector<std::string> cam_sn;
-    Spinnaker::CameraPtr cam;
+    //Spinnaker::CameraPtr cam;
     Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
     double camera_gain;
     double frame_rate;
@@ -203,20 +248,20 @@ int main(int argc, char** argv)
 
     Spinnaker::TriggerSourceEnums trigger_source;
     Spinnaker::TriggerActivationEnums trigger_activation = Spinnaker::TriggerActivation_RisingEdge;
-    Spinnaker::ImagePtr image;
+    //Spinnaker::ImagePtr image;
     Spinnaker::SystemPtr system = Spinnaker::System::GetInstance();
     Spinnaker::CameraList cam_list;
     bool cam_connected = false;
 
     // OpenCV Variables
-    char key;
-    cv::Mat cv_image;
+    char key, key2;
+    //cv::Mat cv_image;
     cv::Size img_size;
     std::string image_window = "Camera: ";
     std::vector<int> compression_params;
     compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
     compression_params.push_back(4);
-    uint8_t cv_type = CV_8UC3;
+    //uint8_t cv_type = CV_8UC3;
 
     std::string sdate, stime;
     std::string log_filename = "camera_capture_log_";
@@ -911,7 +956,14 @@ int main(int argc, char** argv)
         config_trigger(cam, ON);
         sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
                         
-        // grab an image: either from the continuous, single or triggered
+        // start up the image acquisition thread
+        image_capture = true;
+        image_aquisition_complete = false;
+        std::thread image_acquisition_thread(image_aquisition);
+        while (!image_aquisition_complete);
+
+
+/*        // grab an image: either from the continuous, single or triggered
         switch (ts)
         {
         case 0:
@@ -924,7 +976,7 @@ int main(int argc, char** argv)
             aquire_software_trigger_image(cam, image);
             break;
         }
-
+*/
         //sleep_ms(100);
 
         // if the gain is 0 or greater then them is set to off and a value must be set
@@ -991,7 +1043,7 @@ int main(int argc, char** argv)
         //std::cout << "  z <value> - move the zoom motor to the given step value [" << min_zoom_steps << " - " << max_zoom_steps << "]" << std::endl;
         //std::cout << "  g <value> - Set the camera gain" << std::endl;
         //std::cout << "  e <value> - set the camera exposure time (us)" << std::endl;
-        std::cout << "  s - Save an image" << std::endl;
+        std::cout << "  s - Start the image capture sequence" << std::endl;
         std::cout << "  q - Quit" << std::endl;
         std::cout << std::endl;
 
@@ -999,6 +1051,7 @@ int main(int argc, char** argv)
 
         // grab an initial image to get the padding 
         //acquire_image(cam, image);
+/*
         switch (ts)
         {
         case 0:
@@ -1016,8 +1069,10 @@ int main(int argc, char** argv)
         y_padding = (uint32_t)image->GetYPadding();
 
         cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
-
+*/
         //std::thread io_thread(get_input);
+        image_aquisition_complete = false;
+        while (!image_aquisition_complete);
 
         // read in the file to describe the linear stage interpolation
         read_linear_stage_params(linear_stage_filename, coeffs);
@@ -1027,6 +1082,7 @@ int main(int argc, char** argv)
 
             //acquire_image(cam, image);
             //acquire_single_image(cam, image);
+/*
             switch (ts)
             {
             case 0:
@@ -1046,11 +1102,18 @@ int main(int argc, char** argv)
             cv::imshow(image_window, cv_image);
 
             key = cv::waitKey(1);
-
+*/
             //if (entry)
             //{
             //    // get the fisrt character
             //    key = console_input[0];
+            image_aquisition_complete = false;
+            while (!image_aquisition_complete);
+
+            //std::getline(std::cin, console_input, '\n');
+            //key = console_input[0];
+            std::cin >> key;
+            std::cout << std::endl;
 
             switch (key)
             {
@@ -1102,8 +1165,15 @@ int main(int argc, char** argv)
                 {
                     double step_value = calculate_stage_point(linear_stage_range[range_idx], coeffs);
                     std::cout << "Simulated Range = " << linear_stage_range[range_idx] << ", set linear stage to: " << num2str(step_value, "%2.4f") << std::endl;
-                    std::cout << "Press Enter to Continue...";
-                    std::cin.ignore();
+                    std::cout << "Press 'q' <enter> to Quit or any other key to Continue..." << std::endl;
+                    
+                    std::cin >> key2;
+
+                    if (key2 == 'q')
+                    {
+                        key = 'q';
+                        break;
+                    }
 
                     std::cout << std::endl;
 
@@ -1131,7 +1201,7 @@ int main(int argc, char** argv)
                             std::cout << "Error creating directory: " << stat << std::endl;
                         }
 
-                        // grab an image: either from the continuous, single or triggered
+/*                        // grab an image: either from the continuous, single or triggered
                         switch (ts)
                         {
                         case 0:
@@ -1144,7 +1214,7 @@ int main(int argc, char** argv)
                             aquire_software_trigger_image(cam, image);
                             break;
                         }
-
+*/
                         sleep_ms(40);
                         exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
                         gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
@@ -1172,27 +1242,11 @@ int main(int argc, char** argv)
 
                             sleep_ms(10);
 
-                            // create the directory to save the images at various focus steps
-                            /*
-                            std::string combined_save_location = "";
-                            std::string sub_dir = "focus_" + num2str(focus_range[focus_idx], "%05d");
-                            int32_t stat = make_dir(output_save_location, sub_dir);
-                            if (stat != 0 && stat != (int32_t)ERROR_ALREADY_EXISTS)
-                            {
-                                std::cout << "Error creating directory: " << stat << std::endl;
-                                data_log_stream << "Error creating directory: " << stat << std::endl;
-                                combined_save_location = output_save_location;
-                            }
-                            else
-                            {
-                                combined_save_location = output_save_location + sub_dir + "/";
-                            }
-                            */
-
                             for (img_idx = 0; img_idx < cap_num; ++img_idx)
                             {
+                                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
 
-                                // grab an image: either from the continuous, single or triggered
+/*                                // grab an image: either from the continuous, single or triggered
                                 switch (ts)
                                 {
                                 case 0:
@@ -1206,13 +1260,12 @@ int main(int argc, char** argv)
                                     break;
                                 }
 
-                                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
 
                                 cv_image = cv::Mat(height + y_padding, width + x_padding, cv_type, image->GetData(), image->GetStride());
 
                                 cv::imshow(image_window, cv_image);
                                 key = cv::waitKey(1);
-
+*/
                                 // save the image
                                 //std::cout << "saving: " << img_save_folder << sub_dir << image_capture_name << std::endl;
                                 data_log_stream << sub_dir << image_capture_name << std::endl;
@@ -1350,6 +1403,10 @@ int main(int argc, char** argv)
         } while (key != 'q');
 
         //io_thread.join();
+        image_capture = false;
+        image_acquisition_thread.join();
+
+        sleep_ms(20);
 
         if (acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
             cam->EndAcquisition();
