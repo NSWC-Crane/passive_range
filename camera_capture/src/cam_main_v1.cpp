@@ -1039,7 +1039,7 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Beginning Acquisition:" << std::endl;
         std::cout << std::endl << "Press the following keys to perform actions:" << std::endl;
-        //std::cout << "  f <value> - move the focus motor to the given step value [" << min_focus_steps << " - " << max_focus_steps << "]" << std::endl;
+        std::cout << "  f <value> - move the focus motor to the given step value [" << min_focus_steps << " - " << max_focus_steps << "]" << std::endl;
         //std::cout << "  z <value> - move the zoom motor to the given step value [" << min_zoom_steps << " - " << max_zoom_steps << "]" << std::endl;
         //std::cout << "  g <value> - Set the camera gain" << std::endl;
         //std::cout << "  e <value> - set the camera exposure time (us)" << std::endl;
@@ -1110,10 +1110,10 @@ int main(int argc, char** argv)
             image_aquisition_complete = false;
             while (!image_aquisition_complete);
 
-            //std::getline(std::cin, console_input, '\n');
-            //key = console_input[0];
-            std::cin >> key;
-            std::cout << std::endl;
+            std::getline(std::cin, console_input, '\n');
+            key = console_input[0];
+            //std::cin >> key;
+            //std::cout << std::endl;
 
             switch (key)
             {
@@ -1153,9 +1153,9 @@ int main(int argc, char** argv)
                 focus_step = 0;
                 zoom_step = 0;
 
-                // set the focus and zoom steps to zero
-                //status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                //status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+                // set the focus and zoom steps to their starting values
+                status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
+                status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
 
                 // get the actual focus and zoom position 
                 //status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
@@ -1165,17 +1165,41 @@ int main(int argc, char** argv)
                 {
                     double step_value = calculate_stage_point(linear_stage_range[range_idx], coeffs);
                     std::cout << "Simulated Range = " << linear_stage_range[range_idx] << ", set linear stage to: " << num2str(step_value, "%2.4f") << std::endl;
-                    std::cout << "Press 'q' <enter> to Quit or any other key to Continue..." << std::endl;
+                    std::cout << "Press 'c' to continue, press f <value> to adjust focus for alignment, or press 'q' <enter> to quit..." << std::endl;
                     
-                    std::cin >> key2;
-
-                    if (key2 == 'q')
+                    do
                     {
-                        key = 'q';
-                        break;
-                    }
+                        std::getline(std::cin, console_input, '\n');
+                        key2 = console_input[0];
 
-                    std::cout << std::endl;
+                        if (key2 == 'q')
+                        {
+                            key = 'q';
+                            break;
+                        }
+                        else if (key2 == 'f')
+                        {
+                            try
+                            {
+                                focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+                                //status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+                                status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                                sleep_ms(10);
+                                status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                                //status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+                                std::cout << "Focus step: " << focus_step << std::endl;
+                            }
+                            catch (std::exception e)
+                            {
+                                std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
+                            }
+                        }
+
+                    } while (key2 != 'c');
+
+                    //std::cout << std::endl;
+                    if (key == 'q')
+                        break;
 
                     for (zoom_idx = 0; zoom_idx < zoom_range.size(); ++zoom_idx)
                     {
@@ -1307,48 +1331,48 @@ int main(int argc, char** argv)
                 std::cout << "------------------------------------------------------------------" << std::endl;
 
                 data_log_stream << "#------------------------------------------------------------------------------" << std::endl;
-                break;
-                // end of key == 's'
+                break;      // end of key == 's'
+                
 
-                //case 'f':
+            case 'f':
+                //std::cout << "Enter focus step: ";
+                //std::getline(std::cin, console_input.substr(2, console_input.length()-1));
+                try
+                {
+                    focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+                    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+                    status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                    sleep_ms(10);
+                    status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+                    status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+                    std::cout << "Focus step: " << focus_step << std::endl;
+                }
+                catch (std::exception e)
+                {
+                    std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
+                }
+                break;      // end of key == 'f'
+               
 
-                //    //std::cout << "Enter focus step: ";
-                //    //std::getline(std::cin, console_input.substr(2, console_input.length()-1));
-                //    try
-                //    {
-                //        focus_step = std::stoi(console_input.substr(2, console_input.length() - 1));
-                //        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
-                //        status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                //        sleep_ms(10);
-                //        status = ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
-                //        status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
-                //        std::cout << "Focus step: " << focus_step << std::endl;
-                //    }
-                //    catch (std::exception e)
-                //    {
-                //        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
-                //    }
-                //    break;
+            //case 'z':
 
-                //case 'z':
-
-                //    //std::cout << "Enter zoom step: ";
-                //    //std::getline(std::cin, console_input);
-                //    try
-                //    {
-                //        zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
-                //        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
-                //        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-                //        sleep_ms(10);
-                //        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
-                //        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
-                //        std::cout << "Zoom step: " << zoom_step << std::endl;
-                //    }
-                //    catch (std::exception e)
-                //    {
-                //        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
-                //    }
-                //    break;
+            //    //std::cout << "Enter zoom step: ";
+            //    //std::getline(std::cin, console_input);
+            //    try
+            //    {
+            //        zoom_step = std::stoi(console_input.substr(2, console_input.length() - 1));
+            //        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+            //        status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+            //        sleep_ms(10);
+            //        status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+            //        status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+            //        std::cout << "Zoom step: " << zoom_step << std::endl;
+            //    }
+            //    catch (std::exception e)
+            //    {
+            //        std::cout << "error converting step: " << console_input << " error msg: " << e.what() << std::endl;
+            //    }
+            //    break;
 
                 //case 'e':
                 //    //std::cout << "Enter exposure time (us): ";
