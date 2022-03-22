@@ -1290,6 +1290,11 @@ int main(int argc, char** argv)
                                 cv::imshow(image_window, cv_image);
                                 key = cv::waitKey(1);
 */
+
+                                // new method to capture images
+                                image_aquisition_complete = false;
+                                while (!image_aquisition_complete);
+                                
                                 // save the image
                                 //std::cout << "saving: " << img_save_folder << sub_dir << image_capture_name << std::endl;
                                 data_log_stream << sub_dir << image_capture_name << std::endl;
