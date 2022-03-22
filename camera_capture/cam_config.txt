@@ -24,8 +24,8 @@
 #46000:5:48200
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
-0:500:1000
-#2000:500:5000
+#0:500:1000
+2000:500:5000
 
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
 #full
