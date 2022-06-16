@@ -18,7 +18,7 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-PROJECT(cam_pr_project)
+PROJECT(cam_pr_gui_project)
 set(exe_name "cam_pr")
 
 set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
@@ -32,8 +32,14 @@ message("Platform: " ${PLATFORM})
 string(FIND ${PROJECT_SOURCE_DIR} "/" INDEX REVERSE)
 string(SUBSTRING ${PROJECT_SOURCE_DIR} 0 ${INDEX} PR_ROOT)
 
-#include(${PR_ROOT}/common/cmake_utils/use_cpp_11.cmake)
-#include(${PR_ROOT}/common/cmake_utils/use_sse_avx.cmake)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build Options
 option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  ON)
@@ -73,9 +79,13 @@ endif()
 
 
 # look for any *.c and *.cpp files
-file(GLOB SOURCES "src/*.c*"
+file(GLOB SOURCES "src/*.cpp"
+    "src/*.ui"
+    #"include/capture_gui.h"
+    "${PR_ROOT}/common/include/control_driver.h"
+    "${PR_ROOT}/common/include/spinnaker_utilities.h"
     )
-
+    
 set(project_includes 
     "include" 
     "${PR_ROOT}/common/include"
@@ -109,6 +119,10 @@ else()
 	message("OpenCV not found...")
 endif()
 message(STATUS "--------------------------------------------------------------------------------")
+
+
+find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+
 
 message(" ")
 message("--------------------------------------------------------------------------------")
@@ -152,7 +166,7 @@ endif()
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
-target_link_libraries(${exe_name} ${project_libs})
+target_link_libraries(${exe_name} Qt5::Widgets Qt5::Core Qt5::Gui ${project_libs})
 
 if(WIN32)
     message("MSVC Version: " ${MSVC_VERSION})
