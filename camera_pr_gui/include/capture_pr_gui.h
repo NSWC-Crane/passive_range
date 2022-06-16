@@ -70,7 +70,7 @@ private slots:
     void on_motor_position_clicked();
 
 private:
-    Ui::capture_gui *ui;
+    Ui::capture_pr_gui *ui;
 
     FT_HANDLE ctrl_handle = NULL;
 
