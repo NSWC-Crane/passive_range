@@ -84,34 +84,34 @@ capture_pr_gui::capture_pr_gui(QWidget *parent)
 
     // ui->statusbar->hide();
     // zoom slots
-    connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
-    connect(ui->z_start, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_fp1, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_fp1, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
     connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
     connect(ui->z_step, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
-    connect(ui->z_stop, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
-    connect(ui->z_stop, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_fp2, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
+    connect(ui->z_fp2, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
 
-    ui->z_start->setSingleStep(ui->z_step->value());
-    ui->z_stop->setSingleStep(ui->z_step->value());
+    ui->z_fp1->setSingleStep(ui->z_step->value());
+    ui->z_fp2->setSingleStep(ui->z_step->value());
 
-    ui->z_start->setMaximum(max_zoom_steps);
+    ui->z_fp1->setMaximum(max_zoom_steps);
     ui->z_step->setMaximum(max_zoom_steps);
-    ui->z_stop->setMaximum(max_zoom_steps);
+    ui->z_fp2->setMaximum(max_zoom_steps);
 
     // focus slots
-    connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
-    connect(ui->f_start, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
+    connect(ui->f_fp1, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_fp1, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
     connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
     connect(ui->f_step, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
-    connect(ui->f_stop, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
-    connect(ui->f_stop, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
+    connect(ui->f_fp2, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
+    connect(ui->f_fp2, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
 
-    ui->f_start->setSingleStep(ui->z_step->value());
-    ui->f_stop->setSingleStep(ui->z_step->value());
+    ui->f_fp1->setSingleStep(ui->z_step->value());
+    ui->f_fp2->setSingleStep(ui->z_step->value());
 
-    ui->f_start->setMaximum(max_focus_steps);
+    ui->f_fp1->setMaximum(max_focus_steps);
     ui->f_step->setMaximum(max_focus_steps);
-    ui->f_stop->setMaximum(max_focus_steps);
+    ui->f_fp2->setMaximum(max_focus_steps);
 
     //-----------------------------------------------------------------------------
     // camera slots
@@ -406,18 +406,18 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
         ui->console_te->append("Setting motors to intial position:");
         qApp->processEvents();
 
-        int32_t start = (int32_t)ui->f_start->text().toInt();
+        int32_t start = (int32_t)ui->f_fp1->text().toInt();
         int32_t step = (int32_t)ui->f_step->text().toInt();
-        int32_t stop = (int32_t)ui->f_stop->text().toInt();
+        int32_t stop = (int32_t)ui->f_fp2->text().toInt();
 
         // generate the step ranges
         generate_range(start, stop, step, focus_range);
         status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
         QThread::msleep(50);
 
-        start = (int32_t)ui->z_start->text().toInt();
+        start = (int32_t)ui->z_fp1->text().toInt();
         step = (int32_t)ui->z_step->text().toInt();
-        stop = (int32_t)ui->z_stop->text().toInt();
+        stop = (int32_t)ui->z_fp2->text().toInt();
 
         // generate the step ranges
         generate_range(start, stop, step, zoom_range);
@@ -702,37 +702,37 @@ void capture_pr_gui::generate_range(T start, T stop, T step, std::vector<T>& ran
 void capture_pr_gui::focus_edit_complete()
 {
     // disable duplicate event triggers
-    ui->f_start->blockSignals(true);
+    ui->f_fp1->blockSignals(true);
     ui->f_step->blockSignals(true);
-    ui->f_stop->blockSignals(true);
+    ui->f_fp2->blockSignals(true);
 
     int32_t position = 0;
     QObject* sender_obj = sender();
 
-    int32_t start = (int32_t)ui->f_start->text().toInt();
+    int32_t start = (int32_t)ui->f_fp1->text().toInt();
     int32_t step = (int32_t)ui->f_step->text().toInt();
-    int32_t stop = (int32_t)ui->f_stop->text().toInt();
+    int32_t stop = (int32_t)ui->f_fp2->text().toInt();
 
     if(start > max_focus_steps)
     {
         start = max_focus_steps;
-        ui->f_start->setValue(start);
+        ui->f_fp1->setValue(start);
     }
 
     if(stop > max_focus_steps)
     {
         stop = max_focus_steps;
-        ui->f_stop->setValue(stop);
+        ui->f_fp2->setValue(stop);
     }
 
     if(start > stop)
     {
         stop = start;
-        ui->f_stop->setValue(stop);
+        ui->f_fp2->setValue(stop);
     }
 
-    ui->f_start->setSingleStep(ui->f_step->value());
-    ui->f_stop->setSingleStep(ui->f_step->value());
+    ui->f_fp1->setSingleStep(ui->f_step->value());
+    ui->f_fp2->setSingleStep(ui->f_step->value());
 
     // generate the step ranges
     generate_range(start, stop, step, focus_range);
@@ -740,7 +740,7 @@ void capture_pr_gui::focus_edit_complete()
     ui->console_te->append("focus range: " + QString::number(focus_range[0]) + ":" + QString::number(step) + ":" + QString::number(focus_range[focus_range.size()-1]));
     qApp->processEvents();
 
-    if((ctrl_connected == true) && (sender_obj == ui->f_start))
+    if((ctrl_connected == true) && (sender_obj == ui->f_fp1))
     {
         //update_focus_position();
 
@@ -755,9 +755,9 @@ void capture_pr_gui::focus_edit_complete()
     }
 
     // enable the signals again
-    ui->f_start->blockSignals(false);
+    ui->f_fp1->blockSignals(false);
     ui->f_step->blockSignals(false);
-    ui->f_stop->blockSignals(false);
+    ui->f_fp2->blockSignals(false);
 
 }   // end of focus_edit_complete
 
@@ -765,9 +765,9 @@ void capture_pr_gui::focus_edit_complete()
 void capture_pr_gui::zoom_edit_complete()
 {
     // disable duplicate event triggers
-    ui->z_start->blockSignals(true);
+    ui->z_fp1->blockSignals(true);
     ui->z_step->blockSignals(true);
-    ui->z_stop->blockSignals(true);
+    ui->z_fp2->blockSignals(true);
 
     int32_t position = 0;
     QObject* sender_obj = sender();
@@ -775,33 +775,33 @@ void capture_pr_gui::zoom_edit_complete()
 //    int32_t start = (int32_t)ui->z_start->text().toInt();
 //    int32_t step = (int32_t)ui->z_step->text().toInt();
 //    int32_t stop = (int32_t)ui->z_stop->text().toInt();
-    int32_t start = (int32_t)ui->z_start->value();
+    int32_t start = (int32_t)ui->z_fp1->value();
     int32_t step = (int32_t)ui->z_step->value();
-    int32_t stop = (int32_t)ui->z_stop->value();
+    int32_t stop = (int32_t)ui->z_fp2->value();
 
     if(start > max_zoom_steps)
     {
         start = max_zoom_steps;
 //        ui->z_start->setText(QString::number(start));
-        ui->z_start->setValue(start);
+        ui->z_fp1->setValue(start);
     }
 
     if(stop > max_zoom_steps)
     {
         stop = max_zoom_steps;
 //        ui->z_stop->setText(QString::number(stop));
-        ui->z_stop->setValue(stop);
+        ui->z_fp2->setValue(stop);
     }
 
     if(start > stop)
     {
         stop = start;
 //        ui->z_stop->setText(QString::number(stop));
-        ui->z_stop->setValue(stop);
+        ui->z_fp2->setValue(stop);
     }
 
-    ui->z_start->setSingleStep(ui->z_step->value());
-    ui->z_stop->setSingleStep(ui->z_step->value());
+    ui->z_fp1->setSingleStep(ui->z_step->value());
+    ui->z_fp2->setSingleStep(ui->z_step->value());
 
     // generate the step ranges
     generate_range(start, stop, step, zoom_range);
@@ -809,7 +809,7 @@ void capture_pr_gui::zoom_edit_complete()
     ui->console_te->append("zoom range: " + QString::number(zoom_range[0]) + ":" + QString::number(step) + ":" + QString::number(zoom_range[zoom_range.size()-1]));
     qApp->processEvents();
 
-    if((ctrl_connected == true) && (sender_obj == ui->z_start))
+    if((ctrl_connected == true) && (sender_obj == ui->z_fp1))
     {
         bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
         status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
@@ -820,9 +820,9 @@ void capture_pr_gui::zoom_edit_complete()
     }
 
     // enable the signals again
-    ui->z_start->blockSignals(false);
+    ui->z_fp1->blockSignals(false);
     ui->z_step->blockSignals(false);
-    ui->z_stop->blockSignals(false);
+    ui->z_fp2->blockSignals(false);
 
 }   // end of zoom_edit_complete
 
@@ -931,7 +931,7 @@ void capture_pr_gui::update_image()
 //-----------------------------------------------------------------------------
 void capture_pr_gui::on_start_capture_clicked()
 {
-    uint32_t focus_idx, zoom_idx, img_idx;
+    uint32_t focus_idx, zoom_idx;
     bool status;
     std::string focus_str, zoom_str, exposure_str;
     std::string image_str;
@@ -942,14 +942,14 @@ void capture_pr_gui::on_start_capture_clicked()
 
     uint64_t x_offset, y_offset;
 
-    uint64_t sleep_delay = (uint64_t)ui->cap_delay_sb->value();
+    //uint64_t sleep_delay = (uint64_t)ui->cap_delay_sb->value();
 
     //double tmp_exp_time;
 
     if(ctrl_connected == false || cam_connected == false)
         return;
 
-    uint32_t cap_num = (uint32_t)ui->num_caps->value();
+    //uint32_t cap_num = (uint32_t)ui->num_caps->value();
 
     // disable the gui items
     ui->controller_gb->setEnabled(false);
@@ -1026,7 +1026,7 @@ void capture_pr_gui::on_start_capture_clicked()
     ui->console_te->append("Gain Mode/Value:          " + QString::fromStdString(cam->GainAuto.GetCurrentEntry()->GetSymbolic().c_str()) + " / " + QString::number(camera_gain));
     ui->console_te->append("Exposure Mode/Value (ms): " + QString::fromStdString(cam->ExposureAuto.GetCurrentEntry()->GetSymbolic().c_str()) +  " / " + QString::number(exp_time/1000.0));
     ui->console_te->append("Acquistion Mode:          " + QString::fromStdString(cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic().c_str()));
-    ui->console_te->append("Number of Captures:       " + QString::number(cap_num));
+    //ui->console_te->append("Number of Captures:       " + QString::number(cap_num));
     ui->console_te->append("Trigger Source:           " + QString::fromStdString(cam->TriggerSource.GetCurrentEntry()->GetSymbolic().c_str()));
     ui->console_te->append("Min/Max Gain:             " + QString::number(cam->Gain.GetMin()) + " / " + QString::number(cam->Gain.GetMax()));
     ui->console_te->append("Min/Max Exposure (ms):    " + QString::number(cam->ExposureTime.GetMin()/1000.0) + " / " + QString::number((uint64_t)cam->ExposureTime.GetMax()/1000.0) + "\n");
@@ -1064,7 +1064,7 @@ void capture_pr_gui::on_start_capture_clicked()
     data_log_stream << "Gain Mode/Value:          " << cam->GainAuto.GetCurrentEntry()->GetSymbolic() << " / " << camera_gain << std::endl;
     data_log_stream << "Exposure Mode/Value (ms): " << cam->ExposureAuto.GetCurrentEntry()->GetSymbolic() << " / " << exp_time/1000.0 << std::endl;
     data_log_stream << "Acquistion Mode:          " << cam->AcquisitionMode.GetCurrentEntry()->GetSymbolic() << std::endl;
-    data_log_stream << "Number of Captures:       " << cap_num << std::endl;
+    //data_log_stream << "Number of Captures:       " << cap_num << std::endl;
     data_log_stream << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
     data_log_stream << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
     data_log_stream << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;
@@ -1103,8 +1103,8 @@ void capture_pr_gui::on_start_capture_clicked()
             focus_str = num2str(focus_step, "f%05d_");
             sleep_ms(50);
 
-            for (img_idx = 0; img_idx < cap_num; ++img_idx)
-            {
+            //for (img_idx = 0; img_idx < cap_num; ++img_idx)
+            //{
 
                 // grab an image: either from the continuous, single or triggered
 //                switch (ts)
@@ -1122,7 +1122,7 @@ void capture_pr_gui::on_start_capture_clicked()
                 get_exposure_time(cam, exp_time);
                 exposure_str = num2str(exp_time, "e%05.0f_");
 
-                image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
+                //image_capture_name = image_header + zoom_str + focus_str + exposure_str + num2str(img_idx, "i%02d") + ".png";
 //                image_capture_name = image_header + zoom_str + focus_str + num2str(img_idx, "i%02d") + ".png";
 
                 cv_image = cv::Mat(img_h + y_padding, img_w + x_padding, CV_8UC3, image->GetData(), image->GetStride());
@@ -1132,20 +1132,20 @@ void capture_pr_gui::on_start_capture_clicked()
                 cv::waitKey(1);
 
                 // save the image QString::fromStdString(img_save_folder) +
-                ui->console_te->append("saving: " + QString::fromStdString(image_capture_name));
+                //ui->console_te->append("saving: " + QString::fromStdString(image_capture_name));
                 //qApp->processEvents();
-                data_log_stream << image_capture_name << std::endl;
+                //data_log_stream << image_capture_name << std::endl;
 
-                cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
+                //cv::imwrite((img_save_folder + image_capture_name), cv_image, compression_params);
                 //std::cout << image_capture_name << "," << num2str(tmp_exp_time, "%2.2f") << std::endl;
-                QThread::msleep(sleep_delay);
+                //QThread::msleep(sleep_delay);
 
                 qApp->processEvents();
 
                 if(stop_capture == true)
                     return;
 
-            }   // end of img_idx loop
+            //}   // end of img_idx loop
             //sleep_ms(100);
 
         }   // end of focus_idx loop
