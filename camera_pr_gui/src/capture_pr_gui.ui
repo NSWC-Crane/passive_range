@@ -210,7 +210,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="f_start">
+       <widget class="QSpinBox" name="f_fp1">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -272,7 +272,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="f_stop">
+       <widget class="QSpinBox" name="f_fp2">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -309,7 +309,7 @@
       <rect>
        <x>50</x>
        <y>60</y>
-       <width>191</width>
+       <width>194</width>
        <height>21</height>
       </rect>
      </property>
@@ -334,7 +334,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Start</string>
+         <string>FP1</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -388,7 +388,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Stop</string>
+         <string>FP2</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -435,7 +435,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="z_start">
+       <widget class="QSpinBox" name="z_fp1">
         <property name="minimumSize">
          <size>
           <width>55</width>
@@ -494,7 +494,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="z_stop">
+       <widget class="QSpinBox" name="z_fp2">
         <property name="minimumSize">
          <size>
           <width>55</width>

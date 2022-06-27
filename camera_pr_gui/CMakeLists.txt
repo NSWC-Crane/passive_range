@@ -19,7 +19,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 PROJECT(cam_pr_gui_project)
-set(exe_name "cam_pr")
+set(exe_name "cam_pr_gui")
 
 set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
 if("${PLATFORM}" STREQUAL "")
@@ -44,44 +44,52 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Build Options
 option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  ON)
 
-if(${PLATFORM} STREQUAL "Laptop")
-    set(COMMON_ROOT "D:/Common")
-    set(DLIB_CONTRIB "D:/Projects/dlib-contrib")
-    set(DFD_COMMON_ROOT "D:/Projects/dfd_common")	
-    include(D:/dlib-19.22/dlib/cmake)
-elseif(${PLATFORM} STREQUAL "LaptopN")
-    set(COMMON_ROOT "C:/Projects/Common")
-    set(DLIB_CONTRIB "C:/Projects/dlib-contrib")
-    set(DFD_COMMON_ROOT "C:/Projects/dfd_common")	
-    include(D:/dlib-19.22/dlib/cmake)
-elseif(${PLATFORM} STREQUAL "MainGear")
-    set(_ECLIPSE_VERSION "3.8")
-    set(COMMON_ROOT "~/Projects/Common")
-    set(DLIB_CONTRIB "~/Projects/dlib-contrib")
-    set(DFD_COMMON_ROOT "~/Projects/dfd_common")
-    include(~/dlib-19.22/dlib/cmake)
-elseif(${PLATFORM} STREQUAL "HPC")
-    set(COMMON_ROOT "$HOME/Projects/Common")
-    set(DLIB_CONTRIB "~/Projects/dlib-contrib")
-    set(DFD_COMMON_ROOT "~/Projects/dfd_common")
-    include(~/dlib-19.19/dlib/cmake)
-elseif(${PLATFORM} STREQUAL "BEAST")
-    set(COMMON_ROOT "E:/Projects/Common")
-    set(DLIB_CONTRIB "E:/Projects/dlib-contrib")
-    set(DFD_COMMON_ROOT "~/Projects/dfd_common")
-    include(E:/dlib-19.21/dlib/cmake)
-else()
-    set(COMMON_ROOT "C:/Projects/Common")
-    set(DLIB_CONTRIB "C:/Projects/dlib-contrib")
-    set(DFD_COMMON_ROOT "C:/Projects/dfd_common")	
-    include(D:/dlib-19.19/dlib/cmake)
-endif()
+if(WIN32)
 
+    if(${PLATFORM} STREQUAL "Laptop")
+        set(COMMON_ROOT "D:/Common")
+        #set(DLIB_CONTRIB "D:/Projects/dlib-contrib")
+        #set(DFD_COMMON_ROOT "D:/Projects/dfd_common")	
+        #include(D:/dlib-19.22/dlib/cmake)
+    elseif(${PLATFORM} STREQUAL "LaptopN")
+        set(COMMON_ROOT "C:/Projects/Common")
+        #set(DLIB_CONTRIB "C:/Projects/dlib-contrib")
+        #set(DFD_COMMON_ROOT "C:/Projects/dfd_common")	
+        #include(D:/dlib-19.22/dlib/cmake)
+    elseif(${PLATFORM} STREQUAL "BEAST")
+        set(COMMON_ROOT "E:/Projects/Common")
+        #set(DLIB_CONTRIB "E:/Projects/dlib-contrib")
+        #set(DFD_COMMON_ROOT "~/Projects/dfd_common")
+        #include(E:/dlib-19.21/dlib/cmake)
+    else()
+        set(COMMON_ROOT "C:/Projects/Common")
+        #set(DLIB_CONTRIB "C:/Projects/dlib-contrib")
+        #set(DFD_COMMON_ROOT "C:/Projects/dfd_common")	
+        #include(D:/dlib-19.19/dlib/cmake)
+    endif()
+    
+    set(DFD_DNN_DIRS "${PR_ROOT}/common")
+    set(DFD_DNN_LIBS "${PR_ROOT}/common/bin/dfd_dnn.lib")
+    
+else()
+    if(${PLATFORM} STREQUAL "MainGear")
+        set(_ECLIPSE_VERSION "3.8")
+        set(COMMON_ROOT "~/Projects/Common")
+    elseif(${PLATFORM} STREQUAL "HPC")
+        set(COMMON_ROOT "$HOME/Projects/Common")
+    else()
+        set(COMMON_ROOT "$HOME/Projects/Common")
+    endif()
+
+    set(DFD_DNN_DIRS "${PR_ROOT}/common")
+    set(DFD_DNN_LIBS "${PR_ROOT}/common/bin/libdfd_dnn.so")
+    
+endif()
 
 # look for any *.c and *.cpp files
 file(GLOB SOURCES "src/*.cpp"
     "src/*.ui"
-    #"include/capture_gui.h"
+    "include/capture_pr_gui.h"
     "${PR_ROOT}/common/include/control_driver.h"
     "${PR_ROOT}/common/include/spinnaker_utilities.h"
     )
@@ -89,9 +97,11 @@ file(GLOB SOURCES "src/*.cpp"
 set(project_includes 
     "include" 
     "${PR_ROOT}/common/include"
-    "${DLIB_CONTRIB}/include"
-    "${DFD_COMMON_ROOT}/include"
+    #"${DLIB_CONTRIB}/include"
+    #"${DFD_COMMON_ROOT}/include"
     )
+    
+set(project_libs ${project_libs} ${DFD_DNN_LIBS})
 
 message(" ")
 
@@ -123,6 +133,7 @@ message(STATUS "----------------------------------------------------------------
 
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
+set(project_libs ${project_libs} Qt5::Widgets Qt5::Core Qt5::Gui)
 
 message(" ")
 message("--------------------------------------------------------------------------------")
@@ -166,7 +177,7 @@ endif()
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
-target_link_libraries(${exe_name} Qt5::Widgets Qt5::Core Qt5::Gui ${project_libs})
+target_link_libraries(${exe_name} ${project_libs})
 
 if(WIN32)
     message("MSVC Version: " ${MSVC_VERSION})

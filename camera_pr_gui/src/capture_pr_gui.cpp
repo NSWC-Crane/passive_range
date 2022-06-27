@@ -1,5 +1,5 @@
-#include "capture_gui.h"
-#include "./ui_capture_gui.h"
+#include "capture_pr_gui.h"
+#include "./ui_capture_pr_gui.h"
 
 #include <cstdint>
 #include <cstdlib>
@@ -84,11 +84,6 @@ capture_pr_gui::capture_pr_gui(QWidget *parent)
 
     // ui->statusbar->hide();
     // zoom slots
-    // returnPressed()
-//    QIntValidator zoom_val(min_zoom_steps, max_zoom_steps, this);
-//    ui->z_start->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
-//    ui->z_step->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
-//    ui->z_stop->setValidator(new QIntValidator(min_zoom_steps, max_zoom_steps, this));
     connect(ui->z_start, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
     connect(ui->z_start, SIGNAL(valueChanged(int)), this, SLOT(zoom_edit_complete()));
     connect(ui->z_step, SIGNAL(editingFinished()), this, SLOT(zoom_edit_complete()));
@@ -104,10 +99,6 @@ capture_pr_gui::capture_pr_gui(QWidget *parent)
     ui->z_stop->setMaximum(max_zoom_steps);
 
     // focus slots
-//    QIntValidator focus_val(min_focus_steps, max_focus_steps, this);
-//    ui->f_start->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
-//    ui->f_step->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
-//    ui->f_stop->setValidator(new QIntValidator(min_focus_steps, max_focus_steps, this));
     connect(ui->f_start, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
     connect(ui->f_start, SIGNAL(valueChanged(int)), this, SLOT(focus_edit_complete()));
     connect(ui->f_step, SIGNAL(editingFinished()), this, SLOT(focus_edit_complete()));
