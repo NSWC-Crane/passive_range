@@ -76,9 +76,11 @@ private:
 
     // motor variables
     std::string pid_config_filename = "pid_config.txt";
-    std::vector<int32_t> focus_range, zoom_range;
-    int32_t focus_step = 0;
-    int32_t zoom_step = 0;
+    //std::vector<int32_t> focus_range, zoom_range;
+    int32_t focus_fp1, focus_fp2, zoom_fp1, zoom_fp2;
+    int32_t focus_idx, zoom_idx;
+//    int32_t focus_step = 0;
+//    int32_t zoom_step = 0;
     bool mtr_moving = false;
     std::vector<uint16_t> pid_values;
 
