@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>649</height>
+    <height>615</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>640</width>
-    <height>600</height>
+    <height>615</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -24,9 +24,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>310</y>
+      <y>320</y>
       <width>621</width>
-      <height>291</height>
+      <height>271</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -72,48 +72,13 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget_13">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>280</y>
-      <width>621</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_13">
-     <item>
-      <widget class="QToolButton" name="toolButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="save_location_tb">
-       <property name="minimumSize">
-        <size>
-         <width>585</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>585</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QGroupBox" name="controller_gb">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>251</width>
-      <height>61</height>
+      <width>250</width>
+      <height>45</height>
      </rect>
     </property>
     <property name="title">
@@ -123,7 +88,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>10</y>
        <width>233</width>
        <height>31</height>
       </rect>
@@ -178,8 +143,8 @@
      <rect>
       <x>270</x>
       <y>10</y>
-      <width>361</width>
-      <height>61</height>
+      <width>360</width>
+      <height>45</height>
      </rect>
     </property>
     <property name="title">
@@ -189,7 +154,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>10</y>
        <width>341</width>
        <height>31</height>
       </rect>
@@ -199,7 +164,7 @@
        <widget class="QComboBox" name="cam_cb">
         <property name="minimumSize">
          <size>
-          <width>260</width>
+          <width>265</width>
           <height>0</height>
          </size>
         </property>
@@ -237,7 +202,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>250</y>
+      <y>220</y>
       <width>60</width>
       <height>23</height>
      </rect>
@@ -262,9 +227,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>70</y>
-      <width>251</width>
-      <height>61</height>
+      <y>60</y>
+      <width>250</width>
+      <height>45</height>
      </rect>
     </property>
     <property name="title">
@@ -274,7 +239,7 @@
      <property name="geometry">
       <rect>
        <x>9</x>
-       <y>20</y>
+       <y>10</y>
        <width>231</width>
        <height>31</height>
       </rect>
@@ -402,8 +367,8 @@
    <widget class="QPushButton" name="motor_position">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>250</y>
+      <x>160</x>
+      <y>220</y>
       <width>100</width>
       <height>23</height>
      </rect>
@@ -428,9 +393,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>130</y>
-      <width>251</width>
-      <height>111</height>
+      <y>110</y>
+      <width>250</width>
+      <height>100</height>
      </rect>
     </property>
     <property name="title">
@@ -440,7 +405,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
+       <y>30</y>
        <width>231</width>
        <height>31</height>
       </rect>
@@ -541,7 +506,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>70</y>
+       <y>60</y>
        <width>231</width>
        <height>31</height>
       </rect>
@@ -642,7 +607,7 @@
      <property name="geometry">
       <rect>
        <x>70</x>
-       <y>20</y>
+       <y>10</y>
        <width>161</width>
        <height>21</height>
       </rect>
@@ -709,9 +674,9 @@
     <property name="geometry">
      <rect>
       <x>270</x>
-      <y>70</y>
-      <width>361</width>
-      <height>151</height>
+      <y>60</y>
+      <width>360</width>
+      <height>140</height>
      </rect>
     </property>
     <property name="title">
@@ -721,7 +686,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>10</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -782,7 +747,7 @@
      <property name="geometry">
       <rect>
        <x>180</x>
-       <y>20</y>
+       <y>10</y>
        <width>171</width>
        <height>31</height>
       </rect>
@@ -847,7 +812,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>50</y>
+       <y>40</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -908,7 +873,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>70</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -969,7 +934,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>100</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -1030,7 +995,7 @@
      <property name="geometry">
       <rect>
        <x>160</x>
-       <y>50</y>
+       <y>40</y>
        <width>191</width>
        <height>31</height>
       </rect>
@@ -1116,7 +1081,7 @@
      <property name="geometry">
       <rect>
        <x>160</x>
-       <y>80</y>
+       <y>70</y>
        <width>191</width>
        <height>31</height>
       </rect>
@@ -1202,7 +1167,7 @@
      <property name="geometry">
       <rect>
        <x>220</x>
-       <y>110</y>
+       <y>100</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -1230,6 +1195,57 @@
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_4">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>250</y>
+      <width>620</width>
+      <height>45</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Weights File</string>
+    </property>
+    <widget class="QWidget" name="horizontalLayoutWidget_13">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>10</y>
+       <width>621</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_13">
+      <item>
+       <widget class="QToolButton" name="toolButton">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="net_weights_tb">
+        <property name="minimumSize">
+         <size>
+          <width>570</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>570</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>

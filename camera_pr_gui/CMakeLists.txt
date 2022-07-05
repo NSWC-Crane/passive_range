@@ -71,6 +71,8 @@ if(WIN32)
     set(DFD_DNN_DIRS "${PR_ROOT}/common")
     set(DFD_DNN_LIBS "${PR_ROOT}/common/bin/dfd_dnn.lib")
     
+    #find_library(DFD_DNN_LIBS dfd_dnn_d HINTS "${PR_ROOT}/common/bin/")
+
 else()
     if(${PLATFORM} STREQUAL "MainGear")
         set(_ECLIPSE_VERSION "3.8")
@@ -92,6 +94,7 @@ file(GLOB SOURCES "src/*.cpp"
     "include/capture_pr_gui.h"
     "${PR_ROOT}/common/include/control_driver.h"
     "${PR_ROOT}/common/include/spinnaker_utilities.h"
+    "${PR_ROOT}/common/include/dfd_dnn_lib.h"
     )
     
 set(project_includes 

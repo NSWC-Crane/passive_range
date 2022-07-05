@@ -7,6 +7,9 @@
 #include <iostream>
 #include <sstream>
 
+// OpenCV Includes
+#include <opencv2/core.hpp>
+
 #include "Spinnaker.h"
 #include "SpinGenApi/SpinnakerGenApi.h"
 
@@ -47,10 +50,13 @@ private slots:
     void on_px_format_currentIndexChanged(int index);
 
     void on_toolButton_clicked();
-    void save_location_update();
+    //void save_location_update();
 
     void zoom_edit_complete();
+    void zoom_fp_complete();
+
     void focus_edit_complete();
+    void focus_fp_complete();
 
     void image_size_edit_complete();
 
@@ -61,7 +67,7 @@ private slots:
 
     void on_start_capture_clicked();
 
-    void on_stop_capture_clicked();
+//    void on_stop_capture_clicked();
 
     void on_auto_gain_stateChanged(int arg1);
 
@@ -99,6 +105,7 @@ private:
     uint64_t img_w, img_h;  //, x_offset, y_offset;
     uint32_t x_padding, y_padding;
     uint32_t ts = 0;
+    unsigned int num_classes;
 
     double camera_temp;
     double camera_gain;
@@ -108,10 +115,17 @@ private:
     const uint32_t max_height = 1536;
     const uint32_t max_width = 2048;
 
+    uint32_t range_w = 64;
+    uint32_t range_h = 64;
+
     bool cam_connected = false;
 
-    QString save_location;
-    std::string output_save_location;
+    cv::Mat img_f1, img_f2;
+    cv::Mat dm;
+    cv::Rect crop_rect;
+
+    //QString save_location;
+    //std::string output_save_location;
 
     bool stop_capture = false;
 
