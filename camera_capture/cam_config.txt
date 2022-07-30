@@ -19,13 +19,21 @@
 # Line 1: colon separated values of the focus motor: (start:inc:stop)
 #1000:500:2000
 # coarse
-46000:200:48000
+# 46000:200:48000
 # fine
 #46000:5:48200
+# Test 1 - simplified test to see if everything works
+40000:200:50000
+# Test 2 - more extensive test
+#40000:100:50000
 
 # Line 2: colon separated values of the zoom motor: (start:inc:stop)
 #0:500:1000
-2000:500:5000
+# 2000:500:5000
+# Test 1 - simplified test to see if everything works
+2000:500:2000
+# Test 2 - more extensive test
+#2000:500:5000
 
 # Line 3: comma separated values for the x offset, y offset, width, height of the camera, pixel format
 #full
