@@ -65,6 +65,7 @@ Spinnaker::SystemPtr cam_system;
 cv::Mat cv_image;
 cv::Size img_size;
 std::string image_window = "Cam: ";
+std::string dm_window = "Depthmap";
 std::vector<int> compression_params;
 
 
@@ -276,7 +277,7 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
 
         // get the controller information and display
         ctrl.set_driver_info(ctrl.rx);
-        ui->console_te->append("-----------------------------------------------------------------------------");
+        ui->console_te->append("--------------------------------------------------------------------------");
         ss << ctrl;
         ui->console_te->append(QString::fromStdString(ss.str()));
         ss.str(std::string());
@@ -289,7 +290,7 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
         // ping the motors to get the model number and firmware version
         status = ctrl.ping_motor(ctrl_handle, FOCUS_MOTOR_ID, focus_motor);
 
-        ui->console_te->append("-----------------------------------------------------------------------------");
+        ui->console_te->append("--------------------------------------------------------------------------");
         ui->console_te->append("Focus Motor Information: ");
 
         if (status)
@@ -319,7 +320,7 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
         //-----------------------------------------------------------------------------
         status = ctrl.ping_motor(ctrl_handle, ZOOM_MOTOR_ID, zoom_motor);
 
-        ui->console_te->append("\n-----------------------------------------------------------------------------");
+        ui->console_te->append("\n-----------------------------------------------------------------------");
         ui->console_te->append("Zoom Motor Information: ");
 
         if (status)
@@ -344,7 +345,7 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
         status = ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
 
         ui->console_te->append("  Current Step:     " + QString::number(zoom_step));
-        //ui->console_te->append("-----------------------------------------------------------------------------\n");
+        //ui->console_te->append("--------------------------------------------------------------------------\n");
 
         QThread::msleep(50);
 
@@ -359,14 +360,14 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
         // get the current trigger configurations and display the information
         status = ctrl.get_trigger_info(ctrl_handle, t1_info, t2_info);
 
-        ui->console_te->append("\n-----------------------------------------------------------------------------");
+        ui->console_te->append("\n--------------------------------------------------------------------------");
         ui->console_te->append("Trigger Information: ");
         ss << t1_info << std::endl;
         ss << t2_info;
         ui->console_te->append(QString::fromStdString(ss.str()));
         ss.str(std::string());
         ss.clear();
-        ui->console_te->append("-----------------------------------------------------------------------------");
+        ui->console_te->append("--------------------------------------------------------------------------");
         qApp->processEvents();
         QThread::msleep(50);
 
@@ -404,7 +405,7 @@ void capture_pr_gui::on_ftdi_connect_btn_clicked()
         ui->console_te->append("  Focus PID: " + QString::number(pid_values[0]) + ", " + QString::number(pid_values[1]) + ", " + QString::number(pid_values[2]));
         ui->console_te->append("  Zoom PID:  " + QString::number(pid_values[3]) + ", " + QString::number(pid_values[4]) + ", " + QString::number(pid_values[5]));
 
-        ui->console_te->append("\n-----------------------------------------------------------------------------");
+        ui->console_te->append("\n--------------------------------------------------------------------------");
         ui->console_te->append("Setting motors to intial position:");
         qApp->processEvents();
 
@@ -470,7 +471,7 @@ void capture_pr_gui::on_cam_connect_btn_clicked()
         cam = cam_list.GetByIndex(cam_index);
 
         // print out some information about the camera
-        ui->console_te->append("------------------------------------------------------------------");
+        ui->console_te->append("---------------------------------------------------------------");
         ss << cam;
         ui->console_te->append(QString::fromStdString(ss.str()));
         ss.str(std::string());
@@ -553,6 +554,7 @@ void capture_pr_gui::on_cam_connect_btn_clicked()
         image_timer->start(10);
 
         cv::namedWindow(image_window, cv::WindowFlags::WINDOW_NORMAL);
+        cv::namedWindow(dm_window, cv::WindowFlags::WINDOW_NORMAL);
 
         ui->cam_connect_btn->setText("Disconnect");
         cam_connected = true;
@@ -966,7 +968,7 @@ void capture_pr_gui::on_start_capture_clicked()
     ui->controller_gb->setEnabled(false);
     ui->camera_gb->setEnabled(false);
 
-    ui->console_te->append("------------------------------------------------------------------------------");
+    ui->console_te->append("---------------------------------------------------------------------------");
 
     // enable the motors
     status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
@@ -1008,7 +1010,7 @@ void capture_pr_gui::on_start_capture_clicked()
     ui->console_te->append("Trigger Source:           " + QString::fromStdString(cam->TriggerSource.GetCurrentEntry()->GetSymbolic().c_str()));
     ui->console_te->append("Min/Max Gain:             " + QString::number(cam->Gain.GetMin()) + " / " + QString::number(cam->Gain.GetMax()));
     ui->console_te->append("Min/Max Exposure (ms):    " + QString::number(cam->ExposureTime.GetMin()/1000.0) + " / " + QString::number((uint64_t)cam->ExposureTime.GetMax()/1000.0) + "\n");
-    ui->console_te->append("------------------------------------------------------------------");
+    ui->console_te->append("---------------------------------------------------------------");
     qApp->processEvents();
 
     // disconnect the timer for displaying the camera images
@@ -1054,10 +1056,13 @@ void capture_pr_gui::on_start_capture_clicked()
     img_f2 = img_f2(crop_rect);
     dm = cv::Mat::zeros(range_h, range_w, CV_16UC1);
 
+    ui->console_te->append("Calculating depthmap...");
     // send to dnn
     run_net(img_f1.ptr<unsigned char>(0), img_f2.ptr<unsigned char>(0), range_w, range_h, dm.ptr<unsigned short>(0));
 
-
+    cv::imshow(dm_window, dm);
+    ui->console_te->append("Calculating complete!");
+    qApp->processEvents();
 
     // re-enable the gui controlls
     ui->controller_gb->setEnabled(true);
