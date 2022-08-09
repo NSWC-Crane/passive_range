@@ -232,6 +232,8 @@ int main(int argc, char** argv)
     Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_BGR8;
     double camera_gain;
     double frame_rate;
+    double min_exp_time = 100;
+    double max_exp_time = 2000000;  // 2000000
 
     //Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Once;
     Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
@@ -909,8 +911,29 @@ int main(int argc, char** argv)
             // Release system
             system->ReleaseInstance();
 
-            std::cout << "No Camera found... Press Enter to Exit!" << std::endl;
+            std::cout << "No Camera found..." << std::endl;
             data_log_stream << "No Camera found... Exiting!" << std::endl;
+
+
+            // set the focus and zoom steps to zero
+            focus_step = 0;
+            zoom_step = 0;
+
+            std::cout << std::endl << "Setting motors back to zero..." << std::endl;
+            status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
+            status = ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_step);
+            status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+
+            status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
+            status = ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_step);
+            status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
+
+            // close the motor driver port first
+            std::cout << std::endl << "Closing the Controller port..." << std::endl;
+            close_com_port(ctrl_handle);
+            ctrl_connected = false;
+
+            std::cout << "Press Enter to Exit!" << std::endl;
             std::cin.ignore();
 
             return -1;
@@ -926,7 +949,7 @@ int main(int argc, char** argv)
         data_log_stream << cam;
 
         // initialize the camera
-        init_camera(cam);
+        init_camera(cam, min_exp_time, max_exp_time);
         cam_connected = true;
         //cam->TriggerActivation.SetValue(Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge);
 
@@ -945,6 +968,9 @@ int main(int argc, char** argv)
         set_exposure_mode(cam, exp_mode);
         //set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
+
+        // set the maximum exposure time
+        //cam->AutoExposureExposureTimeUpperLimit.SetValue(max_exp_time);
         
         // start the acquistion if the mode is set to continuous
         if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
@@ -1015,7 +1041,7 @@ int main(int argc, char** argv)
         std::cout << "Number of Captures:       " << cap_num << std::endl;
         std::cout << "Trigger Source:           " << cam->TriggerSource.GetCurrentEntry()->GetSymbolic() << std::endl;
         std::cout << "Min/Max Gain:             " << cam->Gain.GetMin() << " / " << cam->Gain.GetMax() << std::endl;
-        std::cout << "Min/Max Exposure (ms):    " << cam->ExposureTime.GetMin()/1000.0 << " / " << (uint64_t)cam->ExposureTime.GetMax()/1000.0 << std::endl;
+        std::cout << "Min/Max Exposure (ms):    " << cam->AutoExposureExposureTimeLowerLimit.GetValue()/1000.0 << " / " << (uint64_t)cam->AutoExposureExposureTimeUpperLimit.GetValue()/1000.0 << std::endl;
         std::cout << std::endl;
 
         data_log_stream << "Image Size (h x w):       " << height << " x " << width << std::endl;

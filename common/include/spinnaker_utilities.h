@@ -21,11 +21,11 @@ const uint64_t height_mod = 2;
 const uint64_t y_offset_mod = 2;
 const uint64_t max_cam_height = 1536;
 
-double min_exp_time = 0;
-double max_exp_time = 0;
+double spin_min_exp_time = 0;
+double spin_max_exp_time = 0;
 
-double min_gain = 0;
-double max_gain = 0;
+double spin_min_gain = 0;
+double spin_max_gain = 0;
 
 const bool OFF = false;
 const bool ON = true;
@@ -200,15 +200,15 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
 // ----------------------------------------------------------------------------------------
 void get_bounds(Spinnaker::CameraPtr& cam)
 {
-    min_exp_time = cam->ExposureTime.GetMin();
-    max_exp_time = cam->ExposureTime.GetMax();
+    spin_min_exp_time = cam->AutoExposureExposureTimeLowerLimit.GetValue();
+    spin_max_exp_time = cam->AutoExposureExposureTimeUpperLimit.GetValue();
 
-    min_gain = cam->Gain.GetMin();
-    max_gain = cam->Gain.GetMax();
+    spin_min_gain = cam->AutoExposureGainLowerLimit.GetValue();
+    spin_max_gain = cam->AutoExposureGainUpperLimit.GetValue();
 }
 
 // ----------------------------------------------------------------------------------------
-void init_camera(Spinnaker::CameraPtr& cam)
+void init_camera(Spinnaker::CameraPtr& cam, double min_exp_time = 100.0, double max_exp_time = 2000000)
 {
     // initialize the camera
     cam->Init();
@@ -224,8 +224,8 @@ void init_camera(Spinnaker::CameraPtr& cam)
         //std::cout << "can't set bit depth" << std::endl;
 
     // set the upperr and lower limits on the auto exposre time limits
-    cam->AutoExposureExposureTimeLowerLimit.SetValue(100.0);
-    cam->AutoExposureExposureTimeUpperLimit.SetValue(29999999.0);
+    cam->AutoExposureExposureTimeLowerLimit.SetValue(min_exp_time);
+    cam->AutoExposureExposureTimeUpperLimit.SetValue(max_exp_time);
 
     // get the upper and lower bounds for certain camera parameters
     get_bounds(cam);
@@ -368,8 +368,8 @@ void set_gain_value(Spinnaker::CameraPtr& cam, double& value)
 {
     if (Spinnaker::GenApi::IsAvailable(cam->Gain) && Spinnaker::GenApi::IsWritable(cam->Gain))
     {
-        value = (value > max_gain) ? max_gain : value;
-        value = (value < min_gain) ? min_gain : value;
+        value = (value > spin_max_gain) ? spin_max_gain : value;
+        value = (value < spin_min_gain) ? spin_min_gain : value;
         cam->Gain.SetValue(value);
     }
     else
@@ -424,7 +424,7 @@ void set_exposure_time(Spinnaker::CameraPtr& cam, double& value)
     if (Spinnaker::GenApi::IsAvailable(cam->ExposureTime) && Spinnaker::GenApi::IsWritable(cam->ExposureTime))
     {
         //value = (value > cam->ExposureTime.GetMax()) ? cam->ExposureTime.GetMax() : value;
-        value = (value > max_exp_time) ? max_exp_time : value;
+        value = (value > spin_max_exp_time) ? spin_max_exp_time : value;
         cam->ExposureTime.SetValue(value);
     }
     else
