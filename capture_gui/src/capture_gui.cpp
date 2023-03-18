@@ -1152,8 +1152,11 @@ void capture_gui::on_start_capture_clicked()
                 qApp->processEvents();
 
                 if(stop_capture == true)
-                    return;
-
+                {
+                    img_idx = cap_num;
+                    focus_idx = focus_range.size();
+                    zoom_idx = zoom_range.size();
+                }
             }   // end of img_idx loop
             //sleep_ms(100);
 
