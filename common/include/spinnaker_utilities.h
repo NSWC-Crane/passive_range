@@ -803,7 +803,7 @@ void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePt
     //cam->BeginAcquisition();
     cam->TriggerSoftware.Execute();
 
-    Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
+    Spinnaker::ImagePtr ptr_img = cam->GetNextImage(10000);
 
     // Ensure image completion
     if (ptr_img->IsIncomplete())
