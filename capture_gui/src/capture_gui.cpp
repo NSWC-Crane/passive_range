@@ -655,9 +655,9 @@ void capture_gui::update_zoom_position()
     // set the current step to the minimum
     bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
     status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
+    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
     QThread::msleep(20);
     status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
-    status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
     ui->console_te->append("zoom motor: " + QString::number(position));
 }   // end of update_zoom_position
 
@@ -670,11 +670,11 @@ void capture_gui::update_focus_position()
     bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
     status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
     status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
+    QThread::msleep(20);
 
     status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
     ui->console_te->append("focus motor: " + QString::number(position));
-    QThread::msleep(20);
-    qApp->processEvents();
+    //qApp->processEvents();
 }   // end of update_focus_position
 
 //-----------------------------------------------------------------------------
@@ -756,7 +756,7 @@ void capture_gui::focus_edit_complete()
         // set the current step to the minimum
         bool status = ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, true);
         status &= ctrl.set_position(ctrl_handle, FOCUS_MOTOR_ID, focus_range[0]);
-        QThread::msleep(10);
+        QThread::msleep(40);
         status &= ctrl.get_position(ctrl_handle, FOCUS_MOTOR_ID, position);
         status &= ctrl.enable_motor(ctrl_handle, FOCUS_MOTOR_ID, false);
 
@@ -822,7 +822,7 @@ void capture_gui::zoom_edit_complete()
     {
         bool status = ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, true);
         status &= ctrl.set_position(ctrl_handle, ZOOM_MOTOR_ID, zoom_range[0]);
-        QThread::msleep(20);
+        QThread::msleep(40);
         status &= ctrl.get_position(ctrl_handle, ZOOM_MOTOR_ID, position);
         status &= ctrl.enable_motor(ctrl_handle, ZOOM_MOTOR_ID, false);
         ui->console_te->append("zoom motor: " + QString::number(position));
@@ -900,7 +900,7 @@ void capture_gui::gain_edit_complete()
     if(cam_connected == true)
     {
         set_gain_value(cam, camera_gain);
-        QThread::msleep(20);
+        QThread::msleep(50);
         get_gain_value(cam, camera_gain);
         ui->console_te->append("Gain Value: " + QString::number(camera_gain));
     }
@@ -915,7 +915,7 @@ void capture_gui::exposure_edit_complete()
     if(cam_connected == true)
     {
         set_exposure_time(cam, exp_time);
-        QThread::msleep(20);
+        QThread::msleep(50);
         get_exposure_time(cam, exp_time);
         ui->console_te->append("Exposure Time (us): " + QString::number(exp_time));
     }
@@ -1272,20 +1272,31 @@ void capture_gui::on_stop_capture_clicked()
 void capture_gui::on_auto_gain_stateChanged(int arg1)
 {
 
-    gain_mode = ui->auto_gain->isChecked() ? Spinnaker::GainAutoEnums::GainAuto_Continuous : Spinnaker::GainAutoEnums::GainAuto_Off;
-
     if(cam_connected == true)
-        set_gain_mode(cam, gain_mode);
+    {
+        gain_mode = ui->auto_gain->isChecked() ? Spinnaker::GainAutoEnums::GainAuto_Continuous : Spinnaker::GainAutoEnums::GainAuto_Off;
 
+        set_gain_mode(cam, gain_mode);
+        QThread::msleep(50);
+        get_gain_value(cam, camera_gain);
+        ui->console_te->append("Gain Value: " + QString::number(camera_gain));
+    }
 }
 
 //-----------------------------------------------------------------------------
 void capture_gui::on_auto_exp_stateChanged(int arg1)
 {
-    exp_mode = ui->auto_exp->isChecked() ? Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous : Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
 
     if(cam_connected == true)
+    {
+        exp_mode = ui->auto_exp->isChecked() ? Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous : Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+
         set_exposure_mode(cam, exp_mode);
+        QThread::msleep(50);
+        get_exposure_time(cam, exp_time);
+
+        ui->console_te->append("Exposure Time (us): " + QString::number(exp_time));
+    }
 
 }
 
