@@ -50,8 +50,8 @@ Spinnaker::PixelFormatEnums pixel_format = Spinnaker::PixelFormatEnums::PixelFor
 //Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Off;
 Spinnaker::GainAutoEnums gain_mode = Spinnaker::GainAutoEnums::GainAuto_Continuous;
 //Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Once;
-//Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
-Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
+Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Off;
+//Spinnaker::ExposureAutoEnums exp_mode = Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous;
 Spinnaker::AdcBitDepthEnums bit_depth = Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12;
 Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous;
 //Spinnaker::AcquisitionModeEnums acq_mode = Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame;
@@ -530,7 +530,9 @@ void capture_gui::on_cam_connect_btn_clicked()
         set_gain_mode(cam, gain_mode);
         //set_gain_value(cam, camera_gain);
         set_exposure_mode(cam, exp_mode);
-        //set_exposure_time(cam, exp_time);
+        QThread::msleep(10);
+
+        set_exposure_time(cam, exp_time);
         set_acquisition_mode(cam, acq_mode); //acq_mode
         set_adc_bit_depth(cam, bit_depth);
 
