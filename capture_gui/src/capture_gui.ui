@@ -905,12 +905,17 @@
         </property>
         <item>
          <property name="text">
-          <string>RGB8</string>
+          <string>BGR8</string>
          </property>
         </item>
         <item>
          <property name="text">
           <string>Mono12</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>RGB8</string>
          </property>
         </item>
        </widget>

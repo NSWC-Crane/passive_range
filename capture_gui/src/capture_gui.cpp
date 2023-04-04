@@ -520,6 +520,9 @@ void capture_gui::on_cam_connect_btn_clicked()
         case 1:
             pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_Mono12;
             break;
+        case 2:
+            pixel_format = Spinnaker::PixelFormatEnums::PixelFormat_RGB8;
+            break;
         }
 
         set_acquisition_mode(cam, Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame); //acq_mode

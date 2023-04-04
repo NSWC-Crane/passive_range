@@ -200,15 +200,31 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
 // ----------------------------------------------------------------------------------------
 void get_bounds(Spinnaker::CameraPtr& cam)
 {
-    spin_min_exp_time = cam->AutoExposureExposureTimeLowerLimit.GetValue();
-    spin_max_exp_time = cam->AutoExposureExposureTimeUpperLimit.GetValue();
+    if (Spinnaker::GenApi::IsReadable(cam->AutoExposureExposureTimeLowerLimit))
+    {
+        spin_min_exp_time = cam->AutoExposureExposureTimeLowerLimit.GetValue();
+        spin_max_exp_time = cam->AutoExposureExposureTimeUpperLimit.GetValue();
+    }
+    else
+    {
+        spin_min_exp_time = 5000;
+        spin_max_exp_time = 1000000;
+    }
 
-    spin_min_gain = cam->AutoExposureGainLowerLimit.GetValue();
-    spin_max_gain = cam->AutoExposureGainUpperLimit.GetValue();
+    if (Spinnaker::GenApi::IsReadable(cam->AutoExposureGainLowerLimit))
+    {
+        spin_min_gain = cam->AutoExposureGainLowerLimit.GetValue();
+        spin_max_gain = cam->AutoExposureGainUpperLimit.GetValue();
+    }
+    else
+    {
+        spin_min_gain = 0.0;
+        spin_max_gain = 20.0;
+    }
 }
 
 // ----------------------------------------------------------------------------------------
-void init_camera(Spinnaker::CameraPtr& cam, double min_exp_time = 100.0, double max_exp_time = 2000000)
+void init_camera(Spinnaker::CameraPtr& cam, double min_exp_time = 5000.0, double max_exp_time = 1000000)
 {
     // initialize the camera
     cam->Init();
@@ -224,8 +240,11 @@ void init_camera(Spinnaker::CameraPtr& cam, double min_exp_time = 100.0, double 
         //std::cout << "can't set bit depth" << std::endl;
 
     // set the upperr and lower limits on the auto exposre time limits
-    cam->AutoExposureExposureTimeLowerLimit.SetValue(min_exp_time);
-    cam->AutoExposureExposureTimeUpperLimit.SetValue(max_exp_time);
+    if (Spinnaker::GenApi::IsAvailable(cam->AutoExposureExposureTimeLowerLimit) && Spinnaker::GenApi::IsWritable(cam->AutoExposureExposureTimeLowerLimit))
+    {
+        cam->AutoExposureExposureTimeLowerLimit.SetValue(min_exp_time);
+        cam->AutoExposureExposureTimeUpperLimit.SetValue(max_exp_time);
+    }
 
     // get the upper and lower bounds for certain camera parameters
     get_bounds(cam);
