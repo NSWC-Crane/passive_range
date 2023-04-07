@@ -248,6 +248,18 @@ void init_camera(Spinnaker::CameraPtr& cam, double min_exp_time = 5000.0, double
 
     // get the upper and lower bounds for certain camera parameters
     get_bounds(cam);
+
+//    Spinnaker::GenApi::INodeMap& sNodeMap = cam->GetTLStreamNodeMap();
+//    Spinnaker::GenApi::CEnumerationPtr ptrHandlingMode = sNodeMap.GetNode("StreamBufferHandlingMode");
+//    if (!IsAvailable(ptrHandlingMode) || !IsWritable(ptrHandlingMode))
+//    {
+//        std::cout << "Unable to set Buffer Handling mode (node retrieval). Aborting..." << std::endl << std::endl;
+//        return;
+//    }
+
+//    Spinnaker::GenApi::CEnumEntryPtr ptrHandlingModeEntry = ptrHandlingMode->GetEntryByName("NewestFirst");
+//    ptrHandlingMode->SetIntValue(ptrHandlingModeEntry->GetValue());
+
 }   // end of init_camera
 
 // ----------------------------------------------------------------------------------------
