@@ -248,6 +248,18 @@ void init_camera(Spinnaker::CameraPtr& cam, double min_exp_time = 5000.0, double
 
     // get the upper and lower bounds for certain camera parameters
     get_bounds(cam);
+
+    Spinnaker::GenApi::INodeMap& sNodeMap = cam->GetTLStreamNodeMap();
+    Spinnaker::GenApi::CEnumerationPtr ptrHandlingMode = sNodeMap.GetNode("StreamBufferHandlingMode");
+    if (!IsAvailable(ptrHandlingMode) || !IsWritable(ptrHandlingMode))
+    {
+        std::cout << "Unable to set Buffer Handling mode (node retrieval). Aborting..." << std::endl << std::endl;
+        return;
+    }
+
+    Spinnaker::GenApi::CEnumEntryPtr ptrHandlingModeEntry = ptrHandlingMode->GetEntryByName("NewestFirst");
+    ptrHandlingMode->SetIntValue(ptrHandlingModeEntry->GetValue());
+
 }   // end of init_camera
 
 // ----------------------------------------------------------------------------------------
@@ -816,29 +828,35 @@ int configure_trigger(Spinnaker::GenApi::INodeMap& node_map, const trigger_type 
 //}   // end of fire_software_trigger
 
 
-void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image)
+void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image, uint64_t timeout)
 {
 
-    //cam->BeginAcquisition();
-    cam->TriggerSoftware.Execute();
+    try {
 
-    Spinnaker::ImagePtr ptr_img = cam->GetNextImage(10000);
+        cam->BeginAcquisition();
+        cam->TriggerSoftware.Execute();
 
-    // Ensure image completion
-    if (ptr_img->IsIncomplete())
-    {
-        // Retrieve and print the image status description
-        std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(ptr_img->GetImageStatus())
-            << "..." << std::endl << std::endl;
+        Spinnaker::ImagePtr ptr_img = cam->GetNextImage(timeout);
+
+        // Ensure image completion
+        if (ptr_img->IsIncomplete())
+        {
+            // Retrieve and print the image status description
+            std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(ptr_img->GetImageStatus())
+                << "..." << std::endl << std::endl;
+        }
+
+        // convert image
+        image = ptr_img->Convert(Spinnaker::PixelFormat_BGR8);
+
+        // Release image
+        ptr_img->Release();
+        cam->EndAcquisition();
     }
-
-    // convert image
-    image = ptr_img->Convert(Spinnaker::PixelFormat_BGR8);
-
-    // Release image
-    ptr_img->Release();
-    //cam->EndAcquisition();
-
+    catch (Spinnaker::Exception& e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 }
 
 // ----------------------------------------------------------------------------------------

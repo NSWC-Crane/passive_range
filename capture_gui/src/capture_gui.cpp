@@ -542,6 +542,8 @@ void capture_gui::on_cam_connect_btn_clicked()
         // start the acquistion if the mode is set to continuous
         if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
             cam->BeginAcquisition();
+        //if(acq_mode == Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous)
+            //cam->BeginAcquisition();
 
         image_window = "Cam: " + cam_sn[cam_index];
 
@@ -551,6 +553,8 @@ void capture_gui::on_cam_connect_btn_clicked()
         //config_trigger(cam, OFF);
         config_trigger(cam, ON);
         sleep_ms(1000); // blackfy camera needs a 1 second delay after setting the trigger mode to ON
+
+        cam_timeout = ui->cap_wait_sb->text().toULongLong();
 
         // grab an initial image to get the padding
         //acquire_image(cam, image);
@@ -563,7 +567,7 @@ void capture_gui::on_cam_connect_btn_clicked()
     //        cam->EndAcquisition();
     //        break;
     //    case 1:
-            aquire_software_trigger_image(cam, image);
+            aquire_software_trigger_image(cam, image, cam_timeout);
     //        break;
     //    }
 
@@ -933,7 +937,7 @@ void capture_gui::update_image()
     //cv::RNG rng(time(NULL));
     //cv_image = cv::Mat(200,200, CV_8UC3, cv::Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256)));
 
-    aquire_software_trigger_image(cam, image);
+    aquire_software_trigger_image(cam, image, cam_timeout);
 
     cv_image = cv::Mat(img_h + y_padding, img_w + x_padding, CV_8UC3, image->GetData(), image->GetStride());
 
@@ -1130,7 +1134,7 @@ void capture_gui::on_start_capture_clicked()
 //                    cam->EndAcquisition();
 //                    break;
 //                case 1:
-                    aquire_software_trigger_image(cam, image);
+                    aquire_software_trigger_image(cam, image, cam_timeout);
 //                    break;
 //                }
                 get_exposure_time(cam, exp_time);
