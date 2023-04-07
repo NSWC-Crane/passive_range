@@ -102,7 +102,6 @@ private:
     double camera_gain;
     double frame_rate;
     double exp_time;
-    uint64_t cam_timeout;
 
     const uint32_t max_height = 1536;
     const uint32_t max_width = 2048;

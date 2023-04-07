@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>618</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -24,7 +24,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>300</y>
+      <y>270</y>
       <width>621</width>
       <height>291</height>
      </rect>
@@ -76,7 +76,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>270</y>
+      <y>240</y>
       <width>621</width>
       <height>31</height>
      </rect>
@@ -309,7 +309,7 @@
       <rect>
        <x>50</x>
        <y>60</y>
-       <width>194</width>
+       <width>191</width>
        <height>21</height>
       </rect>
      </property>
@@ -577,7 +577,7 @@
       <x>270</x>
       <y>10</y>
       <width>361</width>
-      <height>251</height>
+      <height>221</height>
      </rect>
     </property>
     <property name="title">
@@ -1247,7 +1247,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Capture Delay (ms):</string>
+         <string>Capture  Delay (ms):</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1276,73 +1276,6 @@
         </property>
         <property name="value">
          <number>10</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="horizontalLayoutWidget_18">
-     <property name="geometry">
-      <rect>
-       <x>150</x>
-       <y>210</y>
-       <width>201</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_18">
-      <item>
-       <widget class="QLabel" name="label_19">
-        <property name="minimumSize">
-         <size>
-          <width>125</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>125</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Capture Wait (ms):</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QSpinBox" name="cap_wait_sb">
-        <property name="minimumSize">
-         <size>
-          <width>60</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>60</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-        <property name="maximum">
-         <number>30000</number>
-        </property>
-        <property name="singleStep">
-         <number>250</number>
-        </property>
-        <property name="value">
-         <number>10000</number>
         </property>
        </widget>
       </item>
