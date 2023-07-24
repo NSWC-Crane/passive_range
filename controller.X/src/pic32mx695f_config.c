@@ -18,7 +18,7 @@ void init_CLOCK(void)
     SYSKEY = 0xAA996655;        // Write Key1 to SYSKEY
     SYSKEY = 0x556699AA;        // Write Key2 to SYSKEY
 
-    OSCCONbits.COSC = 3;        // Enable Primary OSC w/PLL
+    OSCCONbits.COSC = 1;        // Internal Fast RC Oscillator with PLL module via Postscaler (FRCPLL)
     OSCCONbits.SLPEN = 1;       // Enable Sleep on "wait"
     OSCCONbits.UFRCEN = 0;      // USB PLL as USB Clock Source
     OSCCONbits.SOSCEN = 0;      // disable Secondary OSC
